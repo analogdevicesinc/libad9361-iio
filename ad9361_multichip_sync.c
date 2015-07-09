@@ -96,3 +96,18 @@ int ad9361_multichip_sync(struct iio_device *master, struct iio_device **slaves,
 
 	return 0;
 }
+
+int ad9361_fmcomms5_multichip_sync(struct iio_context *ctx, unsigned int flags)
+{
+	struct iio_device *master, *slave;
+
+	master = iio_context_find_device(ctx, "cf-ad9361-lpc");
+	if (!master)
+		master = iio_context_find_device(ctx, "cf-ad9361-A");
+	slave = iio_context_find_device(ctx, "cf-ad9361-B");
+
+	if (!master || !slave)
+		return -ENODEV;
+
+	return ad9361_multichip_sync(master, &slave, 1, flags);
+}

@@ -19,9 +19,12 @@
 #define FIXUP_INTERFACE_TIMING	1
 #define CHECK_SAMPLE_RATES	2
 
+struct iio_context;
 struct iio_device;
 
 int ad9361_multichip_sync(struct iio_device *master, struct iio_device **slaves,
 		unsigned int num_slaves, unsigned int flags);
+
+int ad9361_fmcomms5_multichip_sync(struct iio_context *ctx, unsigned int flags);
 
 #endif /* __AD9361_H__ */
