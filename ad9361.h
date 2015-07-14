@@ -15,6 +15,10 @@
 #ifndef __AD9361_H__
 #define __AD9361_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* FLAGS */
 #define FIXUP_INTERFACE_TIMING	1
 #define CHECK_SAMPLE_RATES	2
@@ -26,5 +30,9 @@ int ad9361_multichip_sync(struct iio_device *master, struct iio_device **slaves,
 		unsigned int num_slaves, unsigned int flags);
 
 int ad9361_fmcomms5_multichip_sync(struct iio_context *ctx, unsigned int flags);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __AD9361_H__ */
