@@ -1,0 +1,8 @@
+*.substvars
+*.debhelper
+*.log
+files
+libad9361-0
+libad9361-dev
+tmp
+substvars
