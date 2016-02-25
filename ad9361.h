@@ -23,16 +23,32 @@ extern "C" {
 #define FIXUP_INTERFACE_TIMING	1
 #define CHECK_SAMPLE_RATES	2
 
+#ifdef _WIN32
+#   ifdef LIBAD9361_EXPORTS
+#	define __api __declspec(dllexport)
+#   else
+#	define __api __declspec(dllimport)
+#   endif
+#elif __GNUC__ >= 4
+#   define __api __attribute__((visibility ("default")))
+#else
+#   define __api
+#endif
+
 struct iio_context;
 struct iio_device;
 
-int ad9361_multichip_sync(struct iio_device *master, struct iio_device **slaves,
-		unsigned int num_slaves, unsigned int flags);
+__api int ad9361_multichip_sync(struct iio_device *master,
+		struct iio_device **slaves, unsigned int num_slaves,
+		unsigned int flags);
 
-int ad9361_fmcomms5_multichip_sync(struct iio_context *ctx, unsigned int flags);
+__api int ad9361_fmcomms5_multichip_sync(
+		struct iio_context *ctx, unsigned int flags);
 
 #ifdef __cplusplus
 }
 #endif
+
+#undef __api
 
 #endif /* __AD9361_H__ */
