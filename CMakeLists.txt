@@ -19,6 +19,10 @@ set(LIBAD9361_VERSION ${LIBAD9361_VERSION_MAJOR}.${LIBAD9361_VERSION_MINOR})
 
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries")
 
+if (NOT WIN32)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+endif()
+
 add_definitions(-DLIBAD9361_EXPORTS=1)
 
 set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
