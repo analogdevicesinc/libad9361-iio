@@ -17,7 +17,11 @@
 #include <errno.h>
 #include <iio.h>
 #include <stdio.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <unistd.h>
+#endif
 
 #define MAX_AD9361_SYNC_DEVS	4
 
@@ -86,7 +90,11 @@ int ad9361_multichip_sync(struct iio_device *master, struct iio_device **slaves,
 		else
 			iio_device_attr_write_longlong(master, "multichip_sync", step);
 
+#ifdef _WIN32
+		Sleep(1);
+#else
 		usleep(1000);
+#endif
 	}
 
 	iio_device_attr_write(master, "ensm_mode", ensm_mode[0]);
