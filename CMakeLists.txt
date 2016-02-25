@@ -23,15 +23,15 @@ set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
 	CACHE PATH "Installation directory for libraries")
 mark_as_advanced(INSTALL_LIB_DIR)
 
-include(FindPkgConfig REQUIRED)
-pkg_check_modules(LIBIIO REQUIRED libiio)
+find_library(LIBIIO_LIBRARIES iio)
+find_path(LIBIIO_INCLUDEDIR iio.h)
 
 set(LIBAD9361_HEADERS ad9361.h)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LIBIIO_INCLUDEDIR})
 add_library(ad9361 ad9361_multichip_sync.c ${LIBAD9361_HEADERS})
 set_target_properties(ad9361 PROPERTIES VERSION ${LIBAD9361_VERSION} SOVERSION ${LIBAD9361_VERSION_MAJOR} FRAMEWORK TRUE PUBLIC_HEADER "${LIBAD9361_HEADERS}")
-target_link_libraries(ad9361 LINK_PRIVATE ${LIBIIO_LIBS})
+target_link_libraries(ad9361 LINK_PRIVATE ${LIBIIO_LIBRARIES})
 
 set(LIBAD9361_PC ${CMAKE_CURRENT_BINARY_DIR}/libad9361.pc)
 configure_file(libad9361.pc.cmakein ${LIBAD9361_PC} @ONLY)
