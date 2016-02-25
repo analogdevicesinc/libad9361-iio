@@ -1,0 +1,47 @@
+version: 2015.1.{build}
+clone_depth: 1
+
+install:
+    # Download libiio
+    - cd c:\
+    - appveyor DownloadFile https://ci.appveyor.com/api/projects/analogdevicesinc/libiio/artifacts/libiio-win32.zip
+    - appveyor DownloadFile https://ci.appveyor.com/api/projects/analogdevicesinc/libiio/artifacts/libiio-win64.zip
+    - 7z x libiio-win32.zip
+    - 7z x libiio-win64.zip
+
+build_script:
+    # 32-bit build
+    - mkdir c:\projects\libad9361-iio\build-win32
+    - cd c:\projects\libad9361-iio\build-win32
+    - cmake -G "Visual Studio 12" \
+        -DLIBIIO_LIBRARIES:FILEPATH=c:/libiio-win32/libiio.lib \
+        -DLIBIIO_INCLUDEDIR:PATH=c:/libiio-win32 \
+        -DCMAKE_CONFIGURATION_TYPES=Release \
+        ..
+    - cmake --build . --config Release
+
+    # 64-bit build
+    - mkdir c:\projects\libad9361-iio\build-win64
+    - cd c:\projects\libad9361-iio\build-win64
+    - cmake -G "Visual Studio 12 Win64" \
+        -DLIBIIO_LIBRARIES:FILEPATH=c:/libiio-win64/libiio.lib \
+        -DLIBIIO_INCLUDEDIR:PATH=c:/libiio-win64 \
+        -DCMAKE_CONFIGURATION_TYPES=Release \
+        ..
+    - cmake --build . --config Release
+
+    # Create ZIPs
+    - cd c:\projects\libad9361-iio
+    - mkdir c:\libad9361-win32
+    - copy ad9361.h c:\libad9361-win32\
+    - copy build-win32\Release\libad9361.* c:\libad9361-win32\
+    - copy c:\libiio-win32\*.dll c:\libad9361-win32\
+    - 7z a "c:\libad9361-win32.zip" c:\libad9361-win32
+    - appveyor PushArtifact c:\libad9361-win32.zip
+
+    - mkdir c:\libad9361-win64
+    - copy ad9361.h c:\libad9361-win64\
+    - copy build-win64\Release\libad9361.* c:\libad9361-win64\
+    - copy c:\libiio-win64\*.dll c:\libad9361-win64\
+    - 7z a "c:\libad9361-win64.zip" c:\libad9361-win64
+    - appveyor PushArtifact c:\libad9361-win64.zip
