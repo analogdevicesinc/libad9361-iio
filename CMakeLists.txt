@@ -35,7 +35,7 @@ find_path(LIBIIO_INCLUDEDIR iio.h)
 set(LIBAD9361_HEADERS ad9361.h)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LIBIIO_INCLUDEDIR})
-add_library(ad9361 ad9361_multichip_sync.c ${LIBAD9361_HEADERS})
+add_library(ad9361 ad9361_multichip_sync.c ad9361_baseband_auto_rate.c ${LIBAD9361_HEADERS})
 set_target_properties(ad9361 PROPERTIES VERSION ${LIBAD9361_VERSION} SOVERSION ${LIBAD9361_VERSION_MAJOR} FRAMEWORK TRUE PUBLIC_HEADER "${LIBAD9361_HEADERS}")
 target_link_libraries(ad9361 LINK_PRIVATE ${LIBIIO_LIBRARIES})
 

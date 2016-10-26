@@ -45,6 +45,12 @@ __api int ad9361_multichip_sync(struct iio_device *master,
 __api int ad9361_fmcomms5_multichip_sync(
 		struct iio_context *ctx, unsigned int flags);
 
+__api int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate);
+
+__api int ad9361_set_trx_fir_enable(struct iio_device *dev, int enable);
+
+__api int ad9361_get_trx_fir_enable(struct iio_device *dev, int *enable);
+
 #ifdef __cplusplus
 }
 #endif
