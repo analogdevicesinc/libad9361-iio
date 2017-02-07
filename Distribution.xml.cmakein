@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<installer-gui-script minSpecVersion="2" >
+	<title>Libad9361</title>
+	<options customize="never" rootVolumeOnly="true" />
+	<allowed-os-versions>
+		<os-version min="10.6.6" />
+	</allowed-os-versions>
+	<license file="@CMAKE_CURRENT_SOURCE_DIR@/COPYING.txt" mime-type="text/plain" />
+	<product id="libad9361" version="@LIBAD9361_VERSION@" />
+	<choices-outline>
+		<line choice="default" >
+			<line choice="libad9361" />
+		</line>
+	</choices-outline>
+	<choice id="default" />
+	<choice id="libad9361" visible="false" >
+		<pkg-ref id="libad9361" />
+	</choice>
+	<pkg-ref id="libad9361" version="@LIBAD9361_VERSION@" onConclusion="none" >@LIBAD9361_TEMP_PKG@</pkg-ref>
+</installer-gui-script>

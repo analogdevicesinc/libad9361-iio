@@ -17,6 +17,12 @@ set(LIBAD9361_VERSION_MAJOR 0)
 set(LIBAD9361_VERSION_MINOR 1)
 set(LIBAD9361_VERSION ${LIBAD9361_VERSION_MAJOR}.${LIBAD9361_VERSION_MINOR})
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	option(OSX_PACKAGE "Create a OSX package" ON)
+	set(CMAKE_MACOSX_RPATH ON)
+	set(SKIP_INSTALL_ALL ${OSX_PACKAGE})
+endif()
+
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries")
 
 if (NOT WIN32)
@@ -54,4 +60,42 @@ if(NOT SKIP_INSTALL_ALL)
 		RUNTIME DESTINATION bin
 		FRAMEWORK DESTINATION lib
 		PUBLIC_HEADER DESTINATION include)
+endif()
+
+# Create an installer if compiling for OSX
+if(OSX_PACKAGE)
+	set(LIBAD9361_PKG ${CMAKE_CURRENT_BINARY_DIR}/libad9361-${LIBAD9361_VERSION}.pkg)
+	set(LIBAD9361_TEMP_PKG ${CMAKE_CURRENT_BINARY_DIR}/libad6361-${LIBAD9361_VERSION}-temp.pkg)
+	set(LIBAD9361_DISTRIBUTION_XML ${CMAKE_CURRENT_BINARY_DIR}/Distribution.xml)
+	set(LIBAD9361_FRAMEWORK_DIR ${CMAKE_CURRENT_BINARY_DIR}/ad9361.framework)
+	configure_file(Distribution.xml.cmakein ${LIBAD9361_DISTRIBUTION_XML} @ONLY)
+
+	find_program(PKGBUILD_EXECUTABLE
+		NAMES pkgbuild
+		DOC "OSX Package builder (pkgbuild)")
+	mark_as_advanced(PKGBUILD_EXECUTABLE)
+
+	find_program(PRODUCTBUILD_EXECUTABLE
+		NAMES productbuild
+		DOC "OSX Package builder (productbuild)")
+	mark_as_advanced(PRODUCTBUILD_EXECUTABLE)
+
+	add_custom_command(OUTPUT ${LIBAD9361_PKG}
+		COMMAND ${PKGBUILD_EXECUTABLE}
+			--component ${LIBAD9361_FRAMEWORK_DIR}
+			--identifier com.adi.ad9361 --version ${LIBAD9361_VERSION}
+			--install-location /Library/Frameworks ${LIBAD9361_TEMP_PKG}
+		COMMAND ${PRODUCTBUILD_EXECUTABLE}
+			--distribution ${LIBAD9361_DISTRIBUTION_XML} ${LIBAD9361_PKG}
+		COMMAND ${CMAKE_COMMAND} -E remove ${LIBAD9361_TEMP_PKG}
+		DEPENDS ad9361 ${LIBAD9361_DISTRIBUTION_XML}
+	)
+
+	if (PKGBUILD_EXECUTABLE AND PRODUCTBUILD_EXECUTABLE)
+		add_custom_target(libad9361-pkg ALL DEPENDS ${LIBAD9361_PKG})
+
+		install(CODE "execute_process(COMMAND /usr/sbin/installer -pkg ${LIBAD9361_PKG} -target /)")
+	else()
+		message(WARNING "Missing pkgbuild or productbuild: OSX installer won't be created.")
+	endif()
 endif()
