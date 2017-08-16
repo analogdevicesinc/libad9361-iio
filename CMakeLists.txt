@@ -17,6 +17,8 @@ set(LIBAD9361_VERSION_MAJOR 0)
 set(LIBAD9361_VERSION_MINOR 1)
 set(LIBAD9361_VERSION ${LIBAD9361_VERSION_MAJOR}.${LIBAD9361_VERSION_MINOR})
 
+option(FilterDesigner "FilterDesigner" ON)
+
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	option(OSX_PACKAGE "Create a OSX package" ON)
 	set(CMAKE_MACOSX_RPATH ON)
@@ -40,8 +42,17 @@ find_path(LIBIIO_INCLUDEDIR iio.h)
 
 set(LIBAD9361_HEADERS ad9361.h)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LIBIIO_INCLUDEDIR})
-add_library(ad9361 ad9361_multichip_sync.c ad9361_baseband_auto_rate.c ${LIBAD9361_HEADERS})
+if(FilterDesigner)
+	file(GLOB_RECURSE FD_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/filterdesigner/*.c)
+	include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LIBIIO_INCLUDEDIR}  ${CMAKE_CURRENT_SOURCE_DIR}/internal_design_filter_cg)
+	add_library(ad9361 ad9361_multichip_sync.c ad9361_baseband_auto_rate.c ad9361_generate_fir_taps.c ${FD_SRC_FILES} ${LIBAD9361_HEADERS})
+	enable_testing()
+	add_subdirectory(test)
+else()
+	include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LIBIIO_INCLUDEDIR})
+	add_library(ad9361 ad9361_multichip_sync.c ad9361_baseband_auto_rate.c ${LIBAD9361_HEADERS})
+endif()
+
 set_target_properties(ad9361 PROPERTIES VERSION ${LIBAD9361_VERSION} SOVERSION ${LIBAD9361_VERSION_MAJOR} FRAMEWORK TRUE PUBLIC_HEADER "${LIBAD9361_HEADERS}")
 target_link_libraries(ad9361 LINK_PRIVATE ${LIBIIO_LIBRARIES})
 
