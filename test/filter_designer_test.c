@@ -8,30 +8,24 @@
 
 int check_result(short *taps)
 {
-  FILE * fp;
-  char * line = NULL;
-  size_t len = 0;
-  ssize_t read;
+  FILE* fp;
+  char buffer[255];
+
   fp = fopen("correct_taps.txt", "r");
-  if (fp == NULL)
-    exit(EXIT_FAILURE);
 
   uint k = 0;
-  while ((read = getline(&line, &len, fp)) != -1) {
-    int tap = atoi(line);
-    printf("%i %i\n", tap, taps[k]);
-    if (tap != taps[k])
-    {
-      fclose(fp);
-      if (line)
-        free(line);
-      return 1;
-    }
-    k++;
+  while(fgets(buffer, 255, (FILE*) fp)) {
+      int tap = atoi(buffer);
+      printf("|%i|%i|\n", tap, taps[k]);
+      if (tap != taps[k])
+      {
+        fclose(fp);
+        return 1;
+      }
+      k++;
   }
+
   fclose(fp);
-  if (line)
-    free(line);
   return 0;
 }
 
