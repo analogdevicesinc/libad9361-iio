@@ -13,4 +13,4 @@ else
 	wget http://swdownloads.analog.com/cse/travis_builds/latest_libiio-trusty.deb
 	mv ./latest_libiio-trusty.deb ./latest_libiio.deb
 fi
-apt install ./latest_libiio.deb
+sudo apt install ./latest_libiio.deb
