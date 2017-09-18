@@ -1,0 +1,53 @@
+language: c
+sudo: required
+
+env:
+  global:
+
+matrix:
+  include:
+    - compiler: "clang"
+      os: linux
+      dist: trusty
+      env: LDIST=DO_NOT_DEPLOY
+    - compiler: "gcc"
+      os: linux
+      dist: precise
+      env: LDIST=-precise
+    - compiller: "gcc"
+      os: linux
+      dist: trusty
+      env: LDIST=-trusty
+    - compiler: "gcc"
+      os: osx
+      osx_image: xcode6.4
+      env: LDIST=-osx_10.10
+    - compiler: "gcc"
+      os: osx
+      osx_image: xcode7.3
+      env: LDIST=-osx_10.11
+    - compiler: "gcc"
+      os: osx
+      osx_image: xcode8.1
+      env:
+        - LDIST=-osx_10.12
+        - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
+
+addons:
+  artifacts: true
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./CI/travis/before_install_darwin ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./CI/travis/before_install_linux ; fi
+
+  - mkdir -p $TRAVIS_BUILD_DIR/build
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mkdir -p $TRAVIS_BUILD_DIR/build_tar ; fi
+
+script:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ${TRAVIS_BUILD_DIR}/CI/travis/make_linux; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ${TRAVIS_BUILD_DIR}/CI/travis/make_darwin; fi
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always

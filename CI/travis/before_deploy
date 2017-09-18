@@ -1,0 +1,85 @@
+#!/bin/sh
+
+cd $TRAVIS_BUILD_DIR
+
+check_file()
+{
+temp=$(find ./build* -maxdepth 1 -name "*.$1")
+if [ "$(echo ${temp} | wc -w)" -gt "1"  ] ; then
+	echo "I am confused - more than 2 $1 files"
+	echo $temp
+	exit
+fi
+}
+
+check_file deb
+if [ -n "${temp}" ] ; then
+	export RELEASE_PKG_FILE_DEB=${temp}
+	export TARGET_DEB=$(echo ${RELEASE_PKG_FILE_DEB} | \
+		sed -e 's:^./.*/::' -e 's:.deb$::')${LDIST}.deb
+	echo "deploying $RELEASE_PKG_FILE_DEB to nightly $TARGET_DEB"
+	ls -lh ${RELEASE_PKG_FILE_DEB}
+else
+	echo "Skipping deployment of debian package"
+fi
+
+check_file rpm
+if [ -n "${temp}" ] ; then
+	export RELEASE_PKG_FILE_RPM=${temp}
+	export TARGET_RPM=$(echo ${RELEASE_PKG_FILE_RPM} | \
+		sed -e 's:^./.*/::' -e 's:.rpm$::')${LDIST}.rpm
+	echo "deploying $RELEASE_PKG_FILE_RPM to nightly $TARGET_RPM"
+	ls -lh ${RELEASE_PKG_FILE_RPM}
+else
+	echo "Skipping deployment of rpm package"
+fi
+
+check_file tar.gz
+if [  -n "${temp}"  ] ; then
+	export RELEASE_PKG_FILE_TGZ=${temp}
+
+	# Add the MATLAB bindings into the tar file
+	(
+		cd $(dirname ${RELEASE_PKG_FILE_TGZ})
+
+		mkdir tarball_fixup && cd tarball_fixup
+
+		if [ "$TRAVIS_OS_NAME" = "osx" ] ; then
+			tar --strip-components=1 -xzf ${TRAVIS_BUILD_DIR}/${RELEASE_PKG_FILE_TGZ}
+		else
+			tar -xzf ${TRAVIS_BUILD_DIR}/${RELEASE_PKG_FILE_TGZ}
+		fi
+
+		mkdir -p usr/include usr/lib/matlab/iio
+		cp ${TRAVIS_BUILD_DIR}/bindings/matlab/iio-wrapper.h usr/include/
+		cp ${TRAVIS_BUILD_DIR}/bindings/matlab/*.m usr/lib/matlab/iio/
+
+		if [ "$TRAVIS_OS_NAME" = "osx" ] ; then
+			ln -s /Library/Frameworks/iio.framework/iio usr/lib/libiio.dylib
+			ln -s /Library/Frameworks/iio.framework/Headers/iio.h usr/include/iio.h
+			cp /usr/local/lib/libusb-1.0.dylib usr/lib/
+			tar -czf ${TRAVIS_BUILD_DIR}/${RELEASE_PKG_FILE_TGZ} usr Library
+		else
+			tar -czf ${TRAVIS_BUILD_DIR}/${RELEASE_PKG_FILE_TGZ} usr lib
+		fi
+	)
+
+	export TARGET_TGZ=$(echo ${RELEASE_PKG_FILE_TGZ} | \
+		sed -e 's:^./.*/::' -e 's:.tar.gz$::')${LDIST}.tar.gz;
+	echo "deploying $RELEASE_PKG_FILE_TGZ to $TARGET_TGZ"
+	ls -lh ${RELEASE_PKG_FILE_TGZ}
+else
+	echo "Skipping deployment of tarball"
+fi
+
+check_file pkg
+if [ -n "${temp}" ] ; then
+	export RELEASE_PKG_FILE_PKG=${temp}
+	export TARGET_PKG=$(echo ${RELEASE_PKG_FILE_PKG} | \
+		sed -e 's:^./.*/::' -e 's:.pkg$::')${LDIST}.pkg
+	echo "deploying $RELEASE_PKG_FILE_PKG to nightly $TARGET_PKG"
+	ls -lh ${RELEASE_PKG_FILE_PKG}
+else
+	echo "Skipping deployment of OS X package"
+fi
+

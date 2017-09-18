@@ -1,0 +1,16 @@
+#!/bin/sh
+
+sudo apt-get -qq update
+sudo apt-get install -y cmake doxygen libaio-dev libavahi-client-dev libavahi-common-dev libusb-1.0-0-dev libxml2-dev rpm tar bzip2 gzip
+if [ `sudo apt-cache search libserialport-dev | wc -l` -gt 0 ] ; then
+	sudo apt-get install -y libserialport-dev
+fi
+
+if [ `lsb_release -da 2>&1 | grep -i precise | wc -l` -gt 0 ] ; then
+	wget http://swdownloads.analog.com/cse/travis_builds/latest_libiio-precise.deb
+	mv ./latest_libiio-precise.deb ./latest_libiio.deb
+else
+	wget http://swdownloads.analog.com/cse/travis_builds/latest_libiio-trusty.deb
+	mv ./latest_libiio-trusty.deb ./latest_libiio.deb
+fi
+sudo apt install ./latest_libiio.deb

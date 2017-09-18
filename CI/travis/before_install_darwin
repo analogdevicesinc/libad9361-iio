@@ -1,0 +1,15 @@
+#!/bin/sh
+
+brew update
+if ! brew ls --version cmake &>/dev/null; then
+	brew install cmake
+else
+	brew upgrade cmake
+fi
+brew install doxygen
+brew install --build-from-source libusb
+brew install libxml2
+
+wget http://swdownloads.analog.com/cse/travis_builds/latest_libiio-osx_10.10.pkg
+wget http://swdownloads.analog.com/cse/travis_builds/latest_libiio-osx_10.11.pkg
+wget http://swdownloads.analog.com/cse/travis_builds/latest_libiio-osx_10.12.pkg
