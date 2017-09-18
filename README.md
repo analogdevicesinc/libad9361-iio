@@ -1,13 +1,14 @@
 # libad9361-iio
 
-This is a simple library used for userspace, which manages multi-chip sync, on platforms (FMCOMMS5) where multiple AD9361 devices are used.
+This is a simple library used for userspace, which manages multi-chip sync,
+on platforms (FMCOMMS5) where multiple AD9361 devices are used.
 
 ## Building & Installing
 
 should be a quick matter of `cmake`, then `make`, then `make install`:
 
 ```
-rgetz@pinky:~/libad9361-iio$ cmake ./CMakeLists.txt 
+rgetz@pinky:~/libad9361-iio$ cmake ./CMakeLists.txt
 -- The C compiler identification is GNU 4.7.2
 -- Check for working C compiler: /usr/bin/gcc
 -- Check for working C compiler: /usr/bin/gcc -- works
