@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "ad9361.h"
 #include <stdlib.h>
+#include <stdint.h>
 
 int check_result(short *taps)
 {
@@ -13,7 +14,8 @@ int check_result(short *taps)
 
   fp = fopen("correct_taps.txt", "r");
 
-  uint k = 0;
+  uint8_t k = 0;
+
   while(fgets(buffer, 255, (FILE*) fp)) {
       int tap = atoi(buffer);
       printf("|%i|%i|\n", tap, taps[k]);
