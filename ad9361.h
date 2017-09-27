@@ -78,6 +78,8 @@ __api int ad9361_get_trx_fir_enable(struct iio_device *dev, int *enable);
 
 __api void ad9361_generate_fir_taps(struct filter_design_parameters *parameters, short *taps);
 
+__api int ad9361_fmcomms5_phase_sync(struct iio_context *ctx, long long sample_rate, long long lo);
+
 #ifdef __cplusplus
 }
 #endif
