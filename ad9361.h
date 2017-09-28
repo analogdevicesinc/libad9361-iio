@@ -76,7 +76,9 @@ __api int ad9361_set_trx_fir_enable(struct iio_device *dev, int enable);
 
 __api int ad9361_get_trx_fir_enable(struct iio_device *dev, int *enable);
 
-__api void ad9361_generate_fir_taps(struct filter_design_parameters *parameters, short *taps);
+__api void ad9361_generate_fir_taps(struct filter_design_parameters *parameters, short *taps, int *num_taps);
+
+__api int ad9361_filter_config_from_rate(struct filter_design_parameters *fdp,	unsigned long rate, int TX);
 
 #ifdef __cplusplus
 }

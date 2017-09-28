@@ -18,7 +18,7 @@ int check_result(short *taps)
 
   while(fgets(buffer, 255, (FILE*) fp)) {
       int tap = atoi(buffer);
-      printf("|%i|%i|\n", tap, taps[k]);
+      // printf("|%i|%i|\n", tap, taps[k]);
       if (tap != taps[k])
       {
         fclose(fp);
@@ -26,7 +26,6 @@ int check_result(short *taps)
       }
       k++;
   }
-
   fclose(fp);
   return 0;
 }
@@ -43,10 +42,8 @@ int main(void)
   fdp.FIR = 2;
   fdp.HB1 = 2;
   fdp.DAC_div = 1;
-
   fdp.Type = "Lowpass";
   fdp.RxTx = "Tx";
-
   fdp.RFbw = 4236204;
   fdp.converter_rate = 122880000;
   fdp.PLL_rate = 983040000;
@@ -60,15 +57,11 @@ int main(void)
   fdp.phEQ = -1;
   fdp.HB2 = 2;
   fdp.HB3 = 3;
-
   // Initialize taps
   short outputTaps[128];
-
+  int num_taps;
   // Call designer
-  ad9361_generate_fir_taps(&fdp, outputTaps);
-  printf("Generated Taps\n");
-
+  ad9361_generate_fir_taps(&fdp, outputTaps, &num_taps);
   // Check
   return check_result(outputTaps);
-
 }
