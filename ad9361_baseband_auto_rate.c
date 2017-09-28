@@ -82,9 +82,23 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 	struct iio_channel *chan;
 	long long current_rate;
 	int dec, taps, ret, i, enable, len = 0;
-	int16_t *fir;
 	char *buf;
 
+#ifdef FilterDesigner
+	struct filter_design_parameters fdp;
+	// TX
+	ret = ad9361_filter_config_from_rate(&fdp, rate, true);
+	if (ret<0){return ret;}
+	int16_t *firTX = (int16_t *)malloc(sizeof(int16_t)*128);
+	ad9361_generate_fir_taps(&fdp, firTX, &taps);
+	// RX
+	ret = ad9361_filter_config_from_rate(&fdp, rate, false);
+	if (ret<0){return ret;}
+	int16_t *firRX = (int16_t *)malloc(sizeof(int16_t)*128);
+	ad9361_generate_fir_taps(&fdp, firRX, &taps);
+	dec = fdp.FIR;
+#else
+	int16_t *fir;
 	if (rate <= 20000000UL) {
 		dec = 4;
 		taps = 128;
@@ -102,6 +116,7 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 		fir = fir_64_2;
 		taps = 64;
 	}
+#endif
 
 	chan = iio_device_find_channel(dev, "voltage0", true);
 	if (chan == NULL)
@@ -131,8 +146,13 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 	len += snprintf(buf + len, FIR_BUF_SIZE - len, "RX 3 GAIN -6 DEC %d\n", dec);
 	len += snprintf(buf + len, FIR_BUF_SIZE - len, "TX 3 GAIN 0 INT %d\n", dec);
 
+#ifdef FilterDesigner
+  for (i = 0; i < taps; i++)
+		len += snprintf(buf + len, FIR_BUF_SIZE - len, "%d,%d\n", firTX[i], firRX[i]);
+#else
 	for (i = 0; i < taps; i++)
 		len += snprintf(buf + len, FIR_BUF_SIZE - len, "%d,%d\n", fir[i], fir[i]);
+#endif
 
 	len += snprintf(buf + len, FIR_BUF_SIZE - len, "\n");
 
