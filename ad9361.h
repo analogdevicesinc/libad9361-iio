@@ -38,6 +38,7 @@ extern "C" {
 struct iio_context;
 struct iio_device;
 
+#ifdef FilterDesigner
 struct filter_design_parameters {
   double Rdata;
   double Fpass;
@@ -63,6 +64,11 @@ struct filter_design_parameters {
   double HB3;
 };
 
+__api void ad9361_generate_fir_taps(struct filter_design_parameters *parameters, short *taps, int *num_taps);
+
+__api int ad9361_filter_config_from_rate(struct filter_design_parameters *fdp,	unsigned long rate, int TX);
+#endif
+
 __api int ad9361_multichip_sync(struct iio_device *master,
 		struct iio_device **slaves, unsigned int num_slaves,
 		unsigned int flags);
@@ -75,10 +81,6 @@ __api int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate);
 __api int ad9361_set_trx_fir_enable(struct iio_device *dev, int enable);
 
 __api int ad9361_get_trx_fir_enable(struct iio_device *dev, int *enable);
-
-__api void ad9361_generate_fir_taps(struct filter_design_parameters *parameters, short *taps, int *num_taps);
-
-__api int ad9361_filter_config_from_rate(struct filter_design_parameters *fdp,	unsigned long rate, int TX);
 
 #ifdef __cplusplus
 }
