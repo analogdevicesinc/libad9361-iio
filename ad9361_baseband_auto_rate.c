@@ -96,7 +96,12 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 	if (ret<0){return ret;}
 	int16_t *firRX = (int16_t *)malloc(sizeof(int16_t)*128);
 	ad9361_generate_fir_taps(&fdp, firRX, &taps);
-	dec = fdp.FIR;
+	dec = (int)fdp.FIR;
+	chan = iio_device_find_channel(dev, "voltage0", true);
+	iio_channel_attr_write_longlong(chan, "rf_bandwidth", (unsigned long)fdp.RFbw);
+	chan = iio_device_find_channel(dev, "voltage0", false);
+	iio_channel_attr_write_longlong(chan, "rf_bandwidth", (unsigned long)fdp.RFbw);
+
 #else
 	int16_t *fir;
 	if (rate <= 20000000UL) {
