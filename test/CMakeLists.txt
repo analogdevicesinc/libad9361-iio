@@ -1,0 +1,7 @@
+add_executable(FilterDesignerTest filter_designer_test.c)
+target_link_libraries(FilterDesignerTest ad9361)
+add_test(NAME FilterDesignerTest COMMAND FilterDesignerTest WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_executable(BasebandAutoRateTest bb_rate_test.c)
+target_link_libraries(BasebandAutoRateTest ad9361)
+add_test(NAME BasebandAutoRateTest COMMAND BasebandAutoRateTest WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})

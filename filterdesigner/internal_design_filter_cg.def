@@ -1,0 +1,8 @@
+DLL {
+	global:
+		internal_design_filter_cg;
+		internal_design_filter_cg_initialize;
+		internal_design_filter_cg_terminate;
+	local:
+		*;
+};
