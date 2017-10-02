@@ -41,7 +41,7 @@
 #define DEV_PHY_NAME "ad9361-phy"
 #define DEV_PHY_SLAVE_NAME "ad9361-phy-B"
 
-#define DDS_SCALE 0.02
+#define DDS_SCALE 0.2
 #define SAMPLES 32768
 #define TOLERANCE 0.01 // Degrees
 #define CALIBRATE_TRIES 30
