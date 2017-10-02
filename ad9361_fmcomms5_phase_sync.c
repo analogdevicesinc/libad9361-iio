@@ -104,23 +104,15 @@ void dds_tx_phase_rotation(struct iio_device *dev, double val) {
   }
 }
 
-double unwrap(double x) {
-  x = fmod(x + M_PI, M_2PI);
-  if (x < 0)
-    x += M_2PI;
-  return x - M_PI;
-}
-
-double calculate_phase(int16_t *chan0_r, int16_t *chan0_i, int16_t *chan1_r,
-                       int16_t *chan1_i, int samples) {
-  double angle_wrapped, angle = 0, prev = 0;
+double calculate_phase(int16_t *a, int16_t *b, int16_t *c, int16_t *d,
+                       int samples) {
   int k = 0;
+  double real = 0, imag = 0;
   for (; k < samples; k++) {
-    angle_wrapped = atan2((double)chan1_i[k], (double)chan1_r[k]) -
-                    atan2((double)chan0_i[k], (double)chan0_r[k]);
-    angle += (prev + unwrap(angle_wrapped - prev));
+    real += (double)(a[k] * c[k] + b[k] * d[k]);
+    imag += (double)(a[k] * d[k] - b[k] * c[k]);
   }
-  return angle / k;
+  return atan2(imag, real);
 }
 
 void near_end_loopback_ctrl(unsigned channel, bool enable) {
