@@ -1,0 +1,98 @@
+language: c
+sudo: required
+
+env:
+  global:
+  # SSHHOST
+  - secure: "Izx3rvvdDSlv26z0OLsyHj6uN5YoOz/Deg0bLx8IHRqPcRULJlQLqXOaeX41DmsltFq1X8AbVW2TmqzaLHnsGfM76IyqIWVLANC0TcevKyonDujkiuWoFDrYciKJyLS2aN4SgnG4jyp9977Z0Vc5EL9D61QDlh3LUU+x3+CYxQIWWpMoOsfyZUw8FU/b/KmjqE7zvtgN/RMAeuDIn7jLP9Yg9pFB8KnOFyWHSfT5cXux4WSYqwQasYf68+3JyuJSebS3kK/FgCJOODMs+xed9BjeP8QinhmXFdy+epIFXLARUKZrLzj9+94PZ8n0m0TV39yqFfk96qRjM4bJNwCqfUU6iaSsuLNlSU2HbQeqSDW//BsXFL3EicM+7xgYnx/luboLQZgqJYQAPk3ihaH456Gl9PNF6h4zv8vXsHE+nHDZvubwsgNdTk25YP+3GglQZdRHBhsdBSASGYc0CxYwPHsBi4/QD0RQ2k0W4D1dwJXXRXxTqoSfveP8QIsQVfDwfAhWLG9QMjVwp1dMl+5wIp25E4v1C2I2rQJVuc7pjPb/av34ltWBlQwcXkxUl3/E3qDrO4b5gS/UD47bRCCqYf9GLniXVBm7z+ebA7tW4G/q/RJvb3G7q59nAJXSwJOvB5Kt3pnfeCmfgv6wGeeNizQer+AjHkQy1uNQBBSI8Jw="
+  # SSHUSER
+  - secure: "qNOraig2HbEH9MfIzwiXTZ9+DIKN1RpXaIEurkGFr96UNeeNPqsyPBtzHqXJvXRtq0Wta5S5VI3t8dWe4kqfkYhctYqFJ0lHWRanYd+NXBSHqFWndU3Q+wy5p7NZ4st/jFaHyiVPkpTGv5T8IPsCahgaCt3wYVLloSrTytBXc9iSn3T71JhFBj47zqEa+E8MSNZlNaqh7BnxI6lVhpMrgft7dOIaByFkieeqFFsOKU4D79/XwCcpo66pmIo5OenfRHCtmp2xYMHXbUrKGDaZMhnoc9VBDsaHsMFiyEKWukHwxmFjt2k60AqkqT8BuBf2uyT/20/JQw4W9iDwedPmhz3mHmHh6cc2EMwrBrD3sIpnMuxabrUwfuwfTFgWHd7IkEw9WGwM1DMsWlxxi5u8fF2xMA+4KYcuZIkHPjl5nQ+RQhd0Y9N/+HrVrf88z0cw9lIlobf0MuZvPfxLv2hJbHaNZsOet5d1W9DsZWS0+V6BxNRjEpJci5xKZpgPaEyY+p+kKz/Q11PW+A1VGSVs+aRUHJb0tPm/MrySF8D3uClHKiadFy1mwvvOHUyHuOtiTbb0LGbnEoyySTjLDwsSJ2ybhbqPCbnFNclDWX7Jv20dpY9ZuWVdt/Z4PCmk7/vKw6eyfI0xsGBQQJcizKICQei+Zh8UeHCdU1GOMFiy26Y="
+  # DEPLOY_TO directory
+  - secure: "KejjF6Zyhd37TCFfn08Htco7LYkKc+yEwMzgSEUF6kjeoMe0VYlNCDqlAvQRdGXONZg7cz83h298gJfbvDkKdMm32e73NPfXcCdQBWTuWYx8xzM63WuKrYjM+oFyAxJ2hgOOaK14ctSQtAcnpaZRm12aIpbeRgwpe2oZEBOwwYi4TdwMvrG7WyxhZniqfFQYYjT/8xAgzkmREAJRxp/PBp1+Xe2vkTHZUMHxOM3JAiganSfvgnPA7imY/wu5si9qcwNw0bo+0ISDNXk3mV9p5dlB5Cudjfme8kMjYjqUrBcQ9p0heODZXRCfwC+kdsg4oLAYdDB5nOvPX3b18liWl6ZZ/qaiaq6eLro9IgJgrALFBpElr6oVlMaAil8yKIokM9Pfga1MhdZLLZEuziK2B1T34IS7/5PEy/l9+9cFezpCj0e2Mdpa6FbcrjyX1uPK/U2Hy9tKdVzuLPBS4bQgrKah+Xc2ml3EU+SEhz3UGSi2d+9GZQ0G2n1sVcawVOyzcdqHO6Y53WQ2/UVwJ9TsnLPTWUHLplGgRmAXbTtEhQDDYeffwVd7nZfTQlEug00DlrSoJoSHra6s7oEYLC2lrJoyH82/nkjvCupqxZM9D1V82sUsYAgC4KVzZNg0VROycbBefpgIrvw01eSakay1vOVNsrxptcNXjK9/wiuFbOI="
+  - BRANCH_PULL=$TRAVIS_PULL_REQUEST_BRANCH
+  - PULL=$TRAVIS_PULL_REQUEST
+  - BRANCH=$TRAVIS_BRANCH
+
+matrix:
+  include:
+    - compiler: "clang"
+      os: linux
+      dist: trusty
+      env: LDIST=DO_NOT_DEPLOY
+    - compiler: "gcc"
+      os: linux
+      dist: precise
+      env: LDIST=-precise
+    - compiller: "gcc"
+      os: linux
+      dist: trusty
+      env: LDIST=-trusty
+    - compiler: "gcc"
+      os: osx
+      osx_image: xcode6.4
+      env: LDIST=-osx_10.10
+    - compiler: "gcc"
+      os: osx
+      osx_image: xcode7.3
+      env: LDIST=-osx_10.11
+    - compiler: "gcc"
+      os: osx
+      osx_image: xcode8.1
+      env:
+        - LDIST=-osx_10.12
+        - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
+
+addons:
+  artifacts: true
+  ssh_known_hosts:
+    secure: "HzU57pX/0iwRgPCnrP7QQ92XkrySsx/jjCLEqNAyWuQBYTMl2vVXnys7dclUp841CWRHv3TQXT0Jem9mZ9oZbzMR8Nxo2mjJyiH06BMcBYmTiaGxzSOh0XjiYTm3ZZvH+SQYdiXNBbPIY7B1ekC6Vw/ZQ8N4U1SiMh5W38+jXgqTYefB2h8GjmYB8f3DP0WE97ITaLG0/dUF+vLkuyJaLHND2j0e+cjjir8ah8eioK67+iX1dnDnN4U6su7tdVcqHGdgS3sSjvFl8+q9R9IFuT2RuQLd05Fu5gehV5ruJP0GzjJ8eU1fhkFSiWPenBGgkDRsv7ORmtL9ZmZKjtXIxhIlgVBdH8Rb9qtDCbKf6tSSrOU14TkN1FR8uPw68xhlnptS31AwB+OisWw1ULRJBEWRTABw+avUloDhgFMgUtFnSukjMlst16Qwq5bGKn5yQ6KBJU8BP/uX6ptGQemTokEe92TWJq6TS6kNpb8rA537gaMp8VQ2zk8Nhw6LovA5LbuKB73rcjuQsOto2/DF2GhJkBQ0peVzu1vsAFD5WmMTPzQziTLiTyI+gQktYJSoV8ERAvxqeDptqUYMrRMg7VtuV5fNEQ2Q5fVMrcqB9NGkeUjfIo7GHP0tBEzLCNjaRNYrMxEqKYW8OQSfINA3b3gLZuwLepHW71j2xqnFlpQ="
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./CI/travis/before_install_darwin ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./CI/travis/before_install_linux ; fi
+
+  - mkdir -p $TRAVIS_BUILD_DIR/build
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then mkdir -p $TRAVIS_BUILD_DIR/build_tar ; fi
+
+script:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ${TRAVIS_BUILD_DIR}/CI/travis/make_linux; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ${TRAVIS_BUILD_DIR}/CI/travis/make_darwin; fi
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
+
+before_deploy:
+  - . ${TRAVIS_BUILD_DIR}/CI/travis/before_deploy
+  - openssl aes-256-cbc -K $encrypted_ca7c55addc40_key -iv $encrypted_ca7c55addc40_iv -in ${TRAVIS_BUILD_DIR}/CI/travis/deploy.rsa.enc -out /tmp/deploy.rsa -d
+  - eval "$(ssh-agent -s)"
+  - chmod 600 /tmp/deploy.rsa
+  - ssh-add /tmp/deploy.rsa
+deploy:
+  - provider: releases
+  - api_key:
+      secure: "ocDkFUpRYim0o3kEzO5It8mTjg4FnVYT+KaXoUtZA6r9x6VZteSFvimELIV/WePGnNLOavlXPgRb+cXmJiYSkVkFqrrwRkHgYvTapjPn/LBh0xDQZi9SrvTj/ICW3tMu7Esxqa7P2snhLf7P4XkLMySxeooKe4BoV5Uy8WUy+IE0HCkCxaiokUFEg7UVVDLy5ahTyVcdV4su44E+URCBDTk+UvgKJ3VDjNVDZp8uea7RBRHVfSucb/12AeJr+PkaxrbsqtI+GHMohvmLVBmALkP+WtLLMklxPofEnBW/UV6iU+hvEd6dROqG9T52hDQpcBqdJlqx4C3mHkPpt7lxSFTcyyTKEqRKZA0sBexadMZ3fnS2gNXizstuDAxIuCowc+nOjk1WNAN8z4ADxk5t4ct8U1I7CTA0TgkTzkRizeelTTZCbt8kHwh4oTalBt/5rIg3Tk8+YgrwvuEIAmRwPIORob+xbYGK9GCKwmdfpSuVhcLsgb43eh96ZXQ2bBn30I3pebCMm9xa+1c8pStBlMYmJPJv0Y6m5uNUJAvOImWNoZlyA967Df8b3pbODqhFkUN3OgDyR3uYRxBCohZgmguOvHsqtkM66/QgIMy2vQxhcnzc78dMT/BfLJ13RuN6+9DiGUMuGCzsVgQ7MNQu8MAkUV+fiEdGz6yxskiwpAQ="
+    file:
+      - "${RELEASE_PKG_FILE_DEB}"
+      - "${RELEASE_PKG_FILE_RPM}"
+      - "${RELEASE_PKG_FILE_TGZ}"
+    skip_cleanup: true
+    on:
+      repo: analogdevicesinc/libad9361-iio
+      tags: true
+      condition: "($CC = gcc) && ($TRAVIS_OS_NAME = linux)"
+  - provider: script
+    skip_cleanup: true
+    script:
+      - ${TRAVIS_BUILD_DIR}/CI/travis/deploy
+    on:
+      condition: "($CC = gcc) && ($TRAVIS_OS_NAME = linux)"
+      all_branches: true
+  - provider: script
+    skip_cleanup: true
+    script:
+      - ${TRAVIS_BUILD_DIR}/CI/travis/deploy
+    on:
+      condition: "$TRAVIS_OS_NAME = osx"
+      all_branches: true

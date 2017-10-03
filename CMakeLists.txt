@@ -15,12 +15,35 @@ project(ad9361 C)
 
 set(LIBAD9361_VERSION_MAJOR 0)
 set(LIBAD9361_VERSION_MINOR 1)
-set(LIBAD9361_VERSION ${LIBAD9361_VERSION_MAJOR}.${LIBAD9361_VERSION_MINOR})
+set(VERSION ${LIBAD9361_VERSION_MAJOR}.${LIBAD9361_VERSION_MINOR})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	option(OSX_PACKAGE "Create a OSX package" ON)
 	set(CMAKE_MACOSX_RPATH ON)
 	set(SKIP_INSTALL_ALL ${OSX_PACKAGE})
+endif()
+
+include(FindGit OPTIONAL)
+if (GIT_FOUND)
+	execute_process(
+		COMMAND ${GIT_EXECUTABLE} rev-parse --show-toplevel
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		OUTPUT_VARIABLE LIBAD9361_GIT_REPO
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+	)
+
+if (${LIBAD9361_GIT_REPO} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+		execute_process(
+			COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+			WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+			OUTPUT_VARIABLE LIBAD9361_VERSION_GIT
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+		)
+	endif()
+endif()
+
+if (NOT LIBAD9361_VERSION_GIT)
+	set(LIBAD9361_VERSION_GIT v${VERSION})
 endif()
 
 set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries")
@@ -42,7 +65,15 @@ set(LIBAD9361_HEADERS ad9361.h)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LIBIIO_INCLUDEDIR})
 add_library(ad9361 ad9361_multichip_sync.c ad9361_baseband_auto_rate.c ${LIBAD9361_HEADERS})
-set_target_properties(ad9361 PROPERTIES VERSION ${LIBAD9361_VERSION} SOVERSION ${LIBAD9361_VERSION_MAJOR} FRAMEWORK TRUE PUBLIC_HEADER "${LIBAD9361_HEADERS}")
+set_target_properties(ad9361 PROPERTIES
+	VERSION ${VERSION}
+	SOVERSION ${LIBAD9361_VERSION_MAJOR}
+	FRAMEWORK TRUE
+	PUBLIC_HEADER ${LIBAD9361_HEADERS}
+	C_STANDARD 99
+	C_STANDARD_REQUIRED ON
+	C_EXTENSIONS OFF
+)
 target_link_libraries(ad9361 LINK_PRIVATE ${LIBIIO_LIBRARIES})
 
 if (MSVC)
@@ -64,8 +95,8 @@ endif()
 
 # Create an installer if compiling for OSX
 if(OSX_PACKAGE)
-	set(LIBAD9361_PKG ${CMAKE_CURRENT_BINARY_DIR}/libad9361-${LIBAD9361_VERSION}.pkg)
-	set(LIBAD9361_TEMP_PKG ${CMAKE_CURRENT_BINARY_DIR}/libad6361-${LIBAD9361_VERSION}-temp.pkg)
+	set(LIBAD9361_PKG ${CMAKE_CURRENT_BINARY_DIR}/libad9361-${VERSION}.pkg)
+	set(LIBAD9361_TEMP_PKG ${CMAKE_CURRENT_BINARY_DIR}/libad9361-${VERSION}-temp.pkg)
 	set(LIBAD9361_DISTRIBUTION_XML ${CMAKE_CURRENT_BINARY_DIR}/Distribution.xml)
 	set(LIBAD9361_FRAMEWORK_DIR ${CMAKE_CURRENT_BINARY_DIR}/ad9361.framework)
 	configure_file(Distribution.xml.cmakein ${LIBAD9361_DISTRIBUTION_XML} @ONLY)
@@ -83,7 +114,7 @@ if(OSX_PACKAGE)
 	add_custom_command(OUTPUT ${LIBAD9361_PKG}
 		COMMAND ${PKGBUILD_EXECUTABLE}
 			--component ${LIBAD9361_FRAMEWORK_DIR}
-			--identifier com.adi.ad9361 --version ${LIBAD9361_VERSION}
+			--identifier com.adi.ad9361 --version ${VERSION}
 			--install-location /Library/Frameworks ${LIBAD9361_TEMP_PKG}
 		COMMAND ${PRODUCTBUILD_EXECUTABLE}
 			--distribution ${LIBAD9361_DISTRIBUTION_XML} ${LIBAD9361_PKG}
@@ -97,5 +128,19 @@ if(OSX_PACKAGE)
 		install(CODE "execute_process(COMMAND /usr/sbin/installer -pkg ${LIBAD9361_PKG} -target /)")
 	else()
 		message(WARNING "Missing pkgbuild or productbuild: OSX installer won't be created.")
+	endif()
+else()
+	# Support creating some basic binpkgs via `make package`.
+	# Disabled if OSX_PACKAGE is enabled, as tarballs would
+	#   end up empty otherwise.
+	option(ENABLE_PACKAGING "Create .deb/.rpm or .tar.gz packages via 'make package'" ON)
+
+	if(ENABLE_PACKAGING)
+		if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+			include(cmake/DarwinPackaging.cmake)
+		endif()
+		if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+			include(cmake/LinuxPackaging.cmake)
+		endif()
 	endif()
 endif()
