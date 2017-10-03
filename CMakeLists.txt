@@ -18,6 +18,7 @@ set(LIBAD9361_VERSION_MINOR 1)
 set(LIBAD9361_VERSION ${LIBAD9361_VERSION_MAJOR}.${LIBAD9361_VERSION_MINOR})
 
 option(FilterDesigner "FilterDesigner" ON)
+option(Tools "Build tools" ON)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	option(OSX_PACKAGE "Create a OSX package" ON)
@@ -74,6 +75,10 @@ if(FilterDesigner)
 else()
 	include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LIBIIO_INCLUDEDIR})
 	add_library(ad9361 ad9361_multichip_sync.c ad9361_baseband_auto_rate.c ad9361_fmcomms5_phase_sync.c ${LIBAD9361_HEADERS})
+endif()
+
+if(Tools)
+	add_subdirectory(tools)
 endif()
 
 set_target_properties(ad9361 PROPERTIES VERSION ${LIBAD9361_VERSION} SOVERSION ${LIBAD9361_VERSION_MAJOR} FRAMEWORK TRUE PUBLIC_HEADER "${LIBAD9361_HEADERS}")
