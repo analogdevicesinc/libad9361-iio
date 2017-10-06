@@ -77,30 +77,75 @@ int ad9361_get_trx_fir_enable(struct iio_device *dev, int *enable)
 	return ret;
 }
 
+int ad9361_set_trx_filter_fir_config(struct iio_device *dev, struct ad9361_bb_conf *rx, struct ad9361_bb_conf *tx)
+{
+	int ret, i, len = 0;
+	char *buf;
+
+	if (rx == NULL || tx == NULL)
+		return -EINVAL;
+
+	if (!rx->num_taps && (rx->num_taps != tx->num_taps))
+		return -EINVAL;
+
+	buf = malloc(FIR_BUF_SIZE);
+	if (!buf)
+		return -ENOMEM;
+
+	len += snprintf(buf + len, FIR_BUF_SIZE - len, "RX 3 GAIN %d DEC %d\n", rx->gain, rx->decimation);
+	len += snprintf(buf + len, FIR_BUF_SIZE - len, "TX 3 GAIN %d INT %d\n", tx->gain, tx->decimation);
+
+	if (rx->chain_rates && tx->chain_rates && (rx->chain_rates[0] > 0) && (rx->chain_rates[0] == tx->chain_rates[0])) {
+		len += snprintf(buf + len, FIR_BUF_SIZE - len, "RRX %lu %lu %lu %lu %lu %lu\n",
+				rx->chain_rates[0], rx->chain_rates[1], rx->chain_rates[2],
+				rx->chain_rates[3], rx->chain_rates[4], rx->chain_rates[5]);
+		len += snprintf(buf + len, FIR_BUF_SIZE - len, "RTX %lu %lu %lu %lu %lu %lu\n",
+				tx->chain_rates[0], tx->chain_rates[1], tx->chain_rates[2],
+				tx->chain_rates[3], tx->chain_rates[4], tx->chain_rates[5]);
+	}
+
+	if ((rx->rf_bandwidth > 0) && (tx->rf_bandwidth > 0)) {
+		len += snprintf(buf + len, FIR_BUF_SIZE - len, "BWRX %lu\n", rx->rf_bandwidth);
+		len += snprintf(buf + len, FIR_BUF_SIZE - len, "BWTX %lu\n", tx->rf_bandwidth);
+	}
+
+	for (i = 0; i < rx->num_taps; i++)
+		len += snprintf(buf + len, FIR_BUF_SIZE - len, "%d,%d\n", tx->taps[i], rx->taps[i]);
+
+	len += snprintf(buf + len, FIR_BUF_SIZE - len, "\n");
+
+	fprintf(stderr, "%s", buf); /* FIXME: DEBUG */
+
+	ret = iio_device_attr_write_raw(dev, "filter_fir_config", buf, len);
+	free (buf);
+
+	return ret;
+}
+
+#if 0
 int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 {
 	struct iio_channel *chan;
 	long long current_rate;
-	int dec, taps, ret, i, enable, len = 0;
-	int16_t *fir;
-	char *buf;
+	int ret, enable;
+	struct ad9361_bb_conf bb_conf = { 0 };
 
 	if (rate <= 20000000UL) {
-		dec = 4;
-		taps = 128;
-		fir = fir_128_4;
+		bb_conf.decimation = 4;
+		bb_conf.taps = fir_128_4;
+		bb_conf.num_taps = 128;
 	} else if (rate <= 40000000UL) {
-		dec = 2;
-		fir = fir_128_2;
-		taps = 128;
+		bb_conf.decimation = 2;
+		bb_conf.taps = fir_128_2;
+		bb_conf.num_taps = 128;
 	} else if (rate <= 53333333UL) {
-		dec = 2;
-		fir = fir_96_2;
-		taps = 96;
+		bb_conf.decimation = 2;
+		bb_conf.taps = fir_96_2;
+		bb_conf.num_taps = 96;
 	} else {
-		dec = 2;
-		fir = fir_64_2;
-		taps = 64;
+		bb_conf.decimation = 2;
+		bb_conf.taps = fir_64_2;
+		bb_conf.num_taps = 64;
 	}
 
 	chan = iio_device_find_channel(dev, "voltage0", true);
@@ -124,23 +169,12 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 			return ret;
 	}
 
-	buf = malloc(FIR_BUF_SIZE);
-	if (!buf)
-		return -ENOMEM;
-
-	len += snprintf(buf + len, FIR_BUF_SIZE - len, "RX 3 GAIN -6 DEC %d\n", dec);
-	len += snprintf(buf + len, FIR_BUF_SIZE - len, "TX 3 GAIN 0 INT %d\n", dec);
-
-	for (i = 0; i < taps; i++)
-		len += snprintf(buf + len, FIR_BUF_SIZE - len, "%d,%d\n", fir[i], fir[i]);
-
-	len += snprintf(buf + len, FIR_BUF_SIZE - len, "\n");
-
-	ret = iio_device_attr_write_raw(dev, "filter_fir_config", buf, len);
-	free (buf);
-
-	if (ret < 0)
+	ret = ad9361_set_trx_filter_fir_config(dev, &bb_conf, &bb_conf);
+	if (ret < 0) {
+		iio_channel_attr_write_longlong(chan, "sampling_frequency", current_rate);
+		ad9361_set_trx_fir_enable(dev, enable);
 		return ret;
+	}
 
 	if (rate <= (25000000 / 12))  {
 		ret = ad9361_set_trx_fir_enable(dev, true);
@@ -157,6 +191,69 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 		if (ret < 0)
 			return ret;
 	}
+
+	return 0;
+}
+#endif
+//int ad9361_set_filter_from_rate(struct iio_device *dev, unsigned long rate)
+int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
+{
+	struct iio_channel *chan;
+	long long current_rate;
+	int ret, enable;
+	struct ad9361_bb_conf bb_rx_conf = { 0 }, bb_tx_conf = { 0 };
+	struct filter_design_parameters fdp;
+	short taps_tx[128], taps_rx[128];
+	unsigned long rates_tx[6], rates_rx[6];
+
+	bb_rx_conf.taps = taps_rx;
+	bb_tx_conf.taps = taps_tx;
+	bb_rx_conf.chain_rates = rates_rx;
+	bb_tx_conf.chain_rates = rates_tx;
+
+	// TX
+	ret = ad9361_filter_config_from_rate(&fdp, rate, true);
+	if (ret < 0)
+		return ret;
+
+	ad9361_generate_fir_taps(&fdp, bb_tx_conf.taps, &bb_tx_conf.num_taps, &bb_tx_conf.gain);
+	bb_tx_conf.rf_bandwidth = fdp.RFbw;
+	bb_tx_conf.decimation = fdp.FIR;
+	bb_tx_conf.chain_rates[5] = rate;
+	bb_tx_conf.chain_rates[4] = bb_tx_conf.chain_rates[5] * fdp.FIR;
+	bb_tx_conf.chain_rates[3] = bb_tx_conf.chain_rates[4] * fdp.HB1;
+	bb_tx_conf.chain_rates[2] = bb_tx_conf.chain_rates[3] * fdp.HB2;
+	bb_tx_conf.chain_rates[1] = bb_tx_conf.chain_rates[2] * fdp.HB3;
+	bb_tx_conf.chain_rates[0] = fdp.PLL_rate;
+
+	ret = ad9361_filter_config_from_rate(&fdp, rate, false);
+	if (ret < 0)
+		return ret;
+
+	ad9361_generate_fir_taps(&fdp, bb_rx_conf.taps, &bb_rx_conf.num_taps, &bb_rx_conf.gain);
+	bb_rx_conf.rf_bandwidth = fdp.RFbw;
+	bb_rx_conf.decimation = fdp.FIR;
+	bb_rx_conf.chain_rates[5] = rate;
+	bb_rx_conf.chain_rates[4] = bb_rx_conf.chain_rates[5] * fdp.FIR;
+	bb_rx_conf.chain_rates[3] = bb_rx_conf.chain_rates[4] * fdp.HB1;
+	bb_rx_conf.chain_rates[2] = bb_rx_conf.chain_rates[3] * fdp.HB2;
+	bb_rx_conf.chain_rates[1] = bb_rx_conf.chain_rates[2] * fdp.HB3;
+	bb_rx_conf.chain_rates[0] = fdp.PLL_rate;
+
+	chan = iio_device_find_channel(dev, "voltage0", true);
+	if (chan == NULL)
+		return -ENODEV;
+
+
+	ret = ad9361_set_trx_fir_enable(dev, false);
+	if (ret < 0)
+		return ret;
+
+	ad9361_set_trx_filter_fir_config(dev, &bb_rx_conf, &bb_tx_conf);
+
+	ret = ad9361_set_trx_fir_enable(dev, true);
+	if (ret < 0)
+		return ret;
 
 	return 0;
 }

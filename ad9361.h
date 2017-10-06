@@ -63,6 +63,16 @@ struct filter_design_parameters {
     double HB3;
 };
 
+struct ad9361_bb_conf {
+	int num_taps;
+	int gain;
+	int decimation;
+	short *taps;
+	unsigned long rate;
+	unsigned long rf_bandwidth;
+	unsigned long *chain_rates;
+};
+
 __api int ad9361_generate_fir_taps(struct filter_design_parameters *parameters,
                                    short *taps, int *num_taps, int *gain);
 
@@ -76,6 +86,10 @@ __api int ad9361_fmcomms5_multichip_sync(
 		struct iio_context *ctx, unsigned int flags);
 
 __api int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate);
+
+__api int ad9361_set_filter_from_rate(struct iio_device *dev, unsigned long rate);
+
+__api int ad9361_set_trx_fir_config(struct iio_device *dev, struct ad9361_bb_conf *rx, struct ad9361_bb_conf *tx);
 
 __api int ad9361_set_trx_fir_enable(struct iio_device *dev, int enable);
 
