@@ -109,8 +109,8 @@ double calculate_phase(int16_t *a, int16_t *b, int16_t *c, int16_t *d,
   int k = 0;
   double real = 0, imag = 0;
   for (; k < samples; k++) {
-    real += (double)(a[k] * c[k] + b[k] * d[k]);
-    imag += (double)(a[k] * d[k] - b[k] * c[k]);
+    real += ((double)a[k] * (double)c[k] + (double)b[k] * (double)d[k]);
+    imag += ((double)a[k] * (double)d[k] - (double)b[k] * (double)c[k]);
   }
   return atan2(imag, real);
 }
@@ -314,6 +314,12 @@ double estimate_phase_diff(double *estimate) {
   read_buffer_data(rxb_chan_real, rxbuf, myData2_i, SAMPLES * sizeof(int16_t));
   read_buffer_data(rxb_chan_imag, rxbuf, myData2_q, SAMPLES * sizeof(int16_t));
 
+  #ifdef _WIN32
+  		Sleep(1);
+  #else
+  		usleep(1000);
+  #endif
+
   *estimate =
       calculate_phase(myData0_i, myData0_q, myData2_i, myData2_q, SAMPLES) *
       180 / M_PI;
@@ -337,7 +343,7 @@ int calibrate_chain(struct iio_device *dev, double scale, double *phase) {
     est *= scale;
 
     streaming_interfaces(false);
-#if (DEBUG > 0)
+#if (DEBUG > 1)
     printf("Phase error: %f\n", est);
 #endif
     if (fabs(est) < TOLERANCE)
@@ -364,7 +370,7 @@ int quad_tracking(bool enable) {
   return 0;
 }
 
-int configure_transceiver(long long bw_hz, long long fs_hz, long long lo_hz) {
+int configure_transceiver(struct iio_device *dev, long long bw_hz, long long fs_hz, long long lo_hz) {
   // Set up channels
   struct iio_channel *chnRX =
       iio_device_find_channel(dev_phy, "voltage0", false);
@@ -373,14 +379,11 @@ int configure_transceiver(long long bw_hz, long long fs_hz, long long lo_hz) {
   if (!(chnRX && chnRX))
     return -ENODEV;
   // Setup remaining channel info
-  iio_channel_attr_write_longlong(chnRX, "rf_bandwidth", bw_hz);
-  iio_channel_attr_write_longlong(chnRX, "sampling_frequency", fs_hz);
-  iio_channel_attr_write_longlong(chnTX, "rf_bandwidth", bw_hz);
-  iio_channel_attr_write_longlong(chnTX, "sampling_frequency", fs_hz);
+  ad9361_set_bb_rate(dev, fs_hz);
   // Configure LO channel
-  chnRX = iio_device_find_channel(dev_phy, "altvoltage0", true);
-  chnTX = iio_device_find_channel(dev_phy, "altvoltage1", true);
-  if (!(chnRX && chnRX))
+  chnRX = iio_device_find_channel(dev, "altvoltage0", true);
+  chnTX = iio_device_find_channel(dev, "altvoltage1", true);
+  if (!(chnRX && chnTX))
     return -ENODEV;
   iio_channel_attr_write_longlong(chnRX, "frequency", lo_hz);
   iio_channel_attr_write_longlong(chnTX, "frequency", lo_hz);
@@ -456,7 +459,9 @@ int phase_sync(struct iio_context *ctx, long long sample_rate, long long lo) {
   CHECK(ret);
 
   // Set LO and bandwidths of transceivers
-  ret = configure_transceiver(bw, sample_rate, lo);
+  ret = configure_transceiver(dev_phy, bw, sample_rate, lo);
+  CHECK(ret);
+  ret = configure_transceiver(dev_phy_slave, bw, sample_rate, lo);
   CHECK(ret);
 
   // Turn on quad tracking
