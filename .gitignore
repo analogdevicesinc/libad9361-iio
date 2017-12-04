@@ -1,5 +1,10 @@
+*.swp
+CPackConfig.cmake
+CPackSourceConfig.cmake
 CMakeCache.txt
 CMakeFiles
 Makefile
 cmake_install.cmake
 install_manifest.txt
+libad9361.pc
+libad9361.so*
