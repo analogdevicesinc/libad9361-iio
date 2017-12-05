@@ -23,7 +23,7 @@ matrix:
       os: linux
       dist: precise
       env: LDIST=-precise
-    - compiller: "gcc"
+    - compiler: "gcc"
       os: linux
       dist: trusty
       env: LDIST=-trusty
@@ -71,7 +71,7 @@ before_deploy:
   - ssh-add /tmp/deploy.rsa
 deploy:
   - provider: releases
-  - api_key:
+    api_key:
       secure: "ocDkFUpRYim0o3kEzO5It8mTjg4FnVYT+KaXoUtZA6r9x6VZteSFvimELIV/WePGnNLOavlXPgRb+cXmJiYSkVkFqrrwRkHgYvTapjPn/LBh0xDQZi9SrvTj/ICW3tMu7Esxqa7P2snhLf7P4XkLMySxeooKe4BoV5Uy8WUy+IE0HCkCxaiokUFEg7UVVDLy5ahTyVcdV4su44E+URCBDTk+UvgKJ3VDjNVDZp8uea7RBRHVfSucb/12AeJr+PkaxrbsqtI+GHMohvmLVBmALkP+WtLLMklxPofEnBW/UV6iU+hvEd6dROqG9T52hDQpcBqdJlqx4C3mHkPpt7lxSFTcyyTKEqRKZA0sBexadMZ3fnS2gNXizstuDAxIuCowc+nOjk1WNAN8z4ADxk5t4ct8U1I7CTA0TgkTzkRizeelTTZCbt8kHwh4oTalBt/5rIg3Tk8+YgrwvuEIAmRwPIORob+xbYGK9GCKwmdfpSuVhcLsgb43eh96ZXQ2bBn30I3pebCMm9xa+1c8pStBlMYmJPJv0Y6m5uNUJAvOImWNoZlyA967Df8b3pbODqhFkUN3OgDyR3uYRxBCohZgmguOvHsqtkM66/QgIMy2vQxhcnzc78dMT/BfLJ13RuN6+9DiGUMuGCzsVgQ7MNQu8MAkUV+fiEdGz6yxskiwpAQ="
     file:
       - "${RELEASE_PKG_FILE_DEB}"
