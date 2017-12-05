@@ -1,5 +1,9 @@
 # libad9361-iio
 
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/analogdevicesinc/libad9361-iio?branch=master&svg=true)](https://ci.appveyor.com/project/analogdevicesinc/libad9361-iio)
+[![Travis Build Status](https://travis-ci.org/analogdevicesinc/libad9361-iio.svg?branch=master)](https://travis-ci.org/analogdevicesinc/libad9361-iio)
+[![License](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](https://github.com/analogdevicesinc/libad9361-iio/blob/master/LICENSE)
+
 This is a simple library used for userspace, which manages multi-chip sync,
 on platforms (FMCOMMS5) where multiple AD9361 devices are used.
 
