@@ -29,7 +29,7 @@ fi
 
 FROM=$1
 TO=${branch}_$2
-LATE=${branch}_lastest_libad9361-iio${LDIST}$3
+LATE=${branch}_latest_libad9361-iio${LDIST}$3
 GLOB=${DEPLOY_TO}/${branch}_libad9361-iio-*
 
 echo attemting to deploy $FROM to $TO
