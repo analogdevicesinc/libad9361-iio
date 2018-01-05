@@ -76,8 +76,6 @@ struct ad9361_bb_conf {
 __api int ad9361_generate_fir_taps(struct filter_design_parameters *parameters,
                                    short *taps, int *num_taps, int *gain);
 
-__api int ad9361_filter_config_from_rate(struct filter_design_parameters *fdp,	unsigned long rate, int TX);
-
 __api int ad9361_multichip_sync(struct iio_device *master,
 		struct iio_device **slaves, unsigned int num_slaves,
 		unsigned int flags);
@@ -94,6 +92,15 @@ __api int ad9361_set_trx_fir_config(struct iio_device *dev, struct ad9361_bb_con
 __api int ad9361_set_trx_fir_enable(struct iio_device *dev, int enable);
 
 __api int ad9361_get_trx_fir_enable(struct iio_device *dev, int *enable);
+
+__api int ad9361_calculate_rf_clock_chain(unsigned long tx_sample_rate,
+                                          unsigned long rate_gov,
+                                          unsigned long *rx_path_clks,
+                                          unsigned long *tx_path_clks);
+
+__api int ad9361_calculate_rf_clock_chain_fdp(struct filter_design_parameters *fdpTX,
+                                              struct filter_design_parameters *fdpRX,
+                                              unsigned long sample_rate);
 
 #ifdef __cplusplus
 }

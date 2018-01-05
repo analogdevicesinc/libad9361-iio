@@ -68,6 +68,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LIBIIO_INCLUDEDIR})
 add_library(ad9361 ad9361_multichip_sync.c
             ad9361_baseband_auto_rate.c
             ad9361_design_taps.c
+            ad9361_calculate_rf_clock_chain.c
             ${FD_SRC_FILES}
             ${LIBAD9361_HEADERS})
 enable_testing()

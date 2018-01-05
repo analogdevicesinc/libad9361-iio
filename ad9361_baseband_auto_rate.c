@@ -202,7 +202,7 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 	long long current_rate;
 	int ret, enable;
 	struct ad9361_bb_conf bb_rx_conf = { 0 }, bb_tx_conf = { 0 };
-	struct filter_design_parameters fdp;
+	struct filter_design_parameters fdpTX, fdpRX;
 	short taps_tx[128], taps_rx[128];
 	unsigned long rates_tx[6], rates_rx[6];
 
@@ -212,33 +212,30 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 	bb_tx_conf.chain_rates = rates_tx;
 
 	// TX
-	ret = ad9361_filter_config_from_rate(&fdp, rate, true);
+	//ret = ad9361_filter_config_from_rate(&fdp, rate, true);
+	ret = ad9361_calculate_rf_clock_chain_fdp(&fdpTX, &fdpRX, rate);
 	if (ret < 0)
 		return ret;
 
-	ad9361_generate_fir_taps(&fdp, bb_tx_conf.taps, &bb_tx_conf.num_taps, &bb_tx_conf.gain);
-	bb_tx_conf.rf_bandwidth = fdp.RFbw;
-	bb_tx_conf.decimation = fdp.FIR;
+	ad9361_generate_fir_taps(&fdpTX, bb_tx_conf.taps, &bb_tx_conf.num_taps, &bb_tx_conf.gain);
+	bb_tx_conf.rf_bandwidth = fdpTX.RFbw;
+	bb_tx_conf.decimation = fdpTX.FIR;
 	bb_tx_conf.chain_rates[5] = rate;
-	bb_tx_conf.chain_rates[4] = bb_tx_conf.chain_rates[5] * fdp.FIR;
-	bb_tx_conf.chain_rates[3] = bb_tx_conf.chain_rates[4] * fdp.HB1;
-	bb_tx_conf.chain_rates[2] = bb_tx_conf.chain_rates[3] * fdp.HB2;
-	bb_tx_conf.chain_rates[1] = bb_tx_conf.chain_rates[2] * fdp.HB3;
-	bb_tx_conf.chain_rates[0] = fdp.PLL_rate;
+	bb_tx_conf.chain_rates[4] = bb_tx_conf.chain_rates[5] * fdpTX.FIR;
+	bb_tx_conf.chain_rates[3] = bb_tx_conf.chain_rates[4] * fdpTX.HB1;
+	bb_tx_conf.chain_rates[2] = bb_tx_conf.chain_rates[3] * fdpTX.HB2;
+	bb_tx_conf.chain_rates[1] = bb_tx_conf.chain_rates[2] * fdpTX.HB3;
+	bb_tx_conf.chain_rates[0] = fdpTX.PLL_rate;
 
-	ret = ad9361_filter_config_from_rate(&fdp, rate, false);
-	if (ret < 0)
-		return ret;
-
-	ad9361_generate_fir_taps(&fdp, bb_rx_conf.taps, &bb_rx_conf.num_taps, &bb_rx_conf.gain);
-	bb_rx_conf.rf_bandwidth = fdp.RFbw;
-	bb_rx_conf.decimation = fdp.FIR;
+	ad9361_generate_fir_taps(&fdpRX, bb_rx_conf.taps, &bb_rx_conf.num_taps, &bb_rx_conf.gain);
+	bb_rx_conf.rf_bandwidth = fdpRX.RFbw;
+	bb_rx_conf.decimation = fdpRX.FIR;
 	bb_rx_conf.chain_rates[5] = rate;
-	bb_rx_conf.chain_rates[4] = bb_rx_conf.chain_rates[5] * fdp.FIR;
-	bb_rx_conf.chain_rates[3] = bb_rx_conf.chain_rates[4] * fdp.HB1;
-	bb_rx_conf.chain_rates[2] = bb_rx_conf.chain_rates[3] * fdp.HB2;
-	bb_rx_conf.chain_rates[1] = bb_rx_conf.chain_rates[2] * fdp.HB3;
-	bb_rx_conf.chain_rates[0] = fdp.PLL_rate;
+	bb_rx_conf.chain_rates[4] = bb_rx_conf.chain_rates[5] * fdpRX.FIR;
+	bb_rx_conf.chain_rates[3] = bb_rx_conf.chain_rates[4] * fdpRX.HB1;
+	bb_rx_conf.chain_rates[2] = bb_rx_conf.chain_rates[3] * fdpRX.HB2;
+	bb_rx_conf.chain_rates[1] = bb_rx_conf.chain_rates[2] * fdpRX.HB3;
+	bb_rx_conf.chain_rates[0] = fdpRX.PLL_rate;
 
 	chan = iio_device_find_channel(dev, "voltage0", true);
 	if (chan == NULL)
