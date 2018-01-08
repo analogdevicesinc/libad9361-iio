@@ -211,7 +211,7 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 	bb_rx_conf.chain_rates = rates_rx;
 	bb_tx_conf.chain_rates = rates_tx;
 
-	// TX
+	// TX and RX filter generation
 	//ret = ad9361_filter_config_from_rate(&fdp, rate, true);
 	ret = ad9361_calculate_rf_clock_chain_fdp(&fdpTX, &fdpRX, rate);
 	if (ret < 0)

@@ -36,12 +36,12 @@ int main(void)
     struct filter_design_parameters fdpTX;
     struct filter_design_parameters fdpRX;
     short outputTaps[128];
-    int num_taps, ret, gain;
+    int num_taps, ret, gain, k;
     char filename[100];
 
     unsigned long rates[] = {1000000, 10000000, 20000000, 60000000};
 
-    for (int k = 0; k < 4; k++) {
+    for (k = 0; k < 4; k++) {
 
         // Generate rates in filter struct
         ret = ad9361_calculate_rf_clock_chain_fdp(&fdpTX, &fdpRX, rates[k]);
