@@ -75,7 +75,7 @@ int linux_calculate_rf_clock_chain(
 	const char clk_dividers[][4] = {
 		{12,3,2,2},
 		{8,2,2,2},
-		{6,3,2,1},
+		{6,3,2,1},//Updated to give correct orientation
 		{4,2,2,1},
 		{3,3,1,1},
 		{2,2,1,1},
@@ -205,12 +205,12 @@ bool check_result(unsigned long *rx1, unsigned long *rx2, unsigned long *tx1,
 
 int main(void)
 {
-    int ret;
+    int ret, k;
     unsigned long rx1[6], tx1[6];
     unsigned long rx2[6], tx2[6];
     unsigned long samples_rates;
 
-    for (int k=1; k<35000; k++) {
+    for (k=1; k<35000; k++) {
 
         samples_rates = 1000*k + 520000UL;
 

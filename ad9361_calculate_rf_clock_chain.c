@@ -35,18 +35,18 @@ const unsigned long RX_MIN_PATH_RATES[] = {MIN_ADC_CLK, 0, 0, 0, 0};
 const unsigned long TX_MIN_PATH_RATES[] = {MIN_DAC_CLK, 0, 0, 0, 0};
 
 #define check(val,min,max) ( (val)<=(max) ? (val)>=(min) : false )
-// #define TX 1
-// #define RX 0
 
-unsigned long max_rate_found = 0UL;
+unsigned long max_rate_found;
+
 
 bool check_rates(int FIR, const int *HB_configs, unsigned long samp_rate,
                  unsigned long *rates)
 {
+    int j;
     bool c = true;
 
     rates[5] = samp_rate;
-    for (int j=4; j>0; j--) {
+    for (j=4; j>0; j--) {
         rates[j] = rates[j+1]*HB_configs[j-1];
         if (j>1) {
             c &= check(rates[j],TX_MIN_PATH_RATES[j-1],TX_MAX_PATH_RATES[j-1]);
@@ -97,13 +97,15 @@ void set_rates(unsigned long *rx_path_clks,
                unsigned long *tx_path_clks, int DAC_div, unsigned long *rates,
                int dec_table_index)
 {
+    int k;
+
     // Check if ADC will run faster in config
     if (rates[1]>max_rate_found)
         max_rate_found = rates[1];
     else
         return;
 
-    for (int k=0; k<6; k++) {
+    for (k=0; k<6; k++) {
         rx_path_clks[k] = rates[k];
         tx_path_clks[k] = rates[k];
 
@@ -124,7 +126,7 @@ int determine_path_rates_with_fir(unsigned long sample_rate,
                                   int FIR)
 {
     unsigned long rates[6];
-    int PLL_mult;
+    int PLL_mult, k;
 
     max_rate_found = 0UL;
 
@@ -144,7 +146,7 @@ int determine_path_rates_with_fir(unsigned long sample_rate,
     // BBPLL -> /(PLL_div*DAC_div) -> /HB3 -> /HB2 -> /HB1 -> /FIR
 
     // Cycle through possible decimations from highest to lowest
-    for(int k=0; k<7; k++) {
+    for (k=0; k<7; k++) {
         // HB3 cannot be 3 if rate_gov enabled
         if ((rate_gov>0) && HB_configs[k][0]==3)
             continue;
@@ -162,7 +164,7 @@ int determine_path_rates_with_fir(unsigned long sample_rate,
         }
     }
 
-    if (max_rate_found==0L)
+    if (max_rate_found==0UL)
         return -EINVAL;
     else
         return 0;
@@ -173,6 +175,9 @@ int ad9361_calculate_rf_clock_chain(unsigned long sample_rate,
                                     unsigned long *rx_path_clks,
                                     unsigned long *tx_path_clks)
 {
+    int ret, k;
+    int FIR[] = {4,2,1};
+
     // Check desired rate within bounds
     if (!check(sample_rate, MIN_DATA_RATE, MAX_DATA_RATE))
         return -EINVAL;
@@ -182,11 +187,8 @@ int ad9361_calculate_rf_clock_chain(unsigned long sample_rate,
     // 2. Run the ADC/DAC as fast as possible
     // 3. Use the most decimation possible starting with HB3(closest to ADC)->HB1
 
-    int FIR[] = {4,2,1};
-    int ret;
-
     // Cycle through available FIR settings
-    for (int k=0; k<3; k++) {
+    for (k=0; k<3; k++) {
         ret = determine_path_rates_with_fir(sample_rate, rate_gov, rx_path_clks,
                                             tx_path_clks, FIR[k]);
         if (ret==0)
