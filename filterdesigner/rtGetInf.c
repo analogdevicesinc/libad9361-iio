@@ -1,17 +1,12 @@
 /*
- * Copyright (C) 2017 Analog Devices, Inc.
+ * Sponsored Third Party Support License -- for use only to support
+ * products interfaced to MathWorks software under terms specified in your
+ * company's restricted use license agreement.
+ * File: rtGetInf.c
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * MATLAB Coder version            : 3.4
+ * C/C++ source code generated on  : 04-Apr-2018 20:35:30
  */
-
 
 /*
  * Abstract:
@@ -27,41 +22,36 @@
  */
 real_T rtGetInf(void)
 {
-    size_t bitsPerReal = sizeof(real_T) * (NumBitsPerChar);
     real_T inf = 0.0;
-    if (bitsPerReal == 32U) {
-        inf = rtGetInfF();
-    } else {
-        uint16_T one = 1U;
-        enum {
-            LittleEndian,
-            BigEndian
-        } machByteOrder = (*((uint8_T *) &one) == 1U) ? LittleEndian : BigEndian;
-        switch (machByteOrder) {
-        case LittleEndian: {
-            union {
-                LittleEndianIEEEDouble bitVal;
-                real_T fltVal;
-            } tmpVal;
+    uint16_T one = 1U;
+    enum {
+        LittleEndian,
+        BigEndian
+    } machByteOrder = (*((uint8_T *) &one) == 1U) ? LittleEndian : BigEndian;
+    switch (machByteOrder) {
+    case LittleEndian: {
+        union {
+            LittleEndianIEEEDouble bitVal;
+            real_T fltVal;
+        } tmpVal;
 
-            tmpVal.bitVal.words.wordH = 0x7FF00000U;
-            tmpVal.bitVal.words.wordL = 0x00000000U;
-            inf = tmpVal.fltVal;
-            break;
-        }
+        tmpVal.bitVal.words.wordH = 0x7FF00000U;
+        tmpVal.bitVal.words.wordL = 0x00000000U;
+        inf = tmpVal.fltVal;
+        break;
+    }
 
-        case BigEndian: {
-            union {
-                BigEndianIEEEDouble bitVal;
-                real_T fltVal;
-            } tmpVal;
+    case BigEndian: {
+        union {
+            BigEndianIEEEDouble bitVal;
+            real_T fltVal;
+        } tmpVal;
 
-            tmpVal.bitVal.words.wordH = 0x7FF00000U;
-            tmpVal.bitVal.words.wordL = 0x00000000U;
-            inf = tmpVal.fltVal;
-            break;
-        }
-        }
+        tmpVal.bitVal.words.wordH = 0x7FF00000U;
+        tmpVal.bitVal.words.wordL = 0x00000000U;
+        inf = tmpVal.fltVal;
+        break;
+    }
     }
 
     return inf;
@@ -86,41 +76,36 @@ real32_T rtGetInfF(void)
  */
 real_T rtGetMinusInf(void)
 {
-    size_t bitsPerReal = sizeof(real_T) * (NumBitsPerChar);
     real_T minf = 0.0;
-    if (bitsPerReal == 32U) {
-        minf = rtGetMinusInfF();
-    } else {
-        uint16_T one = 1U;
-        enum {
-            LittleEndian,
-            BigEndian
-        } machByteOrder = (*((uint8_T *) &one) == 1U) ? LittleEndian : BigEndian;
-        switch (machByteOrder) {
-        case LittleEndian: {
-            union {
-                LittleEndianIEEEDouble bitVal;
-                real_T fltVal;
-            } tmpVal;
+    uint16_T one = 1U;
+    enum {
+        LittleEndian,
+        BigEndian
+    } machByteOrder = (*((uint8_T *) &one) == 1U) ? LittleEndian : BigEndian;
+    switch (machByteOrder) {
+    case LittleEndian: {
+        union {
+            LittleEndianIEEEDouble bitVal;
+            real_T fltVal;
+        } tmpVal;
 
-            tmpVal.bitVal.words.wordH = 0xFFF00000U;
-            tmpVal.bitVal.words.wordL = 0x00000000U;
-            minf = tmpVal.fltVal;
-            break;
-        }
+        tmpVal.bitVal.words.wordH = 0xFFF00000U;
+        tmpVal.bitVal.words.wordL = 0x00000000U;
+        minf = tmpVal.fltVal;
+        break;
+    }
 
-        case BigEndian: {
-            union {
-                BigEndianIEEEDouble bitVal;
-                real_T fltVal;
-            } tmpVal;
+    case BigEndian: {
+        union {
+            BigEndianIEEEDouble bitVal;
+            real_T fltVal;
+        } tmpVal;
 
-            tmpVal.bitVal.words.wordH = 0xFFF00000U;
-            tmpVal.bitVal.words.wordL = 0x00000000U;
-            minf = tmpVal.fltVal;
-            break;
-        }
-        }
+        tmpVal.bitVal.words.wordH = 0xFFF00000U;
+        tmpVal.bitVal.words.wordL = 0x00000000U;
+        minf = tmpVal.fltVal;
+        break;
+    }
     }
 
     return minf;

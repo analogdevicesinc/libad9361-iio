@@ -1,15 +1,11 @@
 /*
- * Copyright (C) 2017 Analog Devices, Inc.
+ * Sponsored Third Party Support License -- for use only to support
+ * products interfaced to MathWorks software under terms specified in your
+ * company's restricted use license agreement.
+ * File: internal_design_filter_cg_emxutil.h
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * MATLAB Coder version            : 3.4
+ * C/C++ source code generated on  : 04-Apr-2018 20:35:30
  */
 
 #ifndef INTERNAL_DESIGN_FILTER_CG_EMXUTIL_H
@@ -33,8 +29,16 @@ extern "C" {
 
 #endif
 
-extern void emxEnsureCapacity(emxArray__common *emxArray, int oldNumel,
-                              unsigned int elementSize);
+extern void emxEnsureCapacity_cint8_T(emxArray_cint8_T *emxArray, int oldNumel);
+extern void emxEnsureCapacity_creal_T(emxArray_creal_T *emxArray, int oldNumel);
+extern void emxEnsureCapacity_creal_T1(emxArray_creal_T *emxArray, int
+                                       oldNumel);
+extern void emxEnsureCapacity_int32_T(emxArray_int32_T *emxArray, int oldNumel);
+extern void emxEnsureCapacity_int32_T1(emxArray_int32_T *emxArray, int
+                                       oldNumel);
+extern void emxEnsureCapacity_int8_T(emxArray_int8_T *emxArray, int oldNumel);
+extern void emxEnsureCapacity_real_T(emxArray_real_T *emxArray, int oldNumel);
+extern void emxEnsureCapacity_real_T1(emxArray_real_T *emxArray, int oldNumel);
 extern void emxFree_cint8_T(emxArray_cint8_T **pEmxArray);
 extern void emxFree_creal_T(emxArray_creal_T **pEmxArray);
 extern void emxFree_int32_T(emxArray_int32_T **pEmxArray);

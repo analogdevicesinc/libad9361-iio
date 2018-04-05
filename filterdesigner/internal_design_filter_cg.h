@@ -1,15 +1,11 @@
 /*
- * Copyright (C) 2017 Analog Devices, Inc.
+ * Sponsored Third Party Support License -- for use only to support
+ * products interfaced to MathWorks software under terms specified in your
+ * company's restricted use license agreement.
+ * File: internal_design_filter_cg.h
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * MATLAB Coder version            : 3.4
+ * C/C++ source code generated on  : 04-Apr-2018 20:35:30
  */
 
 #ifndef INTERNAL_DESIGN_FILTER_CG_H
@@ -26,9 +22,6 @@
 #include "rtwtypes.h"
 #include "internal_design_filter_cg_types.h"
 
-/* Type Definitions */
-#include <stdio.h>
-
 /* Function Declarations */
 #ifdef __cplusplus
 
@@ -40,8 +33,8 @@ extern void internal_design_filter_cg(double Rdata, double Fpass, double Fstop,
                                       double caldiv, double FIR, double HB1, double PLL_mult, double Apass, double
                                       Astop, double phEQ, double HB2, double HB3, const char Type[7], const char
                                       RxTx[2], double RFbw, double DAC_div, double converter_rate, double PLL_rate,
-                                      double Fcenter, double wnom, double FIRdBmin, double int_FIR, short
-                                      outputTaps[128], double *numOutputTaps, double *filterGain);
+                                      double Fcenter, double wnom, double FIRdBmin, double int_FIR, double maxTaps,
+                                      short outputTaps[128], double *numOutputTaps, double *filterGain);
 extern void internal_design_filter_cg_initialize(void);
 extern void internal_design_filter_cg_terminate(void);
 

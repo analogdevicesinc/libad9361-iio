@@ -1,15 +1,11 @@
 /*
- * Copyright (C) 2017 Analog Devices, Inc.
+ * Sponsored Third Party Support License -- for use only to support
+ * products interfaced to MathWorks software under terms specified in your
+ * company's restricted use license agreement.
+ * File: rtGetNaN.c
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * MATLAB Coder version            : 3.4
+ * C/C++ source code generated on  : 04-Apr-2018 20:35:30
  */
 
 /*
@@ -26,41 +22,36 @@
  */
 real_T rtGetNaN(void)
 {
-    size_t bitsPerReal = sizeof(real_T) * (NumBitsPerChar);
     real_T nan = 0.0;
-    if (bitsPerReal == 32U) {
-        nan = rtGetNaNF();
-    } else {
-        uint16_T one = 1U;
-        enum {
-            LittleEndian,
-            BigEndian
-        } machByteOrder = (*((uint8_T *) &one) == 1U) ? LittleEndian : BigEndian;
-        switch (machByteOrder) {
-        case LittleEndian: {
-            union {
-                LittleEndianIEEEDouble bitVal;
-                real_T fltVal;
-            } tmpVal;
+    uint16_T one = 1U;
+    enum {
+        LittleEndian,
+        BigEndian
+    } machByteOrder = (*((uint8_T *) &one) == 1U) ? LittleEndian : BigEndian;
+    switch (machByteOrder) {
+    case LittleEndian: {
+        union {
+            LittleEndianIEEEDouble bitVal;
+            real_T fltVal;
+        } tmpVal;
 
-            tmpVal.bitVal.words.wordH = 0xFFF80000U;
-            tmpVal.bitVal.words.wordL = 0x00000000U;
-            nan = tmpVal.fltVal;
-            break;
-        }
+        tmpVal.bitVal.words.wordH = 0xFFF80000U;
+        tmpVal.bitVal.words.wordL = 0x00000000U;
+        nan = tmpVal.fltVal;
+        break;
+    }
 
-        case BigEndian: {
-            union {
-                BigEndianIEEEDouble bitVal;
-                real_T fltVal;
-            } tmpVal;
+    case BigEndian: {
+        union {
+            BigEndianIEEEDouble bitVal;
+            real_T fltVal;
+        } tmpVal;
 
-            tmpVal.bitVal.words.wordH = 0x7FFFFFFFU;
-            tmpVal.bitVal.words.wordL = 0xFFFFFFFFU;
-            nan = tmpVal.fltVal;
-            break;
-        }
-        }
+        tmpVal.bitVal.words.wordH = 0x7FFFFFFFU;
+        tmpVal.bitVal.words.wordL = 0xFFFFFFFFU;
+        nan = tmpVal.fltVal;
+        break;
+    }
     }
 
     return nan;

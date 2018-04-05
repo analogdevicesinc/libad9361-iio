@@ -210,7 +210,7 @@ int main(void)
     unsigned long rx2[6], tx2[6];
     unsigned long samples_rates;
 
-    for (k=1; k<35000; k++) {
+    for (k=1; k<60000; k++) {
 
         samples_rates = 1000*k + 520000UL;
 

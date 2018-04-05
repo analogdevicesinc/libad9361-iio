@@ -61,6 +61,7 @@ struct filter_design_parameters {
     double phEQ;
     double HB2;
     double HB3;
+    double maxTaps;
 };
 
 struct ad9361_bb_conf {

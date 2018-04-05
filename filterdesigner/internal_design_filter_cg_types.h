@@ -1,15 +1,11 @@
 /*
- * Copyright (C) 2017 Analog Devices, Inc.
+ * Sponsored Third Party Support License -- for use only to support
+ * products interfaced to MathWorks software under terms specified in your
+ * company's restricted use license agreement.
+ * File: internal_design_filter_cg_types.h
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * MATLAB Coder version            : 3.4
+ * C/C++ source code generated on  : 04-Apr-2018 20:35:30
  */
 
 #ifndef INTERNAL_DESIGN_FILTER_CG_TYPES_H
@@ -19,26 +15,6 @@
 #include "rtwtypes.h"
 
 /* Type Definitions */
-#ifndef struct_emxArray__common
-#define struct_emxArray__common
-
-struct emxArray__common {
-    void *data;
-    int *size;
-    int allocatedSize;
-    int numDimensions;
-    boolean_T canFreeData;
-};
-
-#endif                                 /*struct_emxArray__common*/
-
-#ifndef typedef_emxArray__common
-#define typedef_emxArray__common
-
-typedef struct emxArray__common emxArray__common;
-
-#endif                                 /*typedef_emxArray__common*/
-
 #ifndef struct_emxArray_cint8_T
 #define struct_emxArray_cint8_T
 

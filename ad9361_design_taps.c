@@ -46,8 +46,8 @@ int ad9361_generate_fir_taps(struct filter_design_parameters *parameters,
         parameters->phEQ, parameters->HB2, parameters->HB3, parameters->Type,
         parameters->RxTx, parameters->RFbw, parameters->DAC_div,
         parameters->converter_rate, parameters->PLL_rate, parameters->Fcenter,
-        parameters->wnom, parameters->FIRdBmin, parameters->int_FIR, taps,
-        &dnum_taps, &dgain);
+        parameters->wnom, parameters->FIRdBmin, parameters->int_FIR,
+        parameters->maxTaps, taps, &dnum_taps, &dgain);
     internal_design_filter_cg_terminate();
     *num_taps = (int)dnum_taps;
     *gain = (int)dgain;
@@ -92,6 +92,37 @@ double calculate_rfbw(double pll_rate, double caldiv, bool TX,
     *rcaldiv = caldiv;
     return rfbw;
 }
+
+void set_max_taps(struct filter_design_parameters *fdpTX,
+                  struct filter_design_parameters *fdpRX)
+{
+    // RX side
+    int N,M,K;
+    if (fdpRX->HB3 == 3)
+        N = 16*floor(fdpRX->converter_rate/(fdpRX->Rdata));
+    else
+        N = 16*floor(fdpRX->converter_rate/(2*fdpRX->Rdata));
+    if (N>128)
+        N = 128;
+    // TX side
+    if (fdpTX->FIR==1)
+        M = 64;
+    else
+        M = 128;
+    K = 16*floor(fdpTX->converter_rate*fdpTX->DAC_div/(2*fdpTX->Rdata));
+    if (K<M)
+        M = K;
+
+    // Pick the smallest
+    if (M>N) {
+        fdpTX->maxTaps = N;
+        fdpRX->maxTaps = N;
+    } else {
+        fdpTX->maxTaps = M;
+        fdpRX->maxTaps = M;
+    }
+}
+
 
 int ad9361_calculate_rf_clock_chain_fdp(struct filter_design_parameters *fdpTX,
                                         struct filter_design_parameters *fdpRX,
@@ -157,6 +188,7 @@ int ad9361_calculate_rf_clock_chain_fdp(struct filter_design_parameters *fdpTX,
         if (fdp->RFbw < 0)
             return -EINVAL;
     }
+    set_max_taps(fdpTX,fdpRX);
 
     return 0;
 
