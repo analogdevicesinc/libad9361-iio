@@ -47,6 +47,7 @@
 #define CALIBRATE_TRIES 30
 #define STEP_SIZE 0.5
 #define M_2PI 2 * M_PI
+#define STALE_BUFFERS 20
 
 #define DEBUG 1
 
@@ -328,27 +329,31 @@ double estimate_phase_diff(double *estimate) {
 
 int calibrate_chain(struct iio_device *dev, double scale, double *phase) {
   double est = 0, tmp;
-  int k = 0, ret;
+  int k = 0, g, ret;
+    
+  if (streaming_interfaces(true) < 0)
+    return -ENODEV;
+
   for (; k < CALIBRATE_TRIES; k++) {
 
     *phase = STEP_SIZE * est + (*phase);
     ret = trx_phase_rotation(dev, *phase);
     CHECK(ret);
 
-    if (streaming_interfaces(true) < 0)
-      return -ENODEV;
-
-    ret = estimate_phase_diff(&est);
+    for (g=0; g<STALE_BUFFERS; g++)
+    	ret = estimate_phase_diff(&est);
     CHECK(ret);
     est *= scale;
 
-    streaming_interfaces(false);
 #if (DEBUG > 1)
     printf("Phase error: %f\n", est);
 #endif
     if (fabs(est) < TOLERANCE)
       break;
   }
+
+  streaming_interfaces(false);
+
 #if (DEBUG > 0)
   printf("Remaining Phase error: %f\n", est);
   printf("Rotation: %f\n", *phase);

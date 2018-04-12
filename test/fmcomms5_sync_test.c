@@ -37,10 +37,13 @@ int main(void)
   if (!check_fmcomms5_connected(ctx))
     exit(0);// Cant find anything don't run tests
   // Sync
-  int ret = ad9361_fmcomms5_phase_sync(ctx, MHZ(10), GHZ(0.90846));
-  if (ret<0)
-    exit(1);
+  int freqMHZ, ret=0;
+  for (freqMHZ = 3; freqMHZ<60; freqMHZ++) {
+      ret = ad9361_fmcomms5_phase_sync(ctx, MHZ(freqMHZ), GHZ(0.90846));
+      if (ret<0)
+          break;
+  }
   // Cleanup
   if (ctx) { iio_context_destroy(ctx); }
-  exit(0);
+  exit(ret);
 }
