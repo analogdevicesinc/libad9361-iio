@@ -1,6 +1,12 @@
 version: 2015.1.{build}
 clone_depth: 1
 
+environment:
+    # Tell msys2 to add mingw64 to the path
+    MSYSTEM: MINGW64
+    # Tell msys2 to inherit the current directory when starting the shell
+    CHERE_INVOKING: 1
+
 install:
     # Download libiio
     - cd c:\
@@ -8,14 +14,52 @@ install:
     - 7z x libiio*.zip > nul
     - mkdir libiio-win64
     - mkdir libiio-win32
+    - mkdir libiio-mingw-win64
+    - mkdir libiio-mingw-win32
     - mv libiio-*/MS64/* libiio-win64/
     - cp libiio-*/include/* libiio-win64/
     - mv libiio-*/MS32/* libiio-win32/
-    - mv libiio-*/include/* libiio-win32/
+    - cp libiio-*/include/* libiio-win32/
+    - mv libiio-*/MinGW32/* libiio-mingw-win32/
+    - cp libiio-*/include/* libiio-mingw-win32/
+    - mv libiio-*/MinGW64/* libiio-mingw-win64/
+    - cp libiio-*/include/* libiio-mingw-win64/
+
 
 
 build_script:
-    # 32-bit build
+    # 32-bit build - MinGW
+    - set OLD_PATH=%PATH%
+    - set OPT_PATH=C:\msys64\mingw32\bin;C:\msys64\mingw64\bin;
+    - set PATH=%OPT_PATH%%PATH%
+
+    - mkdir c:\projects\libad9361-iio\build-mingw-win32
+    - cd c:\projects\libad9361-iio\build-mingw-win32
+#    - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy  mingw-w64-i686-gcc "
+    - cmake -G "Unix Makefiles" \
+        -DLIBIIO_LIBRARIES:FILEPATH=c:/libiio-mingw-win32/libiio.dll.a \
+        -DLIBIIO_INCLUDEDIR:PATH=c:/libiio-mingw-win32 \
+        -DCMAKE_CONFIGURATION_TYPES=Release \
+        -DCMAKE_C_COMPILER:FILEPATH=c:/msys64/mingw32/bin/i686-w64-mingw32-gcc.exe \
+        -DCMAKE_MAKE_PROGRAM=c:/msys64/mingw32/bin/mingw32-make.exe \
+        ..
+    - cmake --build . --config Release
+
+    # 64-bit build - MinGW
+    - mkdir c:\projects\libad9361-iio\build-mingw-win64
+    - cd c:\projects\libad9361-iio\build-mingw-win64
+#    - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy  mingw-w64-x86_64-gcc"
+    - cmake -G "Unix Makefiles" \
+        -DLIBIIO_LIBRARIES:FILEPATH=c:/libiio-mingw-win64/libiio.dll.a \
+        -DLIBIIO_INCLUDEDIR:PATH=c:/libiio-mingw-win64 \
+        -DCMAKE_CONFIGURATION_TYPES=Release \
+        -DCMAKE_C_COMPILER:FILEPATH=c:/msys64/mingw64/bin/x86_64-w64-mingw32-gcc.exe \
+        -DCMAKE_MAKE_PROGRAM=c:/msys64/mingw64/bin/mingw32-make.exe \
+        ..
+    - cmake --build . --config Release
+
+
+    # 32-bit build - VS
     - mkdir c:\projects\libad9361-iio\build-win32
     - cd c:\projects\libad9361-iio\build-win32
     - cmake -G "Visual Studio 12" \
@@ -25,7 +69,7 @@ build_script:
         ..
     - cmake --build . --config Release
 
-    # 64-bit build
+    # 64-bit build - VS
     - mkdir c:\projects\libad9361-iio\build-win64
     - cd c:\projects\libad9361-iio\build-win64
     - cmake -G "Visual Studio 12 Win64" \
@@ -35,8 +79,10 @@ build_script:
         ..
     - cmake --build . --config Release
 
+
     # Create ZIPs
     - cd c:\projects\libad9361-iio
+
     - mkdir c:\libad9361-win32
     - copy ad9361.h c:\libad9361-win32\
     - copy build-win32\Release\libad9361.* c:\libad9361-win32\
@@ -50,3 +96,18 @@ build_script:
     - copy c:\libiio-win64\*.dll c:\libad9361-win64\
     - 7z a "c:\libad9361-win64.zip" c:\libad9361-win64
     - appveyor PushArtifact c:\libad9361-win64.zip
+
+    - mkdir c:\libad9361-mingw-win32
+    - copy ad9361.h c:\libad9361-mingw-win32\
+    - copy build-mingw-win32\libad9361.* c:\libad9361-mingw-win32\
+    - copy c:\libiio-mingw-win32\*.dll c:\libad9361-mingw-win32\
+    - 7z a "c:\libad9361-mingw-win32.zip" c:\libad9361-mingw-win32
+    - appveyor PushArtifact c:\libad9361-mingw-win32.zip
+
+    - mkdir c:\libad9361-mingw-win64
+    - copy ad9361.h c:\libad9361-mingw-win64\
+    - copy build-mingw-win64\libad9361.* c:\libad9361-mingw-win64\
+    - copy c:\libiio-mingw-win64\*.dll c:\libad9361-mingw-win64\
+    - 7z a "c:\libad9361-mingw-win64.zip" c:\libad9361-mingw-win64
+    - appveyor PushArtifact c:\libad9361-mingw-win64.zip
+
