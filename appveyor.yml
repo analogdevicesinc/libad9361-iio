@@ -4,10 +4,15 @@ clone_depth: 1
 install:
     # Download libiio
     - cd c:\
-    - appveyor DownloadFile https://ci.appveyor.com/api/projects/analogdevicesinc/libiio/artifacts/libiio-win32.zip?branch=master
-    - appveyor DownloadFile https://ci.appveyor.com/api/projects/analogdevicesinc/libiio/artifacts/libiio-win64.zip?branch=master
-    - 7z x libiio-win32.zip
-    - 7z x libiio-win64.zip
+    - appveyor DownloadFile https://ci.appveyor.com/api/projects/analogdevicesinc/libiio/artifacts/libiio.zip?branch=master
+    - 7z x libiio*.zip > nul
+    - mkdir libiio-win64
+    - mkdir libiio-win32
+    - mv libiio-*/MS64/* libiio-win64/
+    - cp libiio-*/include/* libiio-win64/
+    - mv libiio-*/MS32/* libiio-win32/
+    - mv libiio-*/include/* libiio-win32/
+
 
 build_script:
     # 32-bit build
