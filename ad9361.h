@@ -38,6 +38,32 @@ extern "C" {
 struct iio_context;
 struct iio_device;
 
+struct filter_design_parameters {
+    double Rdata;
+    double Fpass;
+    double Fstop;
+    double caldiv;
+    double FIR;
+    double HB1;
+    double DAC_div;
+    const char *Type;
+    const char *RxTx;
+    double RFbw;
+    double converter_rate;
+    double PLL_rate;
+    double Fcenter;
+    double wnom;
+    double FIRdBmin;
+    double int_FIR;
+    double PLL_mult;
+    double Apass;
+    double Astop;
+    double phEQ;
+    double HB2;
+    double HB3;
+    double maxTaps;
+};
+
 __api int ad9361_multichip_sync(struct iio_device *master,
 		struct iio_device **slaves, unsigned int num_slaves,
 		unsigned int flags);
@@ -50,6 +76,27 @@ __api int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate);
 __api int ad9361_set_trx_fir_enable(struct iio_device *dev, int enable);
 
 __api int ad9361_get_trx_fir_enable(struct iio_device *dev, int *enable);
+
+__api int ad9361_generate_fir_taps(struct filter_design_parameters *parameters,
+                                   short *taps, int *num_taps, int *gain);
+
+__api int ad9361_calculate_rf_clock_chain(unsigned long tx_sample_rate,
+                                          unsigned long rate_gov,
+                                          unsigned long *rx_path_clks,
+                                          unsigned long *tx_path_clks);
+
+__api int ad9361_calculate_rf_clock_chain_fdp(struct filter_design_parameters *fdpTX,
+                                              struct filter_design_parameters *fdpRX,
+                                              unsigned long sample_rate);
+
+__api int ad9361_set_bb_rate_custom_filter_auto(struct iio_device *dev,
+                                                unsigned long rate);
+
+__api int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
+                                                  unsigned long rate, unsigned long Fpass,
+                                                  unsigned long Fstop, unsigned long wnom_tx,
+                                                  unsigned long wnom_rx);
+
 
 #ifdef __cplusplus
 }
