@@ -1,0 +1,29 @@
+DLL {
+global:
+    internal_design_filter_cg;
+    emxEnsureCapacity_cint8_T;
+    emxEnsureCapacity_creal_T;
+    emxEnsureCapacity_creal_T1;
+    emxEnsureCapacity_int32_T;
+    emxEnsureCapacity_int32_T1;
+    emxEnsureCapacity_int8_T;
+    emxEnsureCapacity_real_T;
+    emxEnsureCapacity_real_T1;
+    emxFree_cint8_T;
+    emxFree_creal_T;
+    emxFree_int32_T;
+    emxFree_int8_T;
+    emxFree_real_T;
+    emxInit_cint8_T;
+    emxInit_creal_T;
+    emxInit_creal_T1;
+    emxInit_int32_T;
+    emxInit_int32_T1;
+    emxInit_int8_T;
+    emxInit_real_T;
+    emxInit_real_T1;
+    internal_design_filter_cg_initialize;
+    internal_design_filter_cg_terminate;
+local:
+    *;
+};
