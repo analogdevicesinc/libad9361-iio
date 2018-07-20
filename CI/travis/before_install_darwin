@@ -10,5 +10,5 @@ brew install doxygen
 brew install --build-from-source libusb
 brew install libxml2
 
-wget http://swdownloads.analog.com/cse/travis_builds/latest_libiio${LDIST}.pkg
-sudo installer -pkg latest_libiio${LDIST}.pkg -target /
+wget http://swdownloads.analog.com/cse/travis_builds/master_latest_libiio${LDIST}.pkg
+sudo installer -pkg master_latest_libiio${LDIST}.pkg -target /
