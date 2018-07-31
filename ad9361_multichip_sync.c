@@ -21,9 +21,23 @@
 #include <windows.h>
 #else
 #include <unistd.h>
+#include <time.h>
 #endif
 
 #define MAX_AD9361_SYNC_DEVS	4
+
+static void ad9361_sleep_ms(void)
+{
+#ifdef _WIN32
+	Sleep(1); /* milliseconds */
+#else
+	struct timespec time;
+
+	time.tv_sec = 0;
+	time.tv_nsec = 1000 * 1000;
+	nanosleep(&time, NULL);
+#endif
+}
 
 int ad9361_multichip_sync(struct iio_device *master, struct iio_device **slaves,
 		unsigned int num_slaves, unsigned int flags)
@@ -90,11 +104,7 @@ int ad9361_multichip_sync(struct iio_device *master, struct iio_device **slaves,
 		else
 			iio_device_attr_write_longlong(master, "multichip_sync", step);
 
-#ifdef _WIN32
-		Sleep(1);
-#else
-		usleep(1000);
-#endif
+		ad9361_sleep_ms();
 	}
 
 	iio_device_attr_write(master, "ensm_mode", ensm_mode[0]);

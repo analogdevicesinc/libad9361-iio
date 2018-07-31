@@ -52,7 +52,7 @@ if (NOT WIN32)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
 endif()
 
-add_definitions(-DLIBAD9361_EXPORTS=1)
+add_definitions(-D_POSIX_C_SOURCE=199309L -DLIBAD9361_EXPORTS=1)
 
 set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
 	CACHE PATH "Installation directory for libraries")
