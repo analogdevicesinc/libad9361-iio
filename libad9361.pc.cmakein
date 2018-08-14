@@ -6,7 +6,7 @@ includedir=@CMAKE_INSTALL_PREFIX@/include
 
 Name: libad9361
 Description: Library for interfacing IIO devices
-Version: @LIBAD9361_VERSION@
+Version: @VERSION@
 
 Requires:
 Libs: -L${libdir} -L${sharedlibdir} -lad9361
