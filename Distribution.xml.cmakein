@@ -6,7 +6,7 @@
 		<os-version min="10.6.6" />
 	</allowed-os-versions>
 	<license file="@CMAKE_CURRENT_SOURCE_DIR@/COPYING.txt" mime-type="text/plain" />
-	<product id="libad9361" version="@LIBAD9361_VERSION@" />
+	<product id="libad9361" version="@VERSION@" />
 	<choices-outline>
 		<line choice="default" >
 			<line choice="libad9361" />
@@ -16,5 +16,5 @@
 	<choice id="libad9361" visible="false" >
 		<pkg-ref id="libad9361" />
 	</choice>
-	<pkg-ref id="libad9361" version="@LIBAD9361_VERSION@" onConclusion="none" >@LIBAD9361_TEMP_PKG@</pkg-ref>
+	<pkg-ref id="libad9361" version="@VERSION@" onConclusion="none" >@LIBAD9361_TEMP_PKG@</pkg-ref>
 </installer-gui-script>
