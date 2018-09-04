@@ -39,12 +39,12 @@ build_script:
     - cmake -G "Unix Makefiles" \
         -DLIBIIO_LIBRARIES:FILEPATH=c:/libiio-mingw-win32/libiio.dll.a \
         -DLIBIIO_INCLUDEDIR:PATH=c:/libiio-mingw-win32 \
-        -DCMAKE_CONFIGURATION_TYPES=Release \
+        -DCMAKE_CONFIGURATION_TYPES=Debug \
         -DCMAKE_C_COMPILER:FILEPATH=c:/msys64/mingw32/bin/i686-w64-mingw32-gcc.exe \
         -DCMAKE_MAKE_PROGRAM=c:/msys64/mingw32/bin/mingw32-make.exe \
         ..
-    - cmake --build . --config Release
-    - ctest -V -C Release
+    - cmake --build . --config Debug
+    - ctest -V -R
 
     # 64-bit build - MinGW
     - mkdir c:\projects\libad9361-iio\build-mingw-win64
