@@ -44,6 +44,7 @@ build_script:
         -DCMAKE_MAKE_PROGRAM=c:/msys64/mingw32/bin/mingw32-make.exe \
         ..
     - cmake --build . --config Release
+    - ctest -C Release
 
     # 64-bit build - MinGW
     - mkdir c:\projects\libad9361-iio\build-mingw-win64
@@ -57,7 +58,7 @@ build_script:
         -DCMAKE_MAKE_PROGRAM=c:/msys64/mingw64/bin/mingw32-make.exe \
         ..
     - cmake --build . --config Release
-
+    - ctest -C Release
 
     # 32-bit build - VS
     - mkdir c:\projects\libad9361-iio\build-win32
@@ -68,6 +69,7 @@ build_script:
         -DCMAKE_CONFIGURATION_TYPES=Release \
         ..
     - cmake --build . --config Release
+    - ctest -C Release
 
     # 64-bit build - VS
     - mkdir c:\projects\libad9361-iio\build-win64
@@ -78,7 +80,7 @@ build_script:
         -DCMAKE_CONFIGURATION_TYPES=Release \
         ..
     - cmake --build . --config Release
-
+    - ctest -C Release
 
     # Create ZIPs
     - cd c:\projects\libad9361-iio
