@@ -97,6 +97,7 @@ __api int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
                                                   unsigned long Fstop, unsigned long wnom_tx,
                                                   unsigned long wnom_rx);
 
+__api int ad9361_fmcomms5_phase_sync(struct iio_context *ctx, long long sample_rate, long long lo);
 
 #ifdef __cplusplus
 }
