@@ -1,6 +1,3 @@
-init:
-    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-
 version: '{branch}.{build}'
 clone_depth: 1
 
@@ -38,30 +35,20 @@ build_script:
 
     - mkdir c:\projects\libad9361-iio\build-mingw-win32
     - cd c:\projects\libad9361-iio\build-mingw-win32
-#    - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy  mingw-w64-i686-gcc "
-    - cmake -G "Unix Makefiles" \
-        -DLIBIIO_LIBRARIES:FILEPATH=c:/libiio-mingw-win32/libiio.dll.a \
-        -DLIBIIO_INCLUDEDIR:PATH=c:/libiio-mingw-win32 \
-        -DCMAKE_CONFIGURATION_TYPES=Debug \
-        -DCMAKE_C_COMPILER:FILEPATH=c:/msys64/mingw32/bin/i686-w64-mingw32-gcc.exe \
-        -DCMAKE_MAKE_PROGRAM=c:/msys64/mingw32/bin/mingw32-make.exe \
-        ..
-    - cmake --build . --config Debug
+    - C:\msys64\usr\bin\bash -lc "cmake -G 'Unix Makefiles' -DLIBIIO_LIBRARIES=c:/libiio-mingw-win32/libiio.dll.a -DLIBIIO_INCLUDEDIR=c:/libiio-mingw-win32 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER:FILEPATH=/mingw32/bin/i686-w64-mingw32-gcc.exe /c/projects/libad9361-iio && make -j3"
+
+    - copy c:\libiio-mingw-win32\*.dll c:\projects\libad9361-iio\build-mingw-win32\test\
+    - copy c:\projects\libad9361-iio\build-mingw-win32\*.dll c:\projects\libad9361-iio\build-mingw-win32\test\
     - ctest -V -R
 
     # 64-bit build - MinGW
     - mkdir c:\projects\libad9361-iio\build-mingw-win64
     - cd c:\projects\libad9361-iio\build-mingw-win64
-#    - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Sy  mingw-w64-x86_64-gcc"
-    - cmake -G "Unix Makefiles" \
-        -DLIBIIO_LIBRARIES:FILEPATH=c:/libiio-mingw-win64/libiio.dll.a \
-        -DLIBIIO_INCLUDEDIR:PATH=c:/libiio-mingw-win64 \
-        -DCMAKE_CONFIGURATION_TYPES=Release \
-        -DCMAKE_C_COMPILER:FILEPATH=c:/msys64/mingw64/bin/x86_64-w64-mingw32-gcc.exe \
-        -DCMAKE_MAKE_PROGRAM=c:/msys64/mingw64/bin/mingw32-make.exe \
-        ..
-    - cmake --build . --config Release
-    - ctest -C Release
+    - C:\msys64\usr\bin\bash -lc "cmake -G 'Unix Makefiles' -DLIBIIO_LIBRARIES=c:/libiio-mingw-win64/libiio.dll.a -DLIBIIO_INCLUDEDIR=c:/libiio-mingw-win64 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER:FILEPATH=/mingw64/bin/x86_64-w64-mingw32-gcc.exe /c/projects/libad9361-iio && make -j3"
+
+    - copy c:\libiio-mingw-win64\*.dll c:\projects\libad9361-iio\build-mingw-win64\test\
+    - copy c:\projects\libad9361-iio\build-mingw-win64\*.dll c:\projects\libad9361-iio\build-mingw-win64\test\
+    - ctest -V -R
 
     # 32-bit build - VS
     - mkdir c:\projects\libad9361-iio\build-win32
@@ -115,6 +102,3 @@ build_script:
     - copy c:\libiio-mingw-win64\*.dll c:\libad9361-mingw-win64\
     - 7z a "c:\libad9361-mingw-win64.zip" c:\libad9361-mingw-win64
     - appveyor PushArtifact c:\libad9361-mingw-win64.zip
-
-on_finish:
-    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
