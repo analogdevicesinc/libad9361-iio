@@ -1,4 +1,11 @@
 find_library(LIBIIO_LIBRARIES iio)
+if(NOT LIBIIO_LIBRARIES)
+  message(FATAL_ERROR "libiio library not found")
+endif()
+find_library(AD9361_LIBRARIES ad9361)
+if(NOT AD9361_LIBRARIES)
+  message(FATAL_ERROR "libad9361 library not found")
+endif()
 
 add_executable(FilterDesignerTest filter_designer_test.c)
 target_link_libraries(FilterDesignerTest ad9361 ${LIBIIO_LIBRARIES})
