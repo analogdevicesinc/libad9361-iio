@@ -226,8 +226,9 @@ int main(void)
         if (ret<0)
             return ret;
 
-        if (check_result(rx1,rx2,tx1,tx2))
-            return -1;
+        check_result(rx1,rx2,tx1,tx2);
+        //if (check_result(rx1,rx2,tx1,tx2))
+        //    return -1;
     }
-    return 0;
+    return -1;
 }
