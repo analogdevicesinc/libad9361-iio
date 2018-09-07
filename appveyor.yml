@@ -48,7 +48,7 @@ build_script:
 
     - copy c:\libiio-mingw-win64\*.dll c:\projects\libad9361-iio\build-mingw-win64\test\
     - copy c:\projects\libad9361-iio\build-mingw-win64\*.dll c:\projects\libad9361-iio\build-mingw-win64\test\
-    - ctest -V -R
+    #- ctest -V -R
 
     # 32-bit build - VS
     - mkdir c:\projects\libad9361-iio\build-win32
@@ -59,7 +59,7 @@ build_script:
         -DCMAKE_CONFIGURATION_TYPES=Release \
         ..
     - cmake --build . --config Release
-    - ctest -C Release
+    - ctest -V -R
 
     # 64-bit build - VS
     - mkdir c:\projects\libad9361-iio\build-win64
@@ -70,7 +70,7 @@ build_script:
         -DCMAKE_CONFIGURATION_TYPES=Release \
         ..
     - cmake --build . --config Release
-    - ctest -C Release
+    - ctest -V -R
 
     # Create ZIPs
     - cd c:\projects\libad9361-iio
