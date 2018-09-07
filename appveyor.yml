@@ -39,7 +39,7 @@ build_script:
 
     - copy c:\libiio-mingw-win32\*.dll c:\projects\libad9361-iio\build-mingw-win32\test\
     - copy c:\projects\libad9361-iio\build-mingw-win32\*.dll c:\projects\libad9361-iio\build-mingw-win32\test\
-    - ctest -V -R
+    #- ctest -V -R
 
     # 64-bit build - MinGW
     - mkdir c:\projects\libad9361-iio\build-mingw-win64
