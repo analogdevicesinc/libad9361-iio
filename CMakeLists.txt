@@ -17,6 +17,10 @@ set(LIBAD9361_VERSION_MAJOR 0)
 set(LIBAD9361_VERSION_MINOR 1)
 set(VERSION ${LIBAD9361_VERSION_MAJOR}.${LIBAD9361_VERSION_MINOR})
 
+if (WIN32)
+	string(TIMESTAMP BUILD_YEAR "%Y")
+endif()
+
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	option(OSX_PACKAGE "Create a OSX package" ON)
 	set(CMAKE_MACOSX_RPATH ON)
@@ -88,6 +92,8 @@ target_link_libraries(ad9361 LINK_PRIVATE ${LIBIIO_LIBRARIES})
 if (MSVC)
 	set_target_properties(ad9361 PROPERTIES OUTPUT_NAME libad9361)
 endif()
+
+configure_file(libad9361-iio.iss.cmakein ${CMAKE_CURRENT_BINARY_DIR}/libad9361-iio.iss @ONLY)
 
 set(LIBAD9361_PC ${CMAKE_CURRENT_BINARY_DIR}/libad9361.pc)
 configure_file(libad9361.pc.cmakein ${LIBAD9361_PC} @ONLY)

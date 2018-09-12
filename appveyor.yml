@@ -25,6 +25,10 @@ install:
     - mv libiio-*/MinGW64/* libiio-mingw-win64/
     - cp libiio-*/include/* libiio-mingw-win64/
 
+    #Install Inno Setup
+    - choco install InnoSetup
+    - set PATH=%PATH%;"C:\Program Files (x86)\Inno Setup 5"
+
 
 
 build_script:
@@ -79,6 +83,9 @@ build_script:
         ..
     - cmake --build . --config Release
 
+    #Create the installer
+    - ISCC c:\projects\libad9361-iio\build-win64\libad9361-iio.iss
+    - appveyor PushArtifact C:\libad9361-setup.exe
 
     # Create ZIPs
     - cd c:\projects\libad9361-iio
@@ -110,4 +117,3 @@ build_script:
     - copy c:\libiio-mingw-win64\*.dll c:\libad9361-mingw-win64\
     - 7z a "c:\libad9361-mingw-win64.zip" c:\libad9361-mingw-win64
     - appveyor PushArtifact c:\libad9361-mingw-win64.zip
-
