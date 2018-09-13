@@ -190,7 +190,7 @@ bool check_result(unsigned long *rx1, unsigned long *rx2, unsigned long *tx1,
 
     if (r) {
         printf("LINUX\n");
-        printf("RX %lu | TX %lu\n",rx1[o],tx1[o]);
+        printf("RX %lu | TX %lu\n",rx1[0],tx1[0]);
         for (o=1; o<6; o++)
             printf("RX %lu (%lu)| TX %lu (%lu)\n",rx1[o],rx1[o-1]/rx1[o],tx1[o],
                    tx1[o-1]/tx1[o]);
@@ -219,16 +219,19 @@ int main(void)
 
         // Baseline from linux driver
         ret = linux_calculate_rf_clock_chain(samples_rates, rate_governor, rx1, tx1);
-        if (ret<0)
+        if (ret<0){
+            printf("Linux failed\n");
             return ret;
+        }
 
         ret = ad9361_calculate_rf_clock_chain(samples_rates, rate_governor, rx2, tx2);
-        if (ret<0)
+        if (ret<0){
+            printf("libad9361 failed\n");
             return ret;
+        }
 
-        check_result(rx1,rx2,tx1,tx2);
-        //if (check_result(rx1,rx2,tx1,tx2))
-        //    return -1;
+        if (check_result(rx1,rx2,tx1,tx2))
+            return -1;
     }
-    return -1;
+    return 0;
 }

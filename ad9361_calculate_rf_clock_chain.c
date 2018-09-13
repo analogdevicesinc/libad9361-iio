@@ -60,9 +60,11 @@ int determine_pll_div(unsigned long *rates)
 {
     // Determine necessary PLL multiplier
     int PLL_mult = MAX_BBPLL_DIV;
+    unsigned long long tmp;
     while (PLL_mult>1) {
-        rates[0] = (unsigned long) rates[1]*PLL_mult;
-        if (check(rates[0], MIN_BBPLL_FREQ, MAX_BBPLL_FREQ)) {
+        tmp = (unsigned long long) rates[1]*PLL_mult;
+        if (check(tmp, MIN_BBPLL_FREQ, MAX_BBPLL_FREQ)) {
+            rates[0] = (unsigned long) rates[1]*PLL_mult;
             return PLL_mult;
         }
         PLL_mult >>= 1;
