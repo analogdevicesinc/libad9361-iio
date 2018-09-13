@@ -59,6 +59,8 @@ build_script:
         -DCMAKE_CONFIGURATION_TYPES=Release \
         ..
     - cmake --build . --config Release
+    - copy c:\libiio-win32\*.dll c:\projects\libad9361-iio\build-win32\test\
+    - copy c:\projects\libad9361-iio\build-win32\Release\*.dll c:\projects\libad9361-iio\build-win32\test\Release
     - ctest -V -C Release
 
     # 64-bit build - VS
@@ -70,6 +72,8 @@ build_script:
         -DCMAKE_CONFIGURATION_TYPES=Release \
         ..
     - cmake --build . --config Release
+    - copy c:\libiio-win64\*.dll c:\projects\libad9361-iio\build-win64\test\
+    - copy c:\projects\libad9361-iio\build-win64\Release\*.dll c:\projects\libad9361-iio\build-win64\test\Release
     - ctest -V -C Release
 
     # Create ZIPs
