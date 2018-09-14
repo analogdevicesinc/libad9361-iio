@@ -6,8 +6,10 @@ cd $TRAVIS_BUILD_DIR/build
 cmake -DOSX_PACKAGE=ON ..
 make
 ls
+make test
 
 cd $TRAVIS_BUILD_DIR/build_tar
 cmake -DOSX_PACKAGE=OFF -DENABLE_PACKAGING=ON ..
 make && make package
 ls
+make test
