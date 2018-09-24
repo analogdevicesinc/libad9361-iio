@@ -73,6 +73,9 @@ __api int ad9361_fmcomms5_multichip_sync(
 
 __api int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate);
 
+__api int ad9361_set_bb_rate_int_dec_8(struct iio_device *dev, struct iio_device *dev_rx,
+                                       struct iio_device *dev_tx, unsigned long rate);
+
 __api int ad9361_set_trx_fir_enable(struct iio_device *dev, int enable);
 
 __api int ad9361_get_trx_fir_enable(struct iio_device *dev, int *enable);

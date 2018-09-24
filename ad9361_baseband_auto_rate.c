@@ -160,3 +160,50 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 
 	return 0;
 }
+
+int set_int_dec_filter_rates(struct iio_device *dev_rx, struct iio_device *dev_tx, long long rate)
+{
+	int ret;
+	struct iio_channel *chan;
+
+	chan = iio_device_find_channel(dev_tx, "voltage0", true);
+	if (chan == NULL)
+		return -ENODEV;
+	ret = iio_channel_attr_write_longlong(chan, "sampling_frequency", rate);
+	if (ret < 0)
+		return ret;
+	chan = iio_device_find_channel(dev_rx, "voltage0", false);
+	if (chan == NULL)
+		return -ENODEV;
+	ret = iio_channel_attr_write_longlong(chan, "sampling_frequency", rate);
+	if (ret < 0)
+		return ret;
+}
+
+int ad9361_set_bb_rate_int_dec_8(struct iio_device *dev, struct iio_device *dev_rx, struct iio_device *dev_tx, unsigned long rate)
+{
+	int ret;
+
+	// // Reset system to configuration with dec/int filter off
+	// ret = ad9361_set_bb_rate(dev, 10000000);
+	// if (ret < 0)
+	// 	return ret;
+	// ret = set_int_dec_filter_rates(dev_rx, dev_tx, 10000000);
+	// if (ret < 0)
+	// 	return ret;
+
+	if (rate < (25000000/48)) {
+		unsigned long rate_FIR = rate*8;
+		ret = ad9361_set_bb_rate(dev, rate_FIR);
+		if (ret < 0)
+			return ret;
+	}
+	else {
+		ret = ad9361_set_bb_rate(dev, rate);
+		if (ret < 0)
+			return ret;
+	}
+	// Set dec8 and int8 filters
+	return set_int_dec_filter_rates(dev_rx, dev_tx, (long long) rate);
+
+}

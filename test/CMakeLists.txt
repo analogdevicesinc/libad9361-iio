@@ -15,3 +15,9 @@ target_link_libraries(FilterDesignerHardwareTest LINK_PRIVATE ${LIBIIO_LIBRARIES
 add_test(NAME FilterDesignerHardwareTest
          COMMAND FilterDesignerHardwareTest
          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_executable(AutoRateDecIntTest auto_rate_int8dec8.c)
+target_link_libraries(AutoRateDecIntTest LINK_PRIVATE ${LIBIIO_LIBRARIES} ad9361)
+add_test(NAME AutoRateDecIntTest
+         COMMAND AutoRateDecIntTest
+         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
