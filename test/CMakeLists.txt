@@ -21,3 +21,9 @@ target_link_libraries(AutoRateDecIntTest LINK_PRIVATE ${LIBIIO_LIBRARIES} ad9361
 add_test(NAME AutoRateDecIntTest
          COMMAND AutoRateDecIntTest
          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_executable(AutoRateTest auto_rate.c)
+target_link_libraries(AutoRateTest LINK_PRIVATE ${LIBIIO_LIBRARIES} ad9361)
+add_test(NAME AutoRateTest
+         COMMAND AutoRateTest
+         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})

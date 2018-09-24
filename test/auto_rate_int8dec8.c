@@ -22,7 +22,8 @@ int main(void)
     struct iio_channel *chan;
     long long current_rate;
 
-    unsigned long rates[] = {520888/8, 300000, 1000000, 10000000, 20000000, 60000000, 61440000};
+    // unsigned long rates[] = {520888/8, 300000, 1000000, 10000000, 20000000, 60000000, 61440000};
+    unsigned long rates[] = {520888, 600000, 1000000, 10000000, 20000000, 46000000};
 
     char * uri = "ip:192.168.2.1";
     ctx = iio_create_context_from_uri(uri);
@@ -42,9 +43,12 @@ int main(void)
 
             printf("Testing rate: %lu\n",rates[k]);
 
-            ret = ad9361_set_bb_rate_int_dec_8(dev, dev_rx, dev_tx, rates[k]);
-            if (ret<0)
-                return ret;
+            // ret = ad9361_set_bb_rate_int_dec_8(dev, dev_rx, dev_tx, rates[k]);
+            ret = ad9361_set_bb_rate(dev, rates[k]);
+            if (ret<0) {
+              printf("ad9361_set_bb_rate Failed: %d\n",ret);
+              return ret;
+            }
             printf("ad9361_set_bb_rate_int_dec_8 returned without error\n");
 
             // Checks
@@ -56,10 +60,10 @@ int main(void)
                 return ret;
 
             if (rates[k]<(25000000/48)) {
-                if (current_rate != (long long) rates[k]*8)
+                if (abs(current_rate - (long long) rates[k]*8) >2)
                     return -1;
             } else {
-                if (current_rate != (long long) rates[k])
+                if (abs(current_rate != (long long) rates[k])> 2)
                     return -1;
             }
             printf("FIR rate check passed\n");
@@ -73,10 +77,10 @@ int main(void)
 
             printf("current_rate %lld\n",current_rate);
             if (rates[k]<(25000000/48)) {
-                if (current_rate != (long long) rates[k])
+                if (abs(current_rate != (long long) rates[k])> 2)
                     return -1;
             } else {
-                if (current_rate != (long long) rates[k])
+                if (abs(current_rate != (long long) rates[k])> 2)
                     return -1;
             }
             printf("TX rate check passed\n");
@@ -89,10 +93,10 @@ int main(void)
                 return ret;
 
             if (rates[k]<(25000000/48)) {
-                if (current_rate != (long long) rates[k])
+                if (abs(current_rate != (long long) rates[k])> 2)
                     return -1;
             } else {
-                if (current_rate != (long long) rates[k])
+                if (abs(current_rate != (long long) rates[k])> 2)
                     return -1;
             }
             printf("RX rate check passed\n");
@@ -115,9 +119,13 @@ int main(void)
 
             printf("Testing rate: %lu\n",rates[k]);
 
-            ret = ad9361_set_bb_rate_int_dec_8(dev, dev_rx, dev_tx, rates[k]);
-            if (ret<0)
-                return ret;
+            // ret = ad9361_set_bb_rate_int_dec_8(dev, dev_rx, dev_tx, rates[k]);
+            ret = ad9361_set_bb_rate(dev, rates[k]);
+            if (ret<0) {
+              printf("ad9361_set_bb_rate Failed: %d\n",ret);
+              return ret;
+            }
+
             printf("ad9361_set_bb_rate_int_dec_8 returned without error\n");
 
             // Checks
@@ -129,10 +137,10 @@ int main(void)
                 return ret;
 
             if (rates[k]<(25000000/48)) {
-                if (current_rate != (long long) rates[k]*8)
+                if (abs(current_rate != (long long) rates[k]*8)> 2)
                     return -1;
             } else {
-                if (current_rate != (long long) rates[k])
+                if (abs(current_rate != (long long) rates[k])> 2)
                     return -1;
             }
             printf("FIR rate check passed\n");
@@ -146,10 +154,10 @@ int main(void)
 
             printf("current_rate %lld\n",current_rate);
             if (rates[k]<(25000000/48)) {
-                if (current_rate != (long long) rates[k])
+                if (abs(current_rate != (long long) rates[k])> 2)
                     return -1;
             } else {
-                if (current_rate != (long long) rates[k])
+                if (abs(current_rate != (long long) rates[k])> 2)
                     return -1;
             }
             printf("TX rate check passed\n");
@@ -162,10 +170,10 @@ int main(void)
                 return ret;
 
             if (rates[k]<(25000000/48)) {
-                if (current_rate != (long long) rates[k])
+                if (abs(current_rate != (long long) rates[k])> 2)
                     return -1;
             } else {
-                if (current_rate != (long long) rates[k])
+                if (abs(current_rate != (long long) rates[k])> 2)
                     return -1;
             }
             printf("RX rate check passed\n");
