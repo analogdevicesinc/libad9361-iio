@@ -254,6 +254,23 @@ int apply_custom_filter(struct iio_device *dev, unsigned dec_tx,
         return ret;
 
     if (rate <= (25000000 / 12))  {
+
+        int dacrate, txrate, max;
+        char readbuf[100];
+        ret = iio_device_attr_read(dev, "tx_path_rates", readbuf, sizeof(readbuf));
+        if (ret < 0)
+            return ret;
+        ret = sscanf(readbuf, "BBPLL:%*d DAC:%d T2:%*d T1:%*d TF:%*d TXSAMP:%d",
+                     &dacrate, &txrate);
+        if (ret != 2)
+            return -EFAULT;
+        if (txrate == 0)
+            return -EINVAL;
+        max = (dacrate / txrate) * 16;
+        if (max < taps)
+            iio_channel_attr_write_longlong(chan, "sampling_frequency", 3000000);
+
+
         ret = ad9361_set_trx_fir_enable(dev, true);
         if (ret < 0)
             return ret;
