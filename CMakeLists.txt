@@ -108,6 +108,8 @@ if(NOT SKIP_INSTALL_ALL)
 		PUBLIC_HEADER DESTINATION include)
 endif()
 
+add_subdirectory(bindings/matlab)
+
 # Create an installer if compiling for OSX
 if(OSX_PACKAGE)
 	set(LIBAD9361_PKG ${CMAKE_CURRENT_BINARY_DIR}/libad9361-${VERSION}.pkg)

@@ -29,7 +29,7 @@ extern "C" {
 #   else
 #	define __api __declspec(dllimport)
 #   endif
-#elif __GNUC__ >= 4
+#elif __GNUC__ >= 4 && !defined(MATLAB_MEX_FILE) && !defined(MATLAB_LOADLIBRARY)
 #   define __api __attribute__((visibility ("default")))
 #else
 #   define __api
