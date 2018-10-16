@@ -135,6 +135,7 @@ else()
 	message(STATUS "Doxygen not found, API documentation won't be generated")
 endif()
 
+add_subdirectory(bindings/matlab)
 
 # Create an installer if compiling for OSX
 if(OSX_PACKAGE)
