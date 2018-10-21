@@ -5,7 +5,7 @@ sharedlibdir=@CMAKE_INSTALL_PREFIX@/lib
 includedir=@CMAKE_INSTALL_PREFIX@/include
 
 Name: libad9361
-Description: Library for interfacing IIO devices
+Description: Device specific library for AD936X transceivers
 Version: @VERSION@
 
 Requires:

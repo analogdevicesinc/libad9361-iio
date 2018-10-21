@@ -12,6 +12,9 @@
  * Lesser General Public License for more details.
  */
 
+ /** @file ad9361.h
+  * @brief Public interface */
+
 #ifndef __AD9361_H__
 #define __AD9361_H__
 
@@ -64,6 +67,17 @@ struct filter_design_parameters {
     double maxTaps;
 };
 
+/** @} *//* ------------------------------------------------------------------*/
+/* ------------------------- Top-level functions -----------------------------*/
+/** @defgroup TopLevel Top-level functions
+ * @{ */
+
+
+/** @brief Multi-chip synchronization (MCS) management
+ * @param master A pointer to an iio_device structure
+ * @param slave A double pointer to an iio_device structure
+ * @param num_slaves Number of slave devices associated with the master
+ * @param flags Control flags for MCS configuration */
 __api int ad9361_multichip_sync(struct iio_device *master,
 		struct iio_device **slaves, unsigned int num_slaves,
 		unsigned int flags);
@@ -97,6 +111,7 @@ __api int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
                                                   unsigned long Fstop, unsigned long wnom_tx,
                                                   unsigned long wnom_rx);
 
+/** @} */
 
 #ifdef __cplusplus
 }
