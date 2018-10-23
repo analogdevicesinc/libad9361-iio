@@ -12,4 +12,16 @@ clients with a better and easier way of using this hardware.
 
 The full terms of the license can be found here: http://opensource.org/licenses/LGPL-2.1
 
+@section overview Overview
+
+This is a simple library used for userspace management control and configuration of AD936X transceivers,
+ - which manages multi-chip sync (on platforms (FMCOMMS5) where multiple AD9361 devices are use)
+ - can create AD9361 specific FIR filters on the fly
+
+
+@section ad9361_hardware AD9361 Transceiver Internals
+
+![Caption text](doc/AD9361.svg)
+
+
 */

@@ -87,6 +87,7 @@ struct filter_design_parameters {
     double maxTaps; /**< Maximum allowed FIR taps */
 };
 
+/* ---------------------------------------------------------------------------*/
 /* ------------------------- Top-level functions -----------------------------*/
 /** @defgroup TopLevel Top-level functions
  * @{ */
@@ -96,20 +97,26 @@ struct filter_design_parameters {
  * @param master A pointer to an iio_device structure
  * @param slaves A double pointer to an iio_device structure
  * @param num_slaves Number of slave devices associated with the master
- * @param flags Control flags for MCS configuration */
+ * @param flags Control flags for MCS configuration
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned */
 __api int ad9361_multichip_sync(struct iio_device *master,
 		struct iio_device **slaves, unsigned int num_slaves,
 		unsigned int flags);
 
 /** @brief FMComms5 specific MCS management
  * @param ctx A pointer to an iio_context structure
- * @param flags Control flags for MCS configuration */
+ * @param flags Control flags for MCS configuration
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned */
 __api int ad9361_fmcomms5_multichip_sync(
 		struct iio_context *ctx, unsigned int flags);
 
 /** @brief Baseband rate configuration with generic filter support
  * @param dev A pointer to an iio_device structure
  * @param rate Rate in samples per second of desired baseband rate
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned
  *
  * <b>NOTE:</b> Three possible filters are loaded based on required rate and
  * associated decimation/interpolation. These filters are generally very wide
@@ -118,19 +125,25 @@ __api int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate);
 
 /** @brief Enable or disable transmit and receiver FIRs simultaneously
  * @param dev A pointer to an iio_device structure
- * @param enable Integer to enable FIRs when 1 or disable when 0 */
+ * @param enable Integer to enable FIRs when 1 or disable when 0
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned */
 __api int ad9361_set_trx_fir_enable(struct iio_device *dev, int enable);
 
 /** @brief Get current enable value of transmit and receiver FIRs
  * @param dev A pointer to an iio_device structure
- * @param enable Returned integer value of FIR enabled */
+ * @param enable Returned integer value of FIR enabled
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned */
 __api int ad9361_get_trx_fir_enable(struct iio_device *dev, int *enable);
 
 /** @brief Design custom FIR filter from specific design criteria
  * @param parameters A pointer filter designer structure
  * @param taps A pointer to taps of designed filter
  * @param num_taps A pointer to integer number of taps designed in taps
- * @param gain Integer gain for designed filter */
+ * @param gain Integer gain for designed filter
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned */
 __api int ad9361_generate_fir_taps(struct filter_design_parameters *parameters,
                                    short *taps, int *num_taps, int *gain);
 
@@ -138,7 +151,9 @@ __api int ad9361_generate_fir_taps(struct filter_design_parameters *parameters,
  * @param tx_sample_rate Sample rate in samples per second of desired baseband rate
  * @param rate_gov Rate governor enable setting forcing HB3=3 when enabled
  * @param rx_path_clks A pointer to a unsigned long variable where the 6 RX path rates should be stored
- * @param tx_path_clks A pointer to a unsigned long variable where the 6 TX path rates should be stored */
+ * @param tx_path_clks A pointer to a unsigned long variable where the 6 TX path rates should be stored
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned */
 __api int ad9361_calculate_rf_clock_chain(unsigned long tx_sample_rate,
                                           unsigned long rate_gov,
                                           unsigned long *rx_path_clks,
@@ -147,7 +162,9 @@ __api int ad9361_calculate_rf_clock_chain(unsigned long tx_sample_rate,
 /** @brief Calculate the clock path rates and default filter settings for both transmit and receiver for a desired baseband rate
  * @param fdpTX Filter design parameters structure where TX filter design parameters will be stored
  * @param fdpRX Filter design parameters structure where RX filter design parameters will be stored
- * @param sample_rate Desired basedband sample rate in samples per second for both RX and TX filter configurations */
+ * @param sample_rate Desired basedband sample rate in samples per second for both RX and TX filter configurations
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned */
 __api int ad9361_calculate_rf_clock_chain_fdp(struct filter_design_parameters *fdpTX,
                                               struct filter_design_parameters *fdpRX,
                                               unsigned long sample_rate);
@@ -155,6 +172,8 @@ __api int ad9361_calculate_rf_clock_chain_fdp(struct filter_design_parameters *f
 /** @brief Baseband rate configuration with custom filter support based on desired baseband sample rate
  * @param dev A pointer to an iio_device structure
  * @param rate Rate in samples per second of desired baseband rate
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned
  *
  * <b>NOTE:</b> Designed filter will have the following configuration:
  * Fpass = rate / 3
@@ -171,7 +190,8 @@ __api int ad9361_set_bb_rate_custom_filter_auto(struct iio_device *dev,
  * @param Fstop Start edge frequency in hertz of stopband
  * @param wnom_tx TX RF bandwidth of analog filter in hertz
  * @param wnom_rx RX RF bandwidth of analog filter in hertz
- */
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned */
 __api int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
                                                   unsigned long rate, unsigned long Fpass,
                                                   unsigned long Fstop, unsigned long wnom_tx,
