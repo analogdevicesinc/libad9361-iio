@@ -6,4 +6,3 @@ cd $TRAVIS_BUILD_DIR/build
 cmake -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON ..
 make && make package
 make test
-

@@ -25,6 +25,10 @@ install:
     - mv libiio-*/MinGW64/* libiio-mingw-win64/
     - cp libiio-*/include/* libiio-mingw-win64/
 
+    #Install Inno Setup
+    - choco install InnoSetup
+    - set PATH=%PATH%;"C:\Program Files (x86)\Inno Setup 5"
+
 
 
 build_script:
@@ -44,7 +48,11 @@ build_script:
         -DCMAKE_MAKE_PROGRAM=c:/msys64/mingw32/bin/mingw32-make.exe \
         ..
     - cmake --build . --config Release
-    - ctest -C Release
+<<<<<<< HEAD
+    - copy c:\libiio-mingw-win32\*.dll c:\projects\libad9361-iio\build-mingw-win32\test\
+    - copy c:\projects\libad9361-iio\build-mingw-win32\*.dll c:\projects\libad9361-iio\build-mingw-win32\test\
+    - ctest -V -R
+>>>>>>> matlab-support
 
     # 64-bit build - MinGW
     - mkdir c:\projects\libad9361-iio\build-mingw-win64
@@ -58,7 +66,11 @@ build_script:
         -DCMAKE_MAKE_PROGRAM=c:/msys64/mingw64/bin/mingw32-make.exe \
         ..
     - cmake --build . --config Release
-    - ctest -C Release
+<<<<<<< HEAD
+    - copy c:\libiio-mingw-win64\*.dll c:\projects\libad9361-iio\build-mingw-win64\test\
+    - copy c:\projects\libad9361-iio\build-mingw-win64\*.dll c:\projects\libad9361-iio\build-mingw-win64\test\
+    - ctest -V -R
+>>>>>>> matlab-support
 
     # 32-bit build - VS
     - mkdir c:\projects\libad9361-iio\build-win32
@@ -69,7 +81,11 @@ build_script:
         -DCMAKE_CONFIGURATION_TYPES=Release \
         ..
     - cmake --build . --config Release
-    - ctest -C Release
+<<<<<<< HEAD
+    - copy c:\libiio-win32\*.dll c:\projects\libad9361-iio\build-win32\test\Release
+    - copy c:\projects\libad9361-iio\build-win32\Release\*.dll c:\projects\libad9361-iio\build-win32\test\Release
+    - ctest -V -C Release
+>>>>>>> matlab-support
 
     # 64-bit build - VS
     - mkdir c:\projects\libad9361-iio\build-win64
@@ -80,7 +96,15 @@ build_script:
         -DCMAKE_CONFIGURATION_TYPES=Release \
         ..
     - cmake --build . --config Release
-    - ctest -C Release
+<<<<<<< HEAD
+    - copy c:\libiio-win64\*.dll c:\projects\libad9361-iio\build-win64\test\Release
+    - copy c:\projects\libad9361-iio\build-win64\Release\*.dll c:\projects\libad9361-iio\build-win64\test\Release
+    - ctest -V -C Release
+    
+    #Create the installer
+    - ISCC c:\projects\libad9361-iio\build-win64\libad9361-iio.iss
+    - appveyor PushArtifact C:\libad9361-setup.exe
+>>>>>>> matlab-support
 
     # Create ZIPs
     - cd c:\projects\libad9361-iio
@@ -112,4 +136,3 @@ build_script:
     - copy c:\libiio-mingw-win64\*.dll c:\libad9361-mingw-win64\
     - 7z a "c:\libad9361-mingw-win64.zip" c:\libad9361-mingw-win64
     - appveyor PushArtifact c:\libad9361-mingw-win64.zip
-

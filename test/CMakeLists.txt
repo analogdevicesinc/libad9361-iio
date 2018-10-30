@@ -21,4 +21,9 @@ add_executable(FMComms5SyncTest fmcomms5_sync_test.c)
 target_link_libraries(FMComms5SyncTest ad9361 ${LIBIIO_LIBRARIES})
 add_test(NAME FMComms5SyncTest
          COMMAND FMComms5SyncTest
+
+add_executable(AutoRateTest auto_rate_test_hw.c)
+target_link_libraries(AutoRateTest LINK_PRIVATE ${LIBIIO_LIBRARIES} ad9361)
+add_test(NAME AutoRateTest
+         COMMAND AutoRateTest
          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
