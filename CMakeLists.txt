@@ -108,6 +108,34 @@ if(NOT SKIP_INSTALL_ALL)
 		PUBLIC_HEADER DESTINATION include)
 endif()
 
+set(CMAKE_INSTALL_DOCDIR "" CACHE PATH "documentation root (DATAROOTDIR/doc/${PROJECT_NAME}${LIBAD9361_VERSION_MAJOR}-doc)")
+include(GNUInstallDirs)
+set(CMAKE_INSTALL_DOCDIR "${CMAKE_INSTALL_DATAROOTDIR}/doc/${PROJECT_NAME}${LIBAD9361_VERSION_MAJOR}-doc")
+
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+	option(WITH_DOC "Generate documentation with Doxygen" ON)
+
+	if (WITH_DOC)
+		configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+		set(HTML_DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/html)
+		file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/doc DESTINATION ${HTML_DEST_DIR})
+
+		add_custom_command(TARGET ad9361 POST_BUILD
+			COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+			WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+			COMMENT "Generating API documentation with Doxygen" VERBATIM
+			)
+
+		if(NOT SKIP_INSTALL_ALL)
+			install(DIRECTORY ${HTML_DEST_DIR} DESTINATION ${CMAKE_INSTALL_DOCDIR})
+		endif()
+	endif()
+else()
+	message(STATUS "Doxygen not found, API documentation won't be generated")
+endif()
+
+
 # Create an installer if compiling for OSX
 if(OSX_PACKAGE)
 	set(LIBAD9361_PKG ${CMAKE_CURRENT_BINARY_DIR}/libad9361-${VERSION}.pkg)
