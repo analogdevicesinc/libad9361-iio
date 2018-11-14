@@ -103,6 +103,7 @@ build_script:
 
     - mkdir c:\libad9361-win32
     - copy ad9361.h c:\libad9361-win32\
+    - copy bindings\matlab\ad9361-wrapper.h c:\libad9361-win32\
     - copy build-win32\Release\libad9361.* c:\libad9361-win32\
     - copy c:\libiio-win32\*.dll c:\libad9361-win32\
     - 7z a "c:\libad9361-win32.zip" c:\libad9361-win32
@@ -110,6 +111,7 @@ build_script:
 
     - mkdir c:\libad9361-win64
     - copy ad9361.h c:\libad9361-win64\
+    - copy bindings\matlab\ad9361-wrapper.h c:\libad9361-win64\
     - copy build-win64\Release\libad9361.* c:\libad9361-win64\
     - copy c:\libiio-win64\*.dll c:\libad9361-win64\
     - 7z a "c:\libad9361-win64.zip" c:\libad9361-win64
@@ -117,6 +119,7 @@ build_script:
 
     - mkdir c:\libad9361-mingw-win32
     - copy ad9361.h c:\libad9361-mingw-win32\
+    - copy bindings\matlab\ad9361-wrapper.h c:\libad9361-mingw-win32\
     - copy build-mingw-win32\libad9361.* c:\libad9361-mingw-win32\
     - copy c:\libiio-mingw-win32\*.dll c:\libad9361-mingw-win32\
     - 7z a "c:\libad9361-mingw-win32.zip" c:\libad9361-mingw-win32
@@ -124,6 +127,7 @@ build_script:
 
     - mkdir c:\libad9361-mingw-win64
     - copy ad9361.h c:\libad9361-mingw-win64\
+    - copy bindings\matlab\ad9361-wrapper.h c:\libad9361-mingw-win64\
     - copy build-mingw-win64\libad9361.* c:\libad9361-mingw-win64\
     - copy c:\libiio-mingw-win64\*.dll c:\libad9361-mingw-win64\
     - 7z a "c:\libad9361-mingw-win64.zip" c:\libad9361-mingw-win64
