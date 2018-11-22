@@ -22,18 +22,15 @@ matrix:
     - compiler: "gcc"
       os: linux
       dist: trusty
-      env: LDIST=-trusty
     - compiler: "gcc"
       os: linux
       dist: xenial
       env:
-        - LDIST=-xenial
         - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
     - compiler: "gcc"
       os: osx
       osx_image: xcode8.1
       env:
-        - LDIST=-osx_10.12
         - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
 
 addons:
