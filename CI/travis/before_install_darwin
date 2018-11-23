@@ -2,15 +2,7 @@
 
 . CI/travis/lib.sh
 
-brew update
-if ! brew ls --version cmake &>/dev/null; then
-	brew install cmake
-else
-	brew upgrade cmake
-fi
-brew install doxygen
-brew install --build-from-source libusb
-brew install libxml2
+brew_install_or_upgrade cmake doxygen libusb libxml2
 
 wget http://swdownloads.analog.com/cse/travis_builds/${LIBIIO_BRANCH}_latest_libiio${LDIST}.pkg
 sudo installer -pkg ${LIBIIO_BRANCH}_latest_libiio${LDIST}.pkg -target /
