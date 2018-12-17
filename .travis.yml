@@ -10,6 +10,9 @@ env:
   # DEPLOY_TO directory
   - secure: "KejjF6Zyhd37TCFfn08Htco7LYkKc+yEwMzgSEUF6kjeoMe0VYlNCDqlAvQRdGXONZg7cz83h298gJfbvDkKdMm32e73NPfXcCdQBWTuWYx8xzM63WuKrYjM+oFyAxJ2hgOOaK14ctSQtAcnpaZRm12aIpbeRgwpe2oZEBOwwYi4TdwMvrG7WyxhZniqfFQYYjT/8xAgzkmREAJRxp/PBp1+Xe2vkTHZUMHxOM3JAiganSfvgnPA7imY/wu5si9qcwNw0bo+0ISDNXk3mV9p5dlB5Cudjfme8kMjYjqUrBcQ9p0heODZXRCfwC+kdsg4oLAYdDB5nOvPX3b18liWl6ZZ/qaiaq6eLro9IgJgrALFBpElr6oVlMaAil8yKIokM9Pfga1MhdZLLZEuziK2B1T34IS7/5PEy/l9+9cFezpCj0e2Mdpa6FbcrjyX1uPK/U2Hy9tKdVzuLPBS4bQgrKah+Xc2ml3EU+SEhz3UGSi2d+9GZQ0G2n1sVcawVOyzcdqHO6Y53WQ2/UVwJ9TsnLPTWUHLplGgRmAXbTtEhQDDYeffwVd7nZfTQlEug00DlrSoJoSHra6s7oEYLC2lrJoyH82/nkjvCupqxZM9D1V82sUsYAgC4KVzZNg0VROycbBefpgIrvw01eSakay1vOVNsrxptcNXjK9/wiuFbOI="
 
+services:
+  - docker
+
 matrix:
   include:
     - compiler: "clang"
@@ -26,11 +29,11 @@ matrix:
         - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
     - os: linux
       env:
-        - OS_TYPE=centos
+        - OS_TYPE=centos_docker
         - OS_VERSION=6
     - os: linux
       env:
-        - OS_TYPE=centos
+        - OS_TYPE=centos_docker
         - OS_VERSION=7
     - os: linux
       env:
