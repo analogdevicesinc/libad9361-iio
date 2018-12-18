@@ -21,31 +21,36 @@ matrix:
       env: LDIST=DO_NOT_DEPLOY
     - compiler: "gcc"
       os: linux
-      dist: precise
-      env: LDIST=-precise
-    - compiler: "gcc"
-      os: linux
       dist: trusty
-      env: LDIST=-trusty
     - compiler: "gcc"
       os: linux
       dist: xenial
       env:
-        - LDIST=-xenial
+        - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
+    - os: linux
+      env:
+        - OS_TYPE=centos
+        - OS_VERSION=6
+    - os: linux
+      env:
+        - OS_TYPE=centos
+        - OS_VERSION=7
+    - os: linux
+      env:
+        - OS_TYPE=ubuntu_docker
+        - OS_VERSION=bionic
+    - compiler: "gcc"
+      os: osx
+      osx_image: xcode8
+    - compiler: "gcc"
+      os: osx
+      osx_image: xcode9.2
+      env:
         - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
     - compiler: "gcc"
       os: osx
-      osx_image: xcode6.4
-      env: LDIST=-osx_10.10
-    - compiler: "gcc"
-      os: osx
-      osx_image: xcode7.3
-      env: LDIST=-osx_10.11
-    - compiler: "gcc"
-      os: osx
-      osx_image: xcode8.1
+      osx_image: xcode10.1
       env:
-        - LDIST=-osx_10.12
         - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
 
 addons:
@@ -88,6 +93,17 @@ deploy:
       repo: analogdevicesinc/libad9361-iio
       tags: true
       condition: "($CC = gcc) && ($TRAVIS_OS_NAME = linux)"
+  - provider: releases
+    api_key:
+      secure: "ocDkFUpRYim0o3kEzO5It8mTjg4FnVYT+KaXoUtZA6r9x6VZteSFvimELIV/WePGnNLOavlXPgRb+cXmJiYSkVkFqrrwRkHgYvTapjPn/LBh0xDQZi9SrvTj/ICW3tMu7Esxqa7P2snhLf7P4XkLMySxeooKe4BoV5Uy8WUy+IE0HCkCxaiokUFEg7UVVDLy5ahTyVcdV4su44E+URCBDTk+UvgKJ3VDjNVDZp8uea7RBRHVfSucb/12AeJr+PkaxrbsqtI+GHMohvmLVBmALkP+WtLLMklxPofEnBW/UV6iU+hvEd6dROqG9T52hDQpcBqdJlqx4C3mHkPpt7lxSFTcyyTKEqRKZA0sBexadMZ3fnS2gNXizstuDAxIuCowc+nOjk1WNAN8z4ADxk5t4ct8U1I7CTA0TgkTzkRizeelTTZCbt8kHwh4oTalBt/5rIg3Tk8+YgrwvuEIAmRwPIORob+xbYGK9GCKwmdfpSuVhcLsgb43eh96ZXQ2bBn30I3pebCMm9xa+1c8pStBlMYmJPJv0Y6m5uNUJAvOImWNoZlyA967Df8b3pbODqhFkUN3OgDyR3uYRxBCohZgmguOvHsqtkM66/QgIMy2vQxhcnzc78dMT/BfLJ13RuN6+9DiGUMuGCzsVgQ7MNQu8MAkUV+fiEdGz6yxskiwpAQ="
+    file:
+      - "${RELEASE_PKG_FILE_PKG}"
+      - "${RELEASE_PKG_FILE_TGZ}"
+    skip_cleanup: true
+    on:
+      repo: analogdevicesinc/libad9361-iio
+      tags: true
+      condition: "$TRAVIS_OS_NAME = osx"
   - provider: script
     skip_cleanup: true
     script:

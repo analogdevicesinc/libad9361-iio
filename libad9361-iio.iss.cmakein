@@ -53,6 +53,7 @@ Source: "C:\projects\libad9361-iio\build-win64\test\Release\*.exe"; DestDir: "{s
 Source: "C:\projects\libad9361-iio\build-win32\Release\libad9361.lib"; DestDir: "{pf32}\Microsoft Visual Studio 12.0\VC\lib"; Check: not Is64BitInstallMode
 Source: "C:\projects\libad9361-iio\build-win64\Release\libad9361.lib"; DestDir: "{pf32}\Microsoft Visual Studio 12.0\VC\lib\amd64"; Check: Is64BitInstallMode
 Source: "C:\projects\libad9361-iio\ad9361.h"; DestDir: "{pf32}\Microsoft Visual Studio 12.0\VC\include"
+Source: "C:\projects\libad9361-iio\bindings\matlab\ad9361-wrapper.h"; DestDir: "{pf32}\Microsoft Visual Studio 12.0\VC\include"
 
 Source: "C:\libiio-win32\libiio.dll"; DestDir: "{sys}"; Flags: onlyifdoesntexist 32bit
 Source: "C:\libiio-win64\libiio.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist

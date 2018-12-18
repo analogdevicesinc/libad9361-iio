@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/sh -xe
+
+. CI/travis/lib.sh
 
 sudo apt-get -qq update
 sudo apt-get install -y cmake doxygen libaio-dev libavahi-client-dev libavahi-common-dev libusb-1.0-0-dev libxml2-dev rpm tar bzip2 gzip
@@ -6,11 +8,5 @@ if [ `sudo apt-cache search libserialport-dev | wc -l` -gt 0 ] ; then
 	sudo apt-get install -y libserialport-dev
 fi
 
-if [ "$LDIST" = "DO_NOT_DEPLOY" ] ; then
-	DIST_SUFFIX="-trusty"
-else
-	DIST_SUFFIX="$LDIST"
-fi
-
-wget http://swdownloads.analog.com/cse/travis_builds/master_latest_libiio${DIST_SUFFIX}.deb
-sudo dpkg -i ./master_latest_libiio${DIST_SUFFIX}.deb
+wget http://swdownloads.analog.com/cse/travis_builds/${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
+sudo dpkg -i ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
