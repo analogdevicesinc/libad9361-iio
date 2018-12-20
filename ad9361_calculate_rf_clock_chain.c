@@ -18,13 +18,12 @@
 #define MIN_BBPLL_DIV	2
 #define MAX_DATA_RATE 61440000UL // Output of FIR (RX)
 #define MIN_DATA_RATE MIN_ADC_CLK / 48
-// Output of FIR on RX
+// Input of FIR on RX
 #define MAX_FIR MAX_DATA_RATE * 2
-// Associated with outputs of stage
+// Associated with inputs of stage
 #define MAX_RX_HB1 245760000UL
 #define MAX_RX_HB2 320000000UL
 #define MAX_RX_HB3 640000000UL
-// Associated with inputs of stage
 #define MAX_TX_HB1 160000000UL
 #define MAX_TX_HB2 320000000UL
 #define MAX_TX_HB3 320000000UL
