@@ -481,8 +481,8 @@ int phase_sync(struct iio_context *ctx, long long sample_rate, long long lo) {
   ret = configure_transceiver(dev_phy_slave, bw, sample_rate, lo);
   CHECK(ret);
 
-  // Turn on quad tracking
-  quad_tracking(true);
+  // Turn off quad tracking
+  quad_tracking(false);
 
   // Reset all phase shifts to zero
   ret = trx_phase_rotation(dev_rx, 0.0);
