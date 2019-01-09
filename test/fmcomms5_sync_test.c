@@ -32,18 +32,21 @@ int main(void)
 {
   // Set up context
   struct iio_context *ctx;
-  char * uri = "ip:192.168.3.2";
+  char * uri = "ip:192.168.1.208";
   ctx = iio_create_context_from_uri(uri);
   if (ctx==NULL)
     exit(0);// Cant find anything don't run tests
   if (!check_fmcomms5_connected(ctx))
     exit(0);// Cant find anything don't run tests
   // Sync
-  int freqMHZ, ret=0;
-  for (freqMHZ = 3; freqMHZ<60; freqMHZ++) {
-      ret = ad9361_fmcomms5_phase_sync(ctx, MHZ(freqMHZ), GHZ(0.90846));
-      if (ret<0)
+  int freqGHZ, ret=0;
+  for (freqGHZ = 1; freqGHZ<5; freqGHZ++) {
+      printf("#### Calibrating FMComms5 at LO %d GHz ####\n",freqGHZ);
+      ret = ad9361_fmcomms5_phase_sync(ctx, GHZ(freqGHZ));
+      if (ret<0) {
+          printf("Error: %d\n",ret);
           break;
+      }
   }
   // Cleanup
   if (ctx) { iio_context_destroy(ctx); }
