@@ -2,7 +2,36 @@
 
 if [ "x${COVERITY_SCAN_PROJECT_NAME}" != "x" ] ; then exit 0; fi
 
-cd $TRAVIS_BUILD_DIR/build
-cmake -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON ..
-make && make package
-make test
+. CI/travis/lib.sh
+
+handle_default() {
+	mkdir -p build
+	cd build
+	cmake -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON ..
+	make && make package && make test
+	cd ..
+}
+
+handle_centos() {
+	mkdir -p build
+	cd build
+	cmake -DENABLE_PACKAGING=ON ..
+	make && make package && make test
+	cd ..
+}
+
+handle_centos_docker() {
+	run_docker_script inside_docker.sh \
+		"centos:centos${OS_VERSION}" "centos"
+}
+
+handle_ubuntu_docker() {
+	run_docker_script inside_docker.sh \
+		"ubuntu:${OS_VERSION}"
+}
+
+LIBNAME="$1"
+OS_TYPE=${2:-default}
+OS_VERSION="$3"
+
+handle_${OS_TYPE}

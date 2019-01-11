@@ -2,11 +2,36 @@
 
 . CI/travis/lib.sh
 
-sudo apt-get -qq update
-sudo apt-get install -y cmake doxygen libaio-dev libavahi-client-dev libavahi-common-dev libusb-1.0-0-dev libxml2-dev rpm tar bzip2 gzip
-if [ `sudo apt-cache search libserialport-dev | wc -l` -gt 0 ] ; then
-	sudo apt-get install -y libserialport-dev
-fi
+handle_centos() {
+	# FIXME: see about adding `libserialport-dev` from EPEL ; maybe libusb-1.0.0-devel...
+	yum -y groupinstall 'Development Tools'
+	yum -y install cmake libxml2-devel libusb1-devel doxygen libaio-devel \
+		avahi-devel bzip2 gzip rpm rpm-build
 
-wget http://swdownloads.analog.com/cse/travis_builds/${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
-sudo dpkg -i ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
+	wget http://swdownloads.analog.com/cse/travis_builds/${LIBIIO_BRANCH}_latest_libiio${LDIST}.rpm
+	sudo yum localinstall -y ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.rpm
+}
+
+handle_centos_docker() {
+	prepare_docker_image "centos:centos${OS_VERSION}"
+}
+
+handle_ubuntu_docker() {
+	prepare_docker_image "ubuntu:${OS_VERSION}"
+}
+
+handle_default() {
+	sudo apt-get -qq update
+	sudo apt-get install -y cmake doxygen graphviz libaio-dev libavahi-client-dev libavahi-common-dev libusb-1.0-0-dev libxml2-dev rpm tar bzip2 gzip flex bison git
+	if [ `sudo apt-cache search libserialport-dev | wc -l` -gt 0 ] ; then
+		sudo apt-get install -y libserialport-dev
+	fi
+
+	wget http://swdownloads.analog.com/cse/travis_builds/${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
+	sudo dpkg -i ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
+}
+
+OS_TYPE=${1:-default}
+OS_VERSION=${2}
+
+handle_${OS_TYPE}

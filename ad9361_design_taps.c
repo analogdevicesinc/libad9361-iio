@@ -204,18 +204,19 @@ int apply_custom_filter(struct iio_device *dev, unsigned dec_tx,
                         unsigned dec_rx, short *tapsTx,
                         short *tapsRx, unsigned taps,
                         unsigned long rate,
-                        int gain_tx, int gain_rx)
+                        int gain_tx, int gain_rx,
+                        unsigned long wnom_tx, unsigned long wnom_rx)
 {
-    struct iio_channel *chan;
+    struct iio_channel *chanTX, *chanRX;
     long long current_rate;
     int ret, i, enable, len = 0;
     char *buf;
 
-    chan = iio_device_find_channel(dev, "voltage0", true);
-    if (chan == NULL)
+    chanTX = iio_device_find_channel(dev, "voltage0", true);
+    if (chanTX == NULL)
         return -ENODEV;
 
-    ret = iio_channel_attr_read_longlong(chan, "sampling_frequency", &current_rate);
+    ret = iio_channel_attr_read_longlong(chanTX, "sampling_frequency", &current_rate);
     if (ret < 0)
         return ret;
 
@@ -225,7 +226,7 @@ int apply_custom_filter(struct iio_device *dev, unsigned dec_tx,
 
     if (enable) {
         if (current_rate <= (25000000 / 12))
-            iio_channel_attr_write_longlong(chan, "sampling_frequency", 3000000);
+            iio_channel_attr_write_longlong(chanTX, "sampling_frequency", 3000000);
 
         ret = ad9361_set_trx_fir_enable(dev, false);
         if (ret < 0)
@@ -268,23 +269,33 @@ int apply_custom_filter(struct iio_device *dev, unsigned dec_tx,
             return -EINVAL;
         max = (dacrate / txrate) * 16;
         if (max < taps)
-            iio_channel_attr_write_longlong(chan, "sampling_frequency", 3000000);
+            iio_channel_attr_write_longlong(chanTX, "sampling_frequency", 3000000);
 
 
         ret = ad9361_set_trx_fir_enable(dev, true);
         if (ret < 0)
             return ret;
-        ret = iio_channel_attr_write_longlong(chan, "sampling_frequency", rate);
+        ret = iio_channel_attr_write_longlong(chanTX, "sampling_frequency", rate);
         if (ret < 0)
             return ret;
     } else {
-        ret = iio_channel_attr_write_longlong(chan, "sampling_frequency", rate);
+        ret = iio_channel_attr_write_longlong(chanTX, "sampling_frequency", rate);
         if (ret < 0)
             return ret;
         ret = ad9361_set_trx_fir_enable(dev, true);
         if (ret < 0)
             return ret;
     }
+
+    chanRX = iio_device_find_channel(dev, "voltage0", false);
+    if (chanRX == NULL)
+        return -ENODEV;
+    ret = iio_channel_attr_write_longlong(chanTX, "rf_bandwidth", wnom_tx);
+    if (ret < 0)
+        return ret;
+    ret = iio_channel_attr_write_longlong(chanRX, "rf_bandwidth", wnom_rx);
+    if (ret < 0)
+        return ret;
 
     return 0;
 }
@@ -336,7 +347,7 @@ int ad9361_set_bb_rate_custom_filter_auto(struct iio_device *dev,
     dec_rx = (unsigned) fdpRX.FIR;
     num_taps = (unsigned) fdpTX.maxTaps;
     ret = apply_custom_filter(dev, dec_tx, dec_rx, taps_tx, taps_rx, num_taps,
-                              rate, gain_tx, gain_rx);
+                              rate, gain_tx, gain_rx, fdpTX.wnom, fdpRX.wnom);
     if (ret < 0)
         return ret;
 
@@ -375,7 +386,7 @@ int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
     num_taps = (unsigned) fdpTX.maxTaps;
 
     ret = apply_custom_filter(dev, dec_tx, dec_rx, taps_tx, taps_rx, num_taps,
-                              rate, gain_tx, gain_rx);
+                              rate, gain_tx, gain_rx, wnom_tx, wnom_rx);
     if (ret < 0)
         return ret;
 

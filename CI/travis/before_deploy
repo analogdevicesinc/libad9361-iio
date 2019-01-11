@@ -1,6 +1,6 @@
 #!/bin/sh -xe
 
-cd $TRAVIS_BUILD_DIR
+. CI/travis/lib.sh
 
 check_file()
 {
