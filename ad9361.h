@@ -205,11 +205,15 @@ __api int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
  *
  * <b>NOTES:</b> To perform calibration the following side effects occur:
  * - RF bandwidths of both TX and RX are expanded to the current sample rate. It can be changed after calibration without effecting phase synchronization.
- * - DDSs are enabled and left on after synchronization. Changing these DDSs or switching to DMA sources will not effect phase synchronization
- * - TX and RX LOs are set to the same frequency based on the input provided. LO changes can invalidate phase synchronization
- * - AGCs are set to manual mode at a pre-determined hardware gains for TX and RX. Gain changes can invalidate phase synchronization
+ * - DDSs are enabled and left on after synchronization. Changing these DDSs or switching to DMA sources will not effect phase synchronization.
+ * - TX and RX LOs are set to the same frequency based on the input provided. LO changes can invalidate phase synchronization.
+ * - AGCs are set to manual mode at predetermined hardware gains for TX and RX. Gain changes can invalidate phase synchronization.
  *
- * Phase synchronization is valid until the LOs are retuned or sample rates change or gains are modified*/
+ * Phase synchronization is valid until the LOs are retuned or sample rates change or gains are modified.
+ *
+ * <b>External Links:</b>
+ * - <a href="https://wiki.analog.com/resources/eval/user-guides/ad-fmcomms5-ebz/multi-chip-sync">Detailed information on synchronization process</a>
+ * - <a href="https://wiki.analog.com/resources/eval/user-guides/ad-fmcomms5-ebz/hardware">Phase synchronization performance can depend on revision of hardware</a>*/
 __api int ad9361_fmcomms5_phase_sync(struct iio_context *ctx, long long lo);
 
 /** @} */
