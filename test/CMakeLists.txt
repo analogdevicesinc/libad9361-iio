@@ -18,7 +18,7 @@ add_test(NAME FilterDesignerHardwareTest
 
 #find_library(LIBIIO_LIBRARIES iio)
 add_executable(FMComms5SyncTest fmcomms5_sync_test.c)
-target_link_libraries(FMComms5SyncTest ad9361 ${LIBIIO_LIBRARIES})
+target_link_libraries(FMComms5SyncTest LINK_PRIVATE ${LIBIIO_LIBRARIES} ad9361 m)
 add_test(NAME FMComms5SyncTest
          COMMAND FMComms5SyncTest
          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
@@ -28,5 +28,3 @@ target_link_libraries(AutoRateTest LINK_PRIVATE ${LIBIIO_LIBRARIES} ad9361)
 add_test(NAME AutoRateTest
          COMMAND AutoRateTest
          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-
-
