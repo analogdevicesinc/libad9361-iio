@@ -16,9 +16,12 @@ add_test(NAME FilterDesignerHardwareTest
          COMMAND FilterDesignerHardwareTest
          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-#find_library(LIBIIO_LIBRARIES iio)
 add_executable(FMComms5SyncTest fmcomms5_sync_test.c)
-target_link_libraries(FMComms5SyncTest LINK_PRIVATE ${LIBIIO_LIBRARIES} ad9361 m)
+if(WIN32)
+  target_link_libraries(FMComms5SyncTest LINK_PRIVATE ${LIBIIO_LIBRARIES} ad9361)
+else()
+  target_link_libraries(FMComms5SyncTest LINK_PRIVATE ${LIBIIO_LIBRARIES} ad9361 m)
+endif()
 add_test(NAME FMComms5SyncTest
          COMMAND FMComms5SyncTest
          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
