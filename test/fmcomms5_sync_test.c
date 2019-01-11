@@ -1,4 +1,5 @@
 
+#include "ad9361.h"
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -7,16 +8,15 @@
 #else
 #include <iio.h>
 #endif
-#include "ad9361.h"
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
-#include <unistd.h>
-#include <time.h>
 #ifdef _WIN32
 #include <windows.h>
 #else
+#include <unistd.h>
+#include <time.h>
 #endif
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
