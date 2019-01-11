@@ -197,6 +197,25 @@ __api int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
                                                   unsigned long Fstop, unsigned long wnom_tx,
                                                   unsigned long wnom_rx);
 
+/** @brief FMComms5 phase synchronize all TX and RX channels together
+ * @param ctx A pointer to an iio_context structure
+ * @param lo Frequency in hertz of LO for TX and RX
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned. If -2 is returned calibration failed
+ *
+ * <b>NOTES:</b> To perform calibration the following side effects occur:
+ * - RF bandwidths of both TX and RX are expanded to the current sample rate. It can be changed after calibration without effecting phase synchronization.
+ * - DDSs are enabled and left on after synchronization. Changing these DDSs or switching to DMA sources will not effect phase synchronization.
+ * - TX and RX LOs are set to the same frequency based on the input provided. LO changes can invalidate phase synchronization.
+ * - AGCs are set to manual mode at predetermined hardware gains for TX and RX. Gain changes can invalidate phase synchronization.
+ *
+ * Phase synchronization is valid until the LOs are retuned or sample rates change or gains are modified.
+ *
+ * <b>External Links:</b>
+ * - <a href="https://wiki.analog.com/resources/eval/user-guides/ad-fmcomms5-ebz/multi-chip-sync">Detailed information on synchronization process</a>
+ * - <a href="https://wiki.analog.com/resources/eval/user-guides/ad-fmcomms5-ebz/hardware">Phase synchronization performance can depend on revision of hardware</a>*/
+__api int ad9361_fmcomms5_phase_sync(struct iio_context *ctx, long long lo);
+
 /** @} */
 
 #ifdef __cplusplus
