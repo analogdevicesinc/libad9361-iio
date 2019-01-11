@@ -45,7 +45,7 @@
 #define DEV_PHY_SLAVE_NAME "ad9361-phy-B"
 
 #define DDS_SCALE 0.2
-#define SAMPLES 32768
+#define SAMPLES 8192
 #define TOLERANCE 0.01 // Degrees
 #define CALIBRATE_TRIES 30
 #define STEP_SIZE 0.5
@@ -129,6 +129,7 @@ void dds_tx_phase_rotation(struct iio_device *dev, double val)
 double calculate_phase(int16_t *a, int16_t *b, int16_t *c, int16_t *d,
                        int samples)
 {
+    // Fast phase estimation with complex signals handling wrapped phase
     int k = 0;
     double real = 0, imag = 0;
     for (; k < samples; k++) {
@@ -238,6 +239,7 @@ int trx_phase_rotation(struct iio_device *dev, double val)
     struct iio_channel *out0, *out1;
     double phase, vcos, vsin;
     unsigned offset;
+    int ret;
 
     bool output = (dev == dev_tx_slave) || (dev == dev_tx);
 
@@ -267,10 +269,14 @@ int trx_phase_rotation(struct iio_device *dev, double val)
             return -ENODEV;
 
         if (out1 && out0) {
-            iio_channel_attr_write_double(out0, "calibscale", (double)vcos);
-            iio_channel_attr_write_double(out0, "calibphase", (double)(-1.0 * vsin));
-            iio_channel_attr_write_double(out1, "calibscale", (double)vcos);
-            iio_channel_attr_write_double(out1, "calibphase", (double)vsin);
+            ret = iio_channel_attr_write_double(out0, "calibscale", (double)vcos);
+            CHECK(ret);
+            ret = iio_channel_attr_write_double(out0, "calibphase", (double)(-1.0 * vsin));
+            CHECK(ret);
+            ret = iio_channel_attr_write_double(out1, "calibscale", (double)vcos);
+            CHECK(ret);
+            ret = iio_channel_attr_write_double(out1, "calibphase", (double)vsin);
+            CHECK(ret);
         }
     }
     return 0;
@@ -359,6 +365,8 @@ int calibrate_chain(struct iio_device *dev, double scale, double *phase)
     if (streaming_interfaces(true) < 0)
         return -ENODEV;
 
+    *phase = 0;
+
     for (; k < CALIBRATE_TRIES; k++) {
 
         *phase = STEP_SIZE * est + (*phase);
@@ -368,15 +376,16 @@ int calibrate_chain(struct iio_device *dev, double scale, double *phase)
         for (g=0; g<STALE_BUFFERS; g++)
             ret = estimate_phase_diff(&est);
         CHECK(ret);
-        est *= scale;
 
 #if (DEBUG > 1)
-        printf("Phase error: %f\n", est);
+        printf("Phase error: %f | Phase Setting: %f\n", est, *phase);
 #endif
         if (fabs(est) < TOLERANCE) {
             ret = 0;
             break;
         }
+
+        est *= scale;
     }
 
     streaming_interfaces(false);
@@ -406,21 +415,42 @@ int quad_tracking(bool enable)
 int configure_transceiver(struct iio_device *dev, long long bw_hz,
                           long long fs_hz, long long lo_hz)
 {
+    int ret = 0;
     // Set up channels
-    struct iio_channel *chnRX =
-        iio_device_find_channel(dev_phy, "voltage0", false);
-    struct iio_channel *chnTX =
-        iio_device_find_channel(dev_phy, "voltage0", true);
-    if (!(chnRX && chnRX))
-        return -ENODEV;
-    // Setup remaining channel info
+    struct iio_channel *chnRX1;
+    struct iio_channel *chnTX1;
+    struct iio_channel *chnRX2;
+    struct iio_channel *chnTX2;
     // Configure LO channel
-    chnRX = iio_device_find_channel(dev, "altvoltage0", true);
-    chnTX = iio_device_find_channel(dev, "altvoltage1", true);
-    if (!(chnRX && chnTX))
+    chnRX1 = iio_device_find_channel(dev, "altvoltage0", true);
+    chnTX1 = iio_device_find_channel(dev, "altvoltage1", true);
+    if (!(chnRX1 && chnTX1))
         return -ENODEV;
-    iio_channel_attr_write_longlong(chnRX, "frequency", lo_hz);
-    iio_channel_attr_write_longlong(chnTX, "frequency", lo_hz);
+    ret = iio_channel_attr_write_longlong(chnRX1, "frequency", lo_hz);
+    CHECK(ret);
+    ret = iio_channel_attr_write_longlong(chnTX1, "frequency", lo_hz);
+    CHECK(ret);
+    // Set up gains to know good values
+    chnRX1 = iio_device_find_channel(dev, "voltage0", false);
+    chnTX1 = iio_device_find_channel(dev, "voltage0", true);
+    chnRX2 = iio_device_find_channel(dev, "voltage1", false);
+    chnTX2 = iio_device_find_channel(dev, "voltage1", true);
+    if (!(chnRX1 && chnTX1 && chnRX2 && chnTX2))
+        return -ENODEV;
+    ret = iio_channel_attr_write(chnRX1, "gain_control_mode", "manual");
+    CHECK(ret);
+    ret = iio_channel_attr_write(chnRX2, "gain_control_mode", "manual");
+    CHECK(ret);
+    ret = iio_channel_attr_write_double(chnRX1, "hardwaregain", 32.0);
+    CHECK(ret);
+
+    ret = iio_channel_attr_write_double(chnRX2, "hardwaregain", 32.0);
+    CHECK(ret);
+    ret = iio_channel_attr_write_double(chnTX1, "hardwaregain", -20);
+    CHECK(ret);
+    ret = iio_channel_attr_write_double(chnTX2, "hardwaregain", -20);
+    CHECK(ret);
+
     return 0;
 }
 
@@ -476,7 +506,7 @@ int setup_iio_devices(struct iio_context *ctx)
 /* Synchronize all transmit and receive channels for FMComms5*/
 int phase_sync(struct iio_context *ctx, long long sample_rate, long long lo)
 {
-    // Set bandwidth same as sample rate
+    // Set analog bandwidth same as sample rate
     long long bw = sample_rate;
 
     // Set up devices
@@ -496,7 +526,7 @@ int phase_sync(struct iio_context *ctx, long long sample_rate, long long lo)
     ret = configure_dds(sample_rate, DDS_SCALE);
     CHECK(ret);
 
-    // Set LO and bandwidths of transceivers
+    // Set LO, bandwidth, and gain of transceivers
     ret = configure_transceiver(dev_phy, bw, sample_rate, lo);
     CHECK(ret);
     ret = configure_transceiver(dev_phy_slave, bw, sample_rate, lo);
