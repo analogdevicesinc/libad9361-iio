@@ -2,7 +2,11 @@
 
 This is a simple library used for userspace,
  - which manages multi-chip sync (on platforms (FMCOMMS5) where multiple AD9361 devices are use)
- - can create AD9361 specific FIR filters on the fly, 
+ - can create AD9361 specific FIR filters on the fly,
+ 
+**Docs**
+
+Doxygen-based documentation is available at: http://analogdevicesinc.github.io/libad9361-iio/
 
 
 License : [![License](https://img.shields.io/badge/license-LGPL2-blue.svg)](https://github.com/analogdevicesinc/libad9361-iio/blob/master/COPYING.txt)
