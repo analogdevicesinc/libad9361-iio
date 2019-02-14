@@ -24,6 +24,7 @@ struct PHY {
 //#define MIN_ADC_CLK			(MIN_BBPLL_FREQ / MAX_BBPLL_DIV) /* 11.17MHz */
 #define MAX_ADC_CLK			640000000UL /* 640 MHz */
 #define MAX_DAC_CLK	(MAX_ADC_CLK / 2)
+#define MIN_DAC_CLK 25000000UL /* 25 MHz */
 
 #define MAX_BBPLL_FREF			70007000UL /* 70 MHz + 100ppm */
 #define MIN_BBPLL_FREQ			714928500UL /* 715 MHz - 100ppm */
@@ -45,8 +46,12 @@ struct PHY {
 #define MAX_TX_HB2 245760000UL
 #define MAX_TX_HB3 320000000UL
 
-unsigned long txr[6] = {MAX_BBPLL_FREQ, MAX_DAC_CLK, MAX_RX_HB3, MAX_RX_HB2, MAX_RX_HB1, MAX_DATA_RATE};
-unsigned long rxr[6] = {MAX_BBPLL_FREQ, MAX_ADC_CLK, MAX_TX_HB3, MAX_RX_HB2, MAX_RX_HB1, MAX_DATA_RATE};
+#define check(val,min,max) ( (val)<=(max) ? (val)>=(min) : false )
+const unsigned long RX_MAX_PATH_RATES[] = {MAX_BBPLL_FREQ,MAX_ADC_CLK, MAX_RX_HB3, MAX_RX_HB2, MAX_RX_HB1, MAX_FIR};
+const unsigned long TX_MAX_PATH_RATES[] = {MAX_BBPLL_FREQ,MAX_DAC_CLK, MAX_TX_HB3, MAX_TX_HB2, MAX_TX_HB1, MAX_FIR};
+const unsigned long RX_MIN_PATH_RATES[] = {MIN_BBPLL_FREQ,MIN_ADC_CLK, 0, 0, 0, 0};
+const unsigned long TX_MIN_PATH_RATES[] = {MIN_BBPLL_FREQ,MIN_DAC_CLK, 0, 0, 0, 0};
+
 
 enum ad9361_pdata_rx_freq {
     BBPLL_FREQ,
@@ -217,19 +222,31 @@ bool check_result(unsigned long *rx1, unsigned long *rx2, unsigned long *tx1,
 
     if (r) {
         printf("LINUX\n");
-        printf("BBPLL | RX %lu | TX %lu | MAX: %lu\n",rx1[o],tx1[o],rxr[0]);
+        printf("BBPLL | RX %lu | TX %lu | MAX: %lu\n",rx1[o],tx1[o],RX_MAX_PATH_RATES[0]);
         for (o=1; o<6; o++)
             printf("RX %lu (%lu MAX %lu)| TX %lu (%lu MAX %lu) \n",
-                   rx1[o],rx1[o-1]/rx1[o], rxr[o],
-                   tx1[o], tx1[o-1]/tx1[o], txr[o]);
+                   rx1[o],rx1[o-1]/rx1[o], RX_MAX_PATH_RATES[o],
+                   tx1[o], tx1[o-1]/tx1[o], TX_MAX_PATH_RATES[o]);
         printf("----------\n");
         printf("LIBAD9361\n");
-        printf("BBPLL | RX %lu | TX %lu | MAX: %lu\n",rx2[0],tx2[0],rxr[0]);
+        printf("BBPLL | RX %lu | TX %lu | MAX: %lu\n",rx2[0],tx2[0],RX_MAX_PATH_RATES[0]);
         for (o=1; o<6; o++)
             printf("RX %lu (%lu MAX %lu)| TX %lu (%lu MAX %lu)\n",
-                   rx2[o],rx2[o-1]/rx2[o],rxr[o],
-                   tx2[o],tx2[o-1]/tx2[o],txr[o]);
+                   rx2[o],rx2[o-1]/rx2[o],RX_MAX_PATH_RATES[o],
+                   tx2[o],tx2[o-1]/tx2[o],TX_MAX_PATH_RATES[o]);
     }
+
+    // Check rates themselves
+    for (o=0; o<6; o++)
+    {
+      r |= !check(rx1[o],RX_MIN_PATH_RATES[o],RX_MAX_PATH_RATES[o]);
+      r |= !check(rx2[o],RX_MIN_PATH_RATES[o],RX_MAX_PATH_RATES[o]);
+      r |= !check(tx1[o],TX_MIN_PATH_RATES[o],TX_MAX_PATH_RATES[o]);
+      r |= !check(tx2[o],TX_MIN_PATH_RATES[o],TX_MAX_PATH_RATES[o]);
+      if (r)
+        printf("Rate validation failed\n");
+    }
+
     return r;
 }
 
