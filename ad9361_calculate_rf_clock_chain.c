@@ -21,12 +21,12 @@
 // Output of FIR on RX
 #define MAX_FIR MAX_DATA_RATE * 2
 // Associated with outputs of stage
-#define MAX_RX_HB1 245760000UL
-#define MAX_RX_HB2 320000000UL
-#define MAX_RX_HB3 640000000UL
+#define MAX_RX_HB1 122880000UL
+#define MAX_RX_HB2 245760000UL
+#define MAX_RX_HB3 320000000UL
 // Associated with inputs of stage
-#define MAX_TX_HB1 160000000UL
-#define MAX_TX_HB2 320000000UL
+#define MAX_TX_HB1 122880000UL
+#define MAX_TX_HB2 245760000UL
 #define MAX_TX_HB3 320000000UL
 
 const unsigned long RX_MAX_PATH_RATES[] = {MAX_ADC_CLK, MAX_RX_HB3, MAX_RX_HB2, MAX_RX_HB1, MAX_FIR};

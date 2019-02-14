@@ -31,6 +31,23 @@ struct PHY {
 #define MAX_BBPLL_DIV			64
 #define MIN_BBPLL_DIV	2
 
+// Output of FIR (RX)
+#define MAX_DATA_RATE 61440000UL
+#define MIN_DATA_RATE MIN_ADC_CLK / 48
+// Output of FIR on RX
+#define MAX_FIR MAX_DATA_RATE * 2
+// Associated with outputs of stage
+#define MAX_RX_HB1 122880000UL
+#define MAX_RX_HB2 245760000UL
+#define MAX_RX_HB3 320000000UL
+// Associated with inputs of stage
+#define MAX_TX_HB1 122880000UL
+#define MAX_TX_HB2 245760000UL
+#define MAX_TX_HB3 320000000UL
+
+unsigned long txr[6] = {MAX_BBPLL_FREQ, MAX_DAC_CLK, MAX_RX_HB3, MAX_RX_HB2, MAX_RX_HB1, MAX_DATA_RATE};
+unsigned long rxr[6] = {MAX_BBPLL_FREQ, MAX_ADC_CLK, MAX_TX_HB3, MAX_RX_HB2, MAX_RX_HB1, MAX_DATA_RATE};
+
 enum ad9361_pdata_rx_freq {
     BBPLL_FREQ,
     ADC_FREQ,
@@ -190,16 +207,18 @@ bool check_result(unsigned long *rx1, unsigned long *rx2, unsigned long *tx1,
 
     if (r) {
         printf("LINUX\n");
-        printf("RX %lu | TX %lu\n",rx1[o],tx1[o]);
+        printf("BBPLL | RX %lu | TX %lu | MAX: %lu\n",rx1[o],tx1[o],rxr[0]);
         for (o=1; o<6; o++)
-            printf("RX %lu (%lu)| TX %lu (%lu)\n",rx1[o],rx1[o-1]/rx1[o],tx1[o],
-                   tx1[o-1]/tx1[o]);
+            printf("RX %lu (%lu MAX %lu)| TX %lu (%lu MAX %lu) \n",
+            rx1[o],rx1[o-1]/rx1[o], rxr[o],
+            tx1[o], tx1[o-1]/tx1[o], txr[o]);
         printf("----------\n");
         printf("LIBAD9361\n");
-        printf("RX %lu | TX %lu\n",rx2[0],tx2[0]);
+        printf("BBPLL | RX %lu | TX %lu | MAX: %lu\n",rx2[0],tx2[0],rxr[0]);
         for (o=1; o<6; o++)
-            printf("RX %lu (%lu)| TX %lu (%lu)\n",rx2[o],rx2[o-1]/rx2[o],tx2[o],
-                   tx2[o-1]/tx2[o]);
+            printf("RX %lu (%lu MAX %lu)| TX %lu (%lu MAX %lu)\n",
+            rx2[o],rx2[o-1]/rx2[o],rxr[o],
+            tx2[o],tx2[o-1]/tx2[o],txr[o]);
     }
     return r;
 }
