@@ -197,6 +197,11 @@ __api int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
                                                   unsigned long Fstop, unsigned long wnom_tx,
                                                   unsigned long wnom_rx);
 
+__api int ad9361_set_bb_rate_custom_filter_manual_file(
+                                                  unsigned long rate, unsigned long Fpass,
+                                                  unsigned long Fstop, unsigned long wnom_tx,
+                                                  unsigned long wnom_rx, char **filter_data);
+
 /** @brief FMComms5 phase synchronize all TX and RX channels together
  * @param ctx A pointer to an iio_context structure
  * @param lo Frequency in hertz of LO for TX and RX

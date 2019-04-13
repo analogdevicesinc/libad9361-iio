@@ -32,6 +32,56 @@
 #define snprintf sprintf_s
 #endif
 
+#define FIR_BUF_SIZE	8192
+
+unsigned long rx_path_clk[6];
+unsigned long tx_path_clk[6];
+
+int create_filter_file(struct filter_design_parameters *fdpRX,
+                       struct filter_design_parameters *fdpTX,
+                       int gain_rx, int gain_tx, short *taps_rx, short *taps_tx, int num_taps,
+                       char **filedata)
+{
+    int i, len = 0;
+
+    *filedata = (char*)malloc(FIR_BUF_SIZE);
+    if (!*filedata)
+        return -ENOMEM;
+
+    len += snprintf(*filedata + len, FIR_BUF_SIZE - len,
+                    "# Generated with AD9361 Filter Library\r\n");
+    len += snprintf(*filedata + len, FIR_BUF_SIZE - len,
+                    "# Data Sample Frequency = %.0f Hz\r\n", fdpTX->Rdata);
+
+    if (fdpRX->phEQ != -1) {
+        len += snprintf(*filedata + len, FIR_BUF_SIZE - len,
+                        "# RX Phase equalization = %f ns\r\n", fdpRX->phEQ);
+        len += snprintf(*filedata + len, FIR_BUF_SIZE - len,
+                        "# TX Phase equalization = %f ns\r\n", fdpTX->phEQ);
+    }
+
+    len += snprintf(*filedata + len, FIR_BUF_SIZE - len,
+                    "TX 3 GAIN %d INT %0.f\r\n", gain_tx, fdpTX->FIR);
+    len += snprintf(*filedata + len, FIR_BUF_SIZE - len,
+                    "RX 3 GAIN %d DEC %0.f\r\n", gain_rx, fdpRX->FIR);
+    len += snprintf(*filedata + len, FIR_BUF_SIZE - len,
+                    "RTX %.0f %lu %lu %lu %lu %.0f\r\n", fdpTX->PLL_rate, tx_path_clk[1],
+                    tx_path_clk[2], tx_path_clk[3], tx_path_clk[4], fdpTX->Rdata);
+    len += snprintf(*filedata + len, FIR_BUF_SIZE - len,
+                    "RRX %.0f %lu %lu %lu %lu %.0f\r\n", fdpRX->PLL_rate, rx_path_clk[1],
+                    rx_path_clk[2], rx_path_clk[3], rx_path_clk[4], fdpRX->Rdata);
+    len += snprintf(*filedata + len, FIR_BUF_SIZE - len, "BWTX %.0f\r\n",
+                    fdpTX->RFbw);
+    len += snprintf(*filedata + len, FIR_BUF_SIZE - len, "BWRX %.0f\r\n",
+                    fdpRX->RFbw);
+
+    for (i = 0; i < num_taps; i++)
+        len += snprintf(*filedata + len, FIR_BUF_SIZE - len, "%d,%d\n", taps_tx[i],
+                        taps_rx[i]);
+
+}
+
+
 int ad9361_generate_fir_taps(struct filter_design_parameters *parameters,
                              short *taps, int *num_taps, int *gain)
 {
@@ -135,8 +185,6 @@ int build_configuration(struct filter_design_parameters *fdpTX,
 {
 
     double div, max;
-    unsigned long rx_path_clk[6];
-    unsigned long tx_path_clk[6];
     unsigned long *path_clk;
     struct filter_design_parameters *fdp;
     int ret,k;
@@ -216,7 +264,8 @@ int apply_custom_filter(struct iio_device *dev, unsigned dec_tx,
     if (chanTX == NULL)
         return -ENODEV;
 
-    ret = iio_channel_attr_read_longlong(chanTX, "sampling_frequency", &current_rate);
+    ret = iio_channel_attr_read_longlong(chanTX, "sampling_frequency",
+                                         &current_rate);
     if (ret < 0)
         return ret;
 
@@ -387,6 +436,42 @@ int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
 
     ret = apply_custom_filter(dev, dec_tx, dec_rx, taps_tx, taps_rx, num_taps,
                               rate, gain_tx, gain_rx, wnom_tx, wnom_rx);
+    if (ret < 0)
+        return ret;
+
+    return 0;
+}
+
+int ad9361_set_bb_rate_custom_filter_manual_file(
+    unsigned long rate, unsigned long Fpass,
+    unsigned long Fstop, unsigned long wnom_tx, unsigned long wnom_rx,
+    char **filter_data)
+{
+    struct filter_design_parameters fdpTX;
+    struct filter_design_parameters fdpRX;
+    short taps_tx[128];
+    short taps_rx[128];
+    int ret, num_taps_tx, num_taps_rx, gain_tx, gain_rx;
+    unsigned dec_tx, dec_rx, num_taps;
+
+    if (Fpass >= Fstop)
+        return -EINVAL;
+
+    ret = build_configuration(&fdpTX, &fdpRX, rate, Fpass, Fstop, wnom_tx,
+                              wnom_rx);
+    if (ret<0)
+        return ret;
+
+    ret = ad9361_generate_fir_taps(&fdpRX, taps_rx, &num_taps_rx, &gain_rx);
+    if (ret < 0)
+        return ret;
+
+    ret = ad9361_generate_fir_taps(&fdpTX, taps_tx, &num_taps_tx, &gain_tx);
+    if (ret < 0)
+        return ret;
+
+    ret = create_filter_file(&fdpRX, &fdpTX, gain_rx, gain_tx, taps_rx, taps_tx,
+                             num_taps_tx, filter_data);
     if (ret < 0)
         return ret;
 
