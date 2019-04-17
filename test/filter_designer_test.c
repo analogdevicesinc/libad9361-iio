@@ -37,6 +37,7 @@ int main(void)
     struct filter_design_parameters fdpRX;
     short outputTaps[128];
     int num_taps, ret, gain, k;
+    double Apass_actual, Astop_actual;
     char filename[100];
 
     unsigned long rates[] = {1000000, 10000000, 20000000, 60000000};
@@ -45,9 +46,12 @@ int main(void)
 
         // Generate rates in filter struct
         ret = ad9361_calculate_rf_clock_chain_fdp(&fdpTX, &fdpRX, rates[k]);
-
+        if (ret < 0)
+            return ret;
+            
         // Test RX side
-        ret = ad9361_generate_fir_taps(&fdpRX, outputTaps, &num_taps, &gain);
+        ret = ad9361_generate_fir_taps(&fdpRX, outputTaps, &num_taps, &gain,
+                                       &Apass_actual, &Astop_actual);
         if (ret < 0)
             return ret;
         sprintf(filename,"rateRX_%lu.taps",rates[k]);
@@ -56,7 +60,8 @@ int main(void)
             return ret;
 
         // Test TX side
-        ret = ad9361_generate_fir_taps(&fdpTX, outputTaps, &num_taps, &gain);
+        ret = ad9361_generate_fir_taps(&fdpTX, outputTaps, &num_taps, &gain,
+                                       &Apass_actual, &Astop_actual);
         if (ret < 0)
             return ret;
         sprintf(filename,"rateTX_%lu.taps",rates[k]);

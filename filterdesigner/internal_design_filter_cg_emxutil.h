@@ -16,13 +16,8 @@
 #define INTERNAL_DESIGN_FILTER_CG_EMXUTIL_H
 
 /* Include Files */
-#include <float.h>
-#include <math.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <string.h>
-#include "rt_defines.h"
-#include "rt_nonfinite.h"
 #include "rtwtypes.h"
 #include "internal_design_filter_cg_types.h"
 
@@ -33,29 +28,21 @@ extern "C" {
 
 #endif
 
-extern void emxEnsureCapacity_cint8_T(emxArray_cint8_T *emxArray, int oldNumel);
-extern void emxEnsureCapacity_creal_T(emxArray_creal_T *emxArray, int oldNumel);
-extern void emxEnsureCapacity_creal_T1(emxArray_creal_T *emxArray, int
-                                       oldNumel);
-extern void emxEnsureCapacity_int32_T(emxArray_int32_T *emxArray, int oldNumel);
-extern void emxEnsureCapacity_int32_T1(emxArray_int32_T *emxArray, int
-                                       oldNumel);
-extern void emxEnsureCapacity_int8_T(emxArray_int8_T *emxArray, int oldNumel);
-extern void emxEnsureCapacity_real_T(emxArray_real_T *emxArray, int oldNumel);
-extern void emxEnsureCapacity_real_T1(emxArray_real_T *emxArray, int oldNumel);
-extern void emxFree_cint8_T(emxArray_cint8_T **pEmxArray);
-extern void emxFree_creal_T(emxArray_creal_T **pEmxArray);
-extern void emxFree_int32_T(emxArray_int32_T **pEmxArray);
-extern void emxFree_int8_T(emxArray_int8_T **pEmxArray);
-extern void emxFree_real_T(emxArray_real_T **pEmxArray);
-extern void emxInit_cint8_T(emxArray_cint8_T **pEmxArray, int numDimensions);
-extern void emxInit_creal_T(emxArray_creal_T **pEmxArray, int numDimensions);
-extern void emxInit_creal_T1(emxArray_creal_T **pEmxArray, int numDimensions);
-extern void emxInit_int32_T(emxArray_int32_T **pEmxArray, int numDimensions);
-extern void emxInit_int32_T1(emxArray_int32_T **pEmxArray, int numDimensions);
-extern void emxInit_int8_T(emxArray_int8_T **pEmxArray, int numDimensions);
-extern void emxInit_real_T(emxArray_real_T **pEmxArray, int numDimensions);
-extern void emxInit_real_T1(emxArray_real_T **pEmxArray, int numDimensions);
+  extern void emxEnsureCapacity_cint8_T(emxArray_cint8_T *emxArray, int oldNumel);
+  extern void emxEnsureCapacity_creal_T(emxArray_creal_T *emxArray, int oldNumel);
+  extern void emxEnsureCapacity_int32_T(emxArray_int32_T *emxArray, int oldNumel);
+  extern void emxEnsureCapacity_int8_T(emxArray_int8_T *emxArray, int oldNumel);
+  extern void emxEnsureCapacity_real_T(emxArray_real_T *emxArray, int oldNumel);
+  extern void emxFree_cint8_T(emxArray_cint8_T **pEmxArray);
+  extern void emxFree_creal_T(emxArray_creal_T **pEmxArray);
+  extern void emxFree_int32_T(emxArray_int32_T **pEmxArray);
+  extern void emxFree_int8_T(emxArray_int8_T **pEmxArray);
+  extern void emxFree_real_T(emxArray_real_T **pEmxArray);
+  extern void emxInit_cint8_T(emxArray_cint8_T **pEmxArray, int numDimensions);
+  extern void emxInit_creal_T(emxArray_creal_T **pEmxArray, int numDimensions);
+  extern void emxInit_int32_T(emxArray_int32_T **pEmxArray, int numDimensions);
+  extern void emxInit_int8_T(emxArray_int8_T **pEmxArray, int numDimensions);
+  extern void emxInit_real_T(emxArray_real_T **pEmxArray, int numDimensions);
 
 #ifdef __cplusplus
 

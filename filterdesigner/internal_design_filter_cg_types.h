@@ -19,55 +19,42 @@
 #include "rtwtypes.h"
 
 /* Type Definitions */
-#ifndef struct_emxArray_cint8_T
-#define struct_emxArray_cint8_T
-
-struct emxArray_cint8_T {
-    cint8_T *data;
-    int *size;
-    int allocatedSize;
-    int numDimensions;
-    boolean_T canFreeData;
-};
-
-#endif                                 /*struct_emxArray_cint8_T*/
-
 #ifndef typedef_emxArray_cint8_T
 #define typedef_emxArray_cint8_T
 
-typedef struct emxArray_cint8_T emxArray_cint8_T;
+typedef struct {
+  cint8_T *data;
+  int *size;
+  int allocatedSize;
+  int numDimensions;
+  bool canFreeData;
+} emxArray_cint8_T;
 
 #endif                                 /*typedef_emxArray_cint8_T*/
-
-#ifndef struct_emxArray_creal_T
-#define struct_emxArray_creal_T
-
-struct emxArray_creal_T {
-    creal_T *data;
-    int *size;
-    int allocatedSize;
-    int numDimensions;
-    boolean_T canFreeData;
-};
-
-#endif                                 /*struct_emxArray_creal_T*/
 
 #ifndef typedef_emxArray_creal_T
 #define typedef_emxArray_creal_T
 
-typedef struct emxArray_creal_T emxArray_creal_T;
+typedef struct {
+  creal_T *data;
+  int *size;
+  int allocatedSize;
+  int numDimensions;
+  bool canFreeData;
+} emxArray_creal_T;
 
 #endif                                 /*typedef_emxArray_creal_T*/
 
 #ifndef struct_emxArray_int32_T
 #define struct_emxArray_int32_T
 
-struct emxArray_int32_T {
-    int *data;
-    int *size;
-    int allocatedSize;
-    int numDimensions;
-    boolean_T canFreeData;
+struct emxArray_int32_T
+{
+  int *data;
+  int *size;
+  int allocatedSize;
+  int numDimensions;
+  bool canFreeData;
 };
 
 #endif                                 /*struct_emxArray_int32_T*/
@@ -82,12 +69,13 @@ typedef struct emxArray_int32_T emxArray_int32_T;
 #ifndef struct_emxArray_int8_T
 #define struct_emxArray_int8_T
 
-struct emxArray_int8_T {
-    signed char *data;
-    int *size;
-    int allocatedSize;
-    int numDimensions;
-    boolean_T canFreeData;
+struct emxArray_int8_T
+{
+  signed char *data;
+  int *size;
+  int allocatedSize;
+  int numDimensions;
+  bool canFreeData;
 };
 
 #endif                                 /*struct_emxArray_int8_T*/
@@ -102,12 +90,13 @@ typedef struct emxArray_int8_T emxArray_int8_T;
 #ifndef struct_emxArray_real_T
 #define struct_emxArray_real_T
 
-struct emxArray_real_T {
-    double *data;
-    int *size;
-    int allocatedSize;
-    int numDimensions;
-    boolean_T canFreeData;
+struct emxArray_real_T
+{
+  double *data;
+  int *size;
+  int allocatedSize;
+  int numDimensions;
+  bool canFreeData;
 };
 
 #endif                                 /*struct_emxArray_real_T*/

@@ -57,9 +57,8 @@ static void usage(void)
 {
     unsigned int i;
 
-    printf("Usage:\n\t" MY_NAME " [-x <xml_file>]\n\t"
-           MY_NAME " [-n <hostname>]\n\t"
-           MY_NAME " [-u <uri>]\n\nOptions:\n");
+    printf("Usage:\n\t" MY_NAME " [-r <DataRate>]\n\t"
+           "\n\nOptions:\n");
     for (i = 0; options[i].name; i++)
         printf("\t-%c, --%s\n\t\t\t%s\n",
                options[i].val, options[i].name,
@@ -74,6 +73,7 @@ int main(int argc, char **argv)
     const char *arg_uri = NULL;
     const char *filename = NULL;
     int ret;
+    double ApassTx, AstopTx, ApassRx, AstopRx;
 
     unsigned long rate = 0;
     unsigned long Fpass = -1;
@@ -125,6 +125,13 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
+    if (rate == 0)
+    {
+      fprintf(stderr, "DataRate (-r) must be set.\n\n");
+      usage();
+      return EXIT_FAILURE;
+    }
+
     if (custom_settings) {
         if ((Fpass == -1) || (Fstop == -1) || (wnomTX == -1) || (wnomRX == -1)) {
             fprintf(stderr, "All custom filter settings must be set.\n\n");
@@ -140,7 +147,15 @@ int main(int argc, char **argv)
 
     // Design filter
     ret = ad9361_set_bb_rate_custom_filter_manual_file(rate, Fpass, Fstop,
-            wnomTX, wnomRX, &filter_data);
+            wnomTX, wnomRX, &filter_data, &ApassTx, &AstopTx, &ApassRx, &AstopRx);
+    if (ret<0)
+    {
+        fprintf(stderr, "Filter generation failed %d.\n\n", ret);
+        return EXIT_FAILURE;
+    }
+    printf("Generated Filter Results\n");
+    printf(" Passband Ripple: %f dB (Tx) | %f dB (Rx)\n", ApassTx, ApassRx);
+    printf(" Stopband Attenuation: %f dB (Tx) | %f dB (Rx)\n", AstopTx, AstopRx);
 
     // Export filter
     if (filename!=NULL) {

@@ -14,8 +14,9 @@
 
 #ifndef RTWTYPES_H
 #define RTWTYPES_H
-#ifndef __TMWTYPES__
-#define __TMWTYPES__
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
 
 /*=======================================================================*
  * Target hardware information
@@ -51,7 +52,7 @@ typedef double real64_T;
  *===========================================================================*/
 typedef double real_T;
 typedef double time_T;
-typedef unsigned char boolean_T;
+typedef bool boolean_T;
 typedef int int_T;
 typedef unsigned int uint_T;
 typedef unsigned long ulong_T;
@@ -65,58 +66,58 @@ typedef char_T byte_T;
 #define CREAL_T
 
 typedef struct {
-    real32_T re;
-    real32_T im;
+  real32_T re;
+  real32_T im;
 } creal32_T;
 
 typedef struct {
-    real64_T re;
-    real64_T im;
+  real64_T re;
+  real64_T im;
 } creal64_T;
 
 typedef struct {
-    real_T re;
-    real_T im;
+  real_T re;
+  real_T im;
 } creal_T;
 
 typedef struct {
-    int8_T re;
-    int8_T im;
+  int8_T re;
+  int8_T im;
 } cint8_T;
 
 typedef struct {
-    uint8_T re;
-    uint8_T im;
+  uint8_T re;
+  uint8_T im;
 } cuint8_T;
 
 typedef struct {
-    int16_T re;
-    int16_T im;
+  int16_T re;
+  int16_T im;
 } cint16_T;
 
 typedef struct {
-    uint16_T re;
-    uint16_T im;
+  uint16_T re;
+  uint16_T im;
 } cuint16_T;
 
 typedef struct {
-    int32_T re;
-    int32_T im;
+  int32_T re;
+  int32_T im;
 } cint32_T;
 
 typedef struct {
-    uint32_T re;
-    uint32_T im;
+  uint32_T re;
+  uint32_T im;
 } cuint32_T;
 
 typedef struct {
-    int64_T re;
-    int64_T im;
+  int64_T re;
+  int64_T im;
 } cint64_T;
 
 typedef struct {
-    uint64_T re;
-    uint64_T im;
+  uint64_T re;
+  uint64_T im;
 } cuint64_T;
 
 /*=======================================================================*
@@ -142,7 +143,7 @@ typedef struct {
 #define MIN_uint64_T                   ((uint64_T)(0UL))
 
 /* Logical type definitions */
-#if !defined(__cplusplus) && !defined(__true_false_are_keywords)
+#if !defined(__cplusplus) && !defined(__true_false_are_keywords) && !defined(__bool_true_false_are_defined)
 #  ifndef false
 #   define false                       (0U)
 #  endif
@@ -158,7 +159,6 @@ typedef struct {
  * rt_logging.c and rt_matrx.c.
  */
 #define TMW_NAME_LENGTH_MAX            64
-#endif
 #endif
 
 /*

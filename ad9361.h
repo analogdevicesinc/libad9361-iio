@@ -145,7 +145,8 @@ __api int ad9361_get_trx_fir_enable(struct iio_device *dev, int *enable);
  * @return On success, 0 is returned
  * @return On error, a negative errno code is returned */
 __api int ad9361_generate_fir_taps(struct filter_design_parameters *parameters,
-                                   short *taps, int *num_taps, int *gain);
+                                   short *taps, int *num_taps, int *gain,
+                                   double *Apass_actual, double *Astop_actual);
 
 /** @brief Calculate the clock path rates for both transmit and receiver paths
  * @param tx_sample_rate Sample rate in samples per second of desired baseband rate
@@ -200,7 +201,9 @@ __api int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
 __api int ad9361_set_bb_rate_custom_filter_manual_file(
                                                   unsigned long rate, unsigned long Fpass,
                                                   unsigned long Fstop, unsigned long wnom_tx,
-                                                  unsigned long wnom_rx, char **filter_data);
+                                                  unsigned long wnom_rx, char **filter_data,
+                                                  double *ApassTx, double *AstopTx, 
+                                                  double *ApassRx, double *AstopRx);
 
 /** @brief FMComms5 phase synchronize all TX and RX channels together
  * @param ctx A pointer to an iio_context structure
