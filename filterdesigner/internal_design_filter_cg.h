@@ -34,7 +34,7 @@ extern "C" {
     RxTx[2], double RFbw, double DAC_div, double converter_rate, double PLL_rate,
     double Fcenter, double wnom, double FIRdBmin, double int_FIR, double maxTaps,
     short outputTaps[128], double *numOutputTaps, double *filterGain, double
-    *Apass_actual, double *Astop_actual);
+    *Apass_actual, double *Astop_actual, double *maxInFS, double *maxIndB);
   extern void internal_design_filter_cg_initialize(void);
   extern void internal_design_filter_cg_terminate(void);
 

@@ -11,6 +11,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  */
+
 /* Include Files */
 #include "rt_nonfinite.h"
 #include <math.h>
@@ -69,6 +70,7 @@ static void b_generateCascadedResponseRx(const char enables[4], const
   hb2_coeff[7], const double hb3_coeff_data[], const int hb3_coeff_size[2],
   const double dec_int3_coeff_data[], const int dec_int3_coeff_size[2],
   emxArray_creal_T *combinedResponse);
+static void b_log10(double *x);
 static double b_log2(double x);
 static void b_polyval(const double p[7], const creal_T x[2048], creal_T y[2048]);
 static void b_power(const double a[2048], double y[2048]);
@@ -217,6 +219,8 @@ static void s_freqz_cg(const double b[19], const emxArray_real_T *w, double Fs,
 static void sinc(double x[2048]);
 static double sum(const double x[2048]);
 static void t_freqz_cg(const double b[85], const emxArray_real_T *w, double Fs,
+  emxArray_creal_T *hh);
+static void u_freqz_cg(const double b[128], const emxArray_real_T *w, double Fs,
   emxArray_creal_T *hh);
 static void us(const double o[15], double u[15]);
 static void vector_poly(const emxArray_creal_T *x, emxArray_creal_T *c);
@@ -1405,7 +1409,7 @@ static void b_exp(creal_T x[2048])
 static void b_firfreqz(const double b[15], const struct_T *options, creal_T h
   [2048], double w[2048])
 {
-  int i73;
+  int i74;
   creal_T dcv2[2048];
   double re_tmp;
   double re;
@@ -1427,76 +1431,76 @@ static void b_firfreqz(const double b[15], const struct_T *options, creal_T h
   /*  Fs was specified, freq. vector is in Hz */
   /*  Convert from Hz to rad/sample for computational purposes */
   /*  Digital frequency must be used for this calculation */
-  for (i73 = 0; i73 < 2048; i73++) {
-    w[i73] = options->w[i73];
-    re_tmp = 6.2831853071795862 * options->w[i73] / options->Fs;
+  for (i74 = 0; i74 < 2048; i74++) {
+    w[i74] = options->w[i74];
+    re_tmp = 6.2831853071795862 * options->w[i74] / options->Fs;
     re = re_tmp * 0.0;
-    s_tmp[i73].re = re;
-    s_tmp[i73].im = re_tmp;
-    dcv2[i73].re = re;
-    dcv2[i73].im = re_tmp;
+    s_tmp[i74].re = re;
+    s_tmp[i74].im = re_tmp;
+    dcv2[i74].re = re;
+    dcv2[i74].im = re_tmp;
   }
 
   b_exp(dcv2);
   polyval(b, dcv2, h);
-  for (i73 = 0; i73 < 2048; i73++) {
-    s_tmp[i73].re *= 14.0;
-    s_tmp[i73].im *= 14.0;
+  for (i74 = 0; i74 < 2048; i74++) {
+    s_tmp[i74].re *= 14.0;
+    s_tmp[i74].im *= 14.0;
   }
 
   b_exp(s_tmp);
-  for (i73 = 0; i73 < 2048; i73++) {
-    h_re = h[i73].re;
-    if (s_tmp[i73].im == 0.0) {
-      if (h[i73].im == 0.0) {
-        h[i73].re /= s_tmp[i73].re;
-        h[i73].im = 0.0;
-      } else if (h[i73].re == 0.0) {
-        h[i73].re = 0.0;
-        h[i73].im /= s_tmp[i73].re;
+  for (i74 = 0; i74 < 2048; i74++) {
+    h_re = h[i74].re;
+    if (s_tmp[i74].im == 0.0) {
+      if (h[i74].im == 0.0) {
+        h[i74].re /= s_tmp[i74].re;
+        h[i74].im = 0.0;
+      } else if (h[i74].re == 0.0) {
+        h[i74].re = 0.0;
+        h[i74].im /= s_tmp[i74].re;
       } else {
-        h[i73].re /= s_tmp[i73].re;
-        h[i73].im /= s_tmp[i73].re;
+        h[i74].re /= s_tmp[i74].re;
+        h[i74].im /= s_tmp[i74].re;
       }
-    } else if (s_tmp[i73].re == 0.0) {
-      if (h[i73].re == 0.0) {
-        h[i73].re = h[i73].im / s_tmp[i73].im;
-        h[i73].im = 0.0;
-      } else if (h[i73].im == 0.0) {
-        h[i73].re = 0.0;
-        h[i73].im = -(h_re / s_tmp[i73].im);
+    } else if (s_tmp[i74].re == 0.0) {
+      if (h[i74].re == 0.0) {
+        h[i74].re = h[i74].im / s_tmp[i74].im;
+        h[i74].im = 0.0;
+      } else if (h[i74].im == 0.0) {
+        h[i74].re = 0.0;
+        h[i74].im = -(h_re / s_tmp[i74].im);
       } else {
-        h[i73].re = h[i73].im / s_tmp[i73].im;
-        h[i73].im = -(h_re / s_tmp[i73].im);
+        h[i74].re = h[i74].im / s_tmp[i74].im;
+        h[i74].im = -(h_re / s_tmp[i74].im);
       }
     } else {
-      brm = fabs(s_tmp[i73].re);
-      re = fabs(s_tmp[i73].im);
+      brm = fabs(s_tmp[i74].re);
+      re = fabs(s_tmp[i74].im);
       if (brm > re) {
-        re = s_tmp[i73].im / s_tmp[i73].re;
-        re_tmp = s_tmp[i73].re + re * s_tmp[i73].im;
-        h[i73].re = (h[i73].re + re * h[i73].im) / re_tmp;
-        h[i73].im = (h[i73].im - re * h_re) / re_tmp;
+        re = s_tmp[i74].im / s_tmp[i74].re;
+        re_tmp = s_tmp[i74].re + re * s_tmp[i74].im;
+        h[i74].re = (h[i74].re + re * h[i74].im) / re_tmp;
+        h[i74].im = (h[i74].im - re * h_re) / re_tmp;
       } else if (re == brm) {
-        if (s_tmp[i73].re > 0.0) {
+        if (s_tmp[i74].re > 0.0) {
           re = 0.5;
         } else {
           re = -0.5;
         }
 
-        if (s_tmp[i73].im > 0.0) {
+        if (s_tmp[i74].im > 0.0) {
           re_tmp = 0.5;
         } else {
           re_tmp = -0.5;
         }
 
-        h[i73].re = (h[i73].re * re + h[i73].im * re_tmp) / brm;
-        h[i73].im = (h[i73].im * re - h_re * re_tmp) / brm;
+        h[i74].re = (h[i74].re * re + h[i74].im * re_tmp) / brm;
+        h[i74].im = (h[i74].im * re - h_re * re_tmp) / brm;
       } else {
-        re = s_tmp[i73].re / s_tmp[i73].im;
-        re_tmp = s_tmp[i73].im + re * s_tmp[i73].re;
-        h[i73].re = (re * h[i73].re + h[i73].im) / re_tmp;
-        h[i73].im = (re * h[i73].im - h_re) / re_tmp;
+        re = s_tmp[i74].re / s_tmp[i74].im;
+        re_tmp = s_tmp[i74].im + re * s_tmp[i74].re;
+        h[i74].re = (re * h[i74].re + h[i74].im) / re_tmp;
+        h[i74].im = (re * h[i74].im - h_re) / re_tmp;
       }
     }
   }
@@ -2455,6 +2459,15 @@ static void b_generateCascadedResponseRx(const char enables[4], const
 }
 
 /*
+ * Arguments    : double *x
+ * Return Type  : void
+ */
+static void b_log10(double *x)
+{
+  *x = log10(*x);
+}
+
+/*
  * Arguments    : double x
  * Return Type  : double
  */
@@ -2645,13 +2658,13 @@ static void b_us(const double o[7], double u[7])
 static void b_xscal(int n, const creal_T a, emxArray_creal_T *x, int ix0, int
                     incx)
 {
-  int i71;
+  int i72;
   int k;
   double x_re;
   double x_im;
   if (incx >= 1) {
-    i71 = ix0 + incx * (n - 1);
-    for (k = ix0; incx < 0 ? k >= i71 : k <= i71; k += incx) {
+    i72 = ix0 + incx * (n - 1);
+    for (k = ix0; incx < 0 ? k >= i72 : k <= i72; k += incx) {
       x_re = x->data[k - 1].re;
       x_im = x->data[k - 1].im;
       x->data[k - 1].re = a.re * x_re - a.im * x_im;
@@ -3080,7 +3093,7 @@ static void c_exp(emxArray_creal_T *x)
 static void c_firfreqz(const double b[7], const struct_T *options, creal_T h
   [2048], double w[2048])
 {
-  int i74;
+  int i75;
   creal_T dcv3[2048];
   double re_tmp;
   double re;
@@ -3102,76 +3115,76 @@ static void c_firfreqz(const double b[7], const struct_T *options, creal_T h
   /*  Fs was specified, freq. vector is in Hz */
   /*  Convert from Hz to rad/sample for computational purposes */
   /*  Digital frequency must be used for this calculation */
-  for (i74 = 0; i74 < 2048; i74++) {
-    w[i74] = options->w[i74];
-    re_tmp = 6.2831853071795862 * options->w[i74] / options->Fs;
+  for (i75 = 0; i75 < 2048; i75++) {
+    w[i75] = options->w[i75];
+    re_tmp = 6.2831853071795862 * options->w[i75] / options->Fs;
     re = re_tmp * 0.0;
-    s_tmp[i74].re = re;
-    s_tmp[i74].im = re_tmp;
-    dcv3[i74].re = re;
-    dcv3[i74].im = re_tmp;
+    s_tmp[i75].re = re;
+    s_tmp[i75].im = re_tmp;
+    dcv3[i75].re = re;
+    dcv3[i75].im = re_tmp;
   }
 
   b_exp(dcv3);
   b_polyval(b, dcv3, h);
-  for (i74 = 0; i74 < 2048; i74++) {
-    s_tmp[i74].re *= 6.0;
-    s_tmp[i74].im *= 6.0;
+  for (i75 = 0; i75 < 2048; i75++) {
+    s_tmp[i75].re *= 6.0;
+    s_tmp[i75].im *= 6.0;
   }
 
   b_exp(s_tmp);
-  for (i74 = 0; i74 < 2048; i74++) {
-    h_re = h[i74].re;
-    if (s_tmp[i74].im == 0.0) {
-      if (h[i74].im == 0.0) {
-        h[i74].re /= s_tmp[i74].re;
-        h[i74].im = 0.0;
-      } else if (h[i74].re == 0.0) {
-        h[i74].re = 0.0;
-        h[i74].im /= s_tmp[i74].re;
+  for (i75 = 0; i75 < 2048; i75++) {
+    h_re = h[i75].re;
+    if (s_tmp[i75].im == 0.0) {
+      if (h[i75].im == 0.0) {
+        h[i75].re /= s_tmp[i75].re;
+        h[i75].im = 0.0;
+      } else if (h[i75].re == 0.0) {
+        h[i75].re = 0.0;
+        h[i75].im /= s_tmp[i75].re;
       } else {
-        h[i74].re /= s_tmp[i74].re;
-        h[i74].im /= s_tmp[i74].re;
+        h[i75].re /= s_tmp[i75].re;
+        h[i75].im /= s_tmp[i75].re;
       }
-    } else if (s_tmp[i74].re == 0.0) {
-      if (h[i74].re == 0.0) {
-        h[i74].re = h[i74].im / s_tmp[i74].im;
-        h[i74].im = 0.0;
-      } else if (h[i74].im == 0.0) {
-        h[i74].re = 0.0;
-        h[i74].im = -(h_re / s_tmp[i74].im);
+    } else if (s_tmp[i75].re == 0.0) {
+      if (h[i75].re == 0.0) {
+        h[i75].re = h[i75].im / s_tmp[i75].im;
+        h[i75].im = 0.0;
+      } else if (h[i75].im == 0.0) {
+        h[i75].re = 0.0;
+        h[i75].im = -(h_re / s_tmp[i75].im);
       } else {
-        h[i74].re = h[i74].im / s_tmp[i74].im;
-        h[i74].im = -(h_re / s_tmp[i74].im);
+        h[i75].re = h[i75].im / s_tmp[i75].im;
+        h[i75].im = -(h_re / s_tmp[i75].im);
       }
     } else {
-      brm = fabs(s_tmp[i74].re);
-      re = fabs(s_tmp[i74].im);
+      brm = fabs(s_tmp[i75].re);
+      re = fabs(s_tmp[i75].im);
       if (brm > re) {
-        re = s_tmp[i74].im / s_tmp[i74].re;
-        re_tmp = s_tmp[i74].re + re * s_tmp[i74].im;
-        h[i74].re = (h[i74].re + re * h[i74].im) / re_tmp;
-        h[i74].im = (h[i74].im - re * h_re) / re_tmp;
+        re = s_tmp[i75].im / s_tmp[i75].re;
+        re_tmp = s_tmp[i75].re + re * s_tmp[i75].im;
+        h[i75].re = (h[i75].re + re * h[i75].im) / re_tmp;
+        h[i75].im = (h[i75].im - re * h_re) / re_tmp;
       } else if (re == brm) {
-        if (s_tmp[i74].re > 0.0) {
+        if (s_tmp[i75].re > 0.0) {
           re = 0.5;
         } else {
           re = -0.5;
         }
 
-        if (s_tmp[i74].im > 0.0) {
+        if (s_tmp[i75].im > 0.0) {
           re_tmp = 0.5;
         } else {
           re_tmp = -0.5;
         }
 
-        h[i74].re = (h[i74].re * re + h[i74].im * re_tmp) / brm;
-        h[i74].im = (h[i74].im * re - h_re * re_tmp) / brm;
+        h[i75].re = (h[i75].re * re + h[i75].im * re_tmp) / brm;
+        h[i75].im = (h[i75].im * re - h_re * re_tmp) / brm;
       } else {
-        re = s_tmp[i74].re / s_tmp[i74].im;
-        re_tmp = s_tmp[i74].im + re * s_tmp[i74].re;
-        h[i74].re = (re * h[i74].re + h[i74].im) / re_tmp;
-        h[i74].im = (re * h[i74].im - h_re) / re_tmp;
+        re = s_tmp[i75].re / s_tmp[i75].im;
+        re_tmp = s_tmp[i75].im + re * s_tmp[i75].re;
+        h[i75].re = (re * h[i75].re + h[i75].im) / re_tmp;
+        h[i75].im = (re * h[i75].im - h_re) / re_tmp;
       }
     }
   }
@@ -4285,7 +4298,7 @@ static void d_firfreqz(double b_data[], int b_size[2], const struct_T *options,
   creal_T h[2048], double w[2048])
 {
   double b_b_data[29];
-  int i75;
+  int i76;
   creal_T dcv4[2048];
   double re_tmp;
   double re;
@@ -4318,76 +4331,76 @@ static void d_firfreqz(double b_data[], int b_size[2], const struct_T *options,
   /*  Fs was specified, freq. vector is in Hz */
   /*  Convert from Hz to rad/sample for computational purposes */
   /*  Digital frequency must be used for this calculation */
-  for (i75 = 0; i75 < 2048; i75++) {
-    w[i75] = options->w[i75];
-    re_tmp = 6.2831853071795862 * options->w[i75] / options->Fs;
+  for (i76 = 0; i76 < 2048; i76++) {
+    w[i76] = options->w[i76];
+    re_tmp = 6.2831853071795862 * options->w[i76] / options->Fs;
     re = re_tmp * 0.0;
-    s_tmp[i75].re = re;
-    s_tmp[i75].im = re_tmp;
-    dcv4[i75].re = re;
-    dcv4[i75].im = re_tmp;
+    s_tmp[i76].re = re;
+    s_tmp[i76].im = re_tmp;
+    dcv4[i76].re = re;
+    dcv4[i76].im = re_tmp;
   }
 
   b_exp(dcv4);
   c_polyval(b_data, b_size, dcv4, h);
-  for (i75 = 0; i75 < 2048; i75++) {
-    s_tmp[i75].re *= (double)b_size[1] - 1.0;
-    s_tmp[i75].im *= (double)b_size[1] - 1.0;
+  for (i76 = 0; i76 < 2048; i76++) {
+    s_tmp[i76].re *= (double)b_size[1] - 1.0;
+    s_tmp[i76].im *= (double)b_size[1] - 1.0;
   }
 
   b_exp(s_tmp);
-  for (i75 = 0; i75 < 2048; i75++) {
-    h_re = h[i75].re;
-    if (s_tmp[i75].im == 0.0) {
-      if (h[i75].im == 0.0) {
-        h[i75].re /= s_tmp[i75].re;
-        h[i75].im = 0.0;
-      } else if (h[i75].re == 0.0) {
-        h[i75].re = 0.0;
-        h[i75].im /= s_tmp[i75].re;
+  for (i76 = 0; i76 < 2048; i76++) {
+    h_re = h[i76].re;
+    if (s_tmp[i76].im == 0.0) {
+      if (h[i76].im == 0.0) {
+        h[i76].re /= s_tmp[i76].re;
+        h[i76].im = 0.0;
+      } else if (h[i76].re == 0.0) {
+        h[i76].re = 0.0;
+        h[i76].im /= s_tmp[i76].re;
       } else {
-        h[i75].re /= s_tmp[i75].re;
-        h[i75].im /= s_tmp[i75].re;
+        h[i76].re /= s_tmp[i76].re;
+        h[i76].im /= s_tmp[i76].re;
       }
-    } else if (s_tmp[i75].re == 0.0) {
-      if (h[i75].re == 0.0) {
-        h[i75].re = h[i75].im / s_tmp[i75].im;
-        h[i75].im = 0.0;
-      } else if (h[i75].im == 0.0) {
-        h[i75].re = 0.0;
-        h[i75].im = -(h_re / s_tmp[i75].im);
+    } else if (s_tmp[i76].re == 0.0) {
+      if (h[i76].re == 0.0) {
+        h[i76].re = h[i76].im / s_tmp[i76].im;
+        h[i76].im = 0.0;
+      } else if (h[i76].im == 0.0) {
+        h[i76].re = 0.0;
+        h[i76].im = -(h_re / s_tmp[i76].im);
       } else {
-        h[i75].re = h[i75].im / s_tmp[i75].im;
-        h[i75].im = -(h_re / s_tmp[i75].im);
+        h[i76].re = h[i76].im / s_tmp[i76].im;
+        h[i76].im = -(h_re / s_tmp[i76].im);
       }
     } else {
-      brm = fabs(s_tmp[i75].re);
-      re = fabs(s_tmp[i75].im);
+      brm = fabs(s_tmp[i76].re);
+      re = fabs(s_tmp[i76].im);
       if (brm > re) {
-        re = s_tmp[i75].im / s_tmp[i75].re;
-        re_tmp = s_tmp[i75].re + re * s_tmp[i75].im;
-        h[i75].re = (h[i75].re + re * h[i75].im) / re_tmp;
-        h[i75].im = (h[i75].im - re * h_re) / re_tmp;
+        re = s_tmp[i76].im / s_tmp[i76].re;
+        re_tmp = s_tmp[i76].re + re * s_tmp[i76].im;
+        h[i76].re = (h[i76].re + re * h[i76].im) / re_tmp;
+        h[i76].im = (h[i76].im - re * h_re) / re_tmp;
       } else if (re == brm) {
-        if (s_tmp[i75].re > 0.0) {
+        if (s_tmp[i76].re > 0.0) {
           re = 0.5;
         } else {
           re = -0.5;
         }
 
-        if (s_tmp[i75].im > 0.0) {
+        if (s_tmp[i76].im > 0.0) {
           re_tmp = 0.5;
         } else {
           re_tmp = -0.5;
         }
 
-        h[i75].re = (h[i75].re * re + h[i75].im * re_tmp) / brm;
-        h[i75].im = (h[i75].im * re - h_re * re_tmp) / brm;
+        h[i76].re = (h[i76].re * re + h[i76].im * re_tmp) / brm;
+        h[i76].im = (h[i76].im * re - h_re * re_tmp) / brm;
       } else {
-        re = s_tmp[i75].re / s_tmp[i75].im;
-        re_tmp = s_tmp[i75].im + re * s_tmp[i75].re;
-        h[i75].re = (re * h[i75].re + h[i75].im) / re_tmp;
-        h[i75].im = (re * h[i75].im - h_re) / re_tmp;
+        re = s_tmp[i76].re / s_tmp[i76].im;
+        re_tmp = s_tmp[i76].im + re * s_tmp[i76].re;
+        h[i76].re = (re * h[i76].re + h[i76].im) / re_tmp;
+        h[i76].im = (re * h[i76].im - h_re) / re_tmp;
       }
     }
   }
@@ -5433,7 +5446,7 @@ static int div_s32_floor(int numerator, int denominator)
 static void e_firfreqz(const double b[29], const struct_T *options, creal_T h
   [2048], double w[2048])
 {
-  int i76;
+  int i77;
   creal_T dcv5[2048];
   double re_tmp;
   double re;
@@ -5455,76 +5468,76 @@ static void e_firfreqz(const double b[29], const struct_T *options, creal_T h
   /*  Fs was specified, freq. vector is in Hz */
   /*  Convert from Hz to rad/sample for computational purposes */
   /*  Digital frequency must be used for this calculation */
-  for (i76 = 0; i76 < 2048; i76++) {
-    w[i76] = options->w[i76];
-    re_tmp = 6.2831853071795862 * options->w[i76] / options->Fs;
+  for (i77 = 0; i77 < 2048; i77++) {
+    w[i77] = options->w[i77];
+    re_tmp = 6.2831853071795862 * options->w[i77] / options->Fs;
     re = re_tmp * 0.0;
-    s_tmp[i76].re = re;
-    s_tmp[i76].im = re_tmp;
-    dcv5[i76].re = re;
-    dcv5[i76].im = re_tmp;
+    s_tmp[i77].re = re;
+    s_tmp[i77].im = re_tmp;
+    dcv5[i77].re = re;
+    dcv5[i77].im = re_tmp;
   }
 
   b_exp(dcv5);
   d_polyval(b, dcv5, h);
-  for (i76 = 0; i76 < 2048; i76++) {
-    s_tmp[i76].re *= 28.0;
-    s_tmp[i76].im *= 28.0;
+  for (i77 = 0; i77 < 2048; i77++) {
+    s_tmp[i77].re *= 28.0;
+    s_tmp[i77].im *= 28.0;
   }
 
   b_exp(s_tmp);
-  for (i76 = 0; i76 < 2048; i76++) {
-    h_re = h[i76].re;
-    if (s_tmp[i76].im == 0.0) {
-      if (h[i76].im == 0.0) {
-        h[i76].re /= s_tmp[i76].re;
-        h[i76].im = 0.0;
-      } else if (h[i76].re == 0.0) {
-        h[i76].re = 0.0;
-        h[i76].im /= s_tmp[i76].re;
+  for (i77 = 0; i77 < 2048; i77++) {
+    h_re = h[i77].re;
+    if (s_tmp[i77].im == 0.0) {
+      if (h[i77].im == 0.0) {
+        h[i77].re /= s_tmp[i77].re;
+        h[i77].im = 0.0;
+      } else if (h[i77].re == 0.0) {
+        h[i77].re = 0.0;
+        h[i77].im /= s_tmp[i77].re;
       } else {
-        h[i76].re /= s_tmp[i76].re;
-        h[i76].im /= s_tmp[i76].re;
+        h[i77].re /= s_tmp[i77].re;
+        h[i77].im /= s_tmp[i77].re;
       }
-    } else if (s_tmp[i76].re == 0.0) {
-      if (h[i76].re == 0.0) {
-        h[i76].re = h[i76].im / s_tmp[i76].im;
-        h[i76].im = 0.0;
-      } else if (h[i76].im == 0.0) {
-        h[i76].re = 0.0;
-        h[i76].im = -(h_re / s_tmp[i76].im);
+    } else if (s_tmp[i77].re == 0.0) {
+      if (h[i77].re == 0.0) {
+        h[i77].re = h[i77].im / s_tmp[i77].im;
+        h[i77].im = 0.0;
+      } else if (h[i77].im == 0.0) {
+        h[i77].re = 0.0;
+        h[i77].im = -(h_re / s_tmp[i77].im);
       } else {
-        h[i76].re = h[i76].im / s_tmp[i76].im;
-        h[i76].im = -(h_re / s_tmp[i76].im);
+        h[i77].re = h[i77].im / s_tmp[i77].im;
+        h[i77].im = -(h_re / s_tmp[i77].im);
       }
     } else {
-      brm = fabs(s_tmp[i76].re);
-      re = fabs(s_tmp[i76].im);
+      brm = fabs(s_tmp[i77].re);
+      re = fabs(s_tmp[i77].im);
       if (brm > re) {
-        re = s_tmp[i76].im / s_tmp[i76].re;
-        re_tmp = s_tmp[i76].re + re * s_tmp[i76].im;
-        h[i76].re = (h[i76].re + re * h[i76].im) / re_tmp;
-        h[i76].im = (h[i76].im - re * h_re) / re_tmp;
+        re = s_tmp[i77].im / s_tmp[i77].re;
+        re_tmp = s_tmp[i77].re + re * s_tmp[i77].im;
+        h[i77].re = (h[i77].re + re * h[i77].im) / re_tmp;
+        h[i77].im = (h[i77].im - re * h_re) / re_tmp;
       } else if (re == brm) {
-        if (s_tmp[i76].re > 0.0) {
+        if (s_tmp[i77].re > 0.0) {
           re = 0.5;
         } else {
           re = -0.5;
         }
 
-        if (s_tmp[i76].im > 0.0) {
+        if (s_tmp[i77].im > 0.0) {
           re_tmp = 0.5;
         } else {
           re_tmp = -0.5;
         }
 
-        h[i76].re = (h[i76].re * re + h[i76].im * re_tmp) / brm;
-        h[i76].im = (h[i76].im * re - h_re * re_tmp) / brm;
+        h[i77].re = (h[i77].re * re + h[i77].im * re_tmp) / brm;
+        h[i77].im = (h[i77].im * re - h_re * re_tmp) / brm;
       } else {
-        re = s_tmp[i76].re / s_tmp[i76].im;
-        re_tmp = s_tmp[i76].im + re * s_tmp[i76].re;
-        h[i76].re = (re * h[i76].re + h[i76].im) / re_tmp;
-        h[i76].im = (re * h[i76].im - h_re) / re_tmp;
+        re = s_tmp[i77].re / s_tmp[i77].im;
+        re_tmp = s_tmp[i77].im + re * s_tmp[i77].re;
+        h[i77].re = (re * h[i77].re + h[i77].im) / re_tmp;
+        h[i77].im = (re * h[i77].im - h_re) / re_tmp;
       }
     }
   }
@@ -6208,7 +6221,7 @@ static int eml_zlahqr(emxArray_creal_T *h)
 static void f_firfreqz(const double b[13], const struct_T *options, creal_T h
   [2048], double w[2048])
 {
-  int i77;
+  int i78;
   creal_T dcv6[2048];
   double re_tmp;
   double re;
@@ -6230,76 +6243,76 @@ static void f_firfreqz(const double b[13], const struct_T *options, creal_T h
   /*  Fs was specified, freq. vector is in Hz */
   /*  Convert from Hz to rad/sample for computational purposes */
   /*  Digital frequency must be used for this calculation */
-  for (i77 = 0; i77 < 2048; i77++) {
-    w[i77] = options->w[i77];
-    re_tmp = 6.2831853071795862 * options->w[i77] / options->Fs;
+  for (i78 = 0; i78 < 2048; i78++) {
+    w[i78] = options->w[i78];
+    re_tmp = 6.2831853071795862 * options->w[i78] / options->Fs;
     re = re_tmp * 0.0;
-    s_tmp[i77].re = re;
-    s_tmp[i77].im = re_tmp;
-    dcv6[i77].re = re;
-    dcv6[i77].im = re_tmp;
+    s_tmp[i78].re = re;
+    s_tmp[i78].im = re_tmp;
+    dcv6[i78].re = re;
+    dcv6[i78].im = re_tmp;
   }
 
   b_exp(dcv6);
   e_polyval(b, dcv6, h);
-  for (i77 = 0; i77 < 2048; i77++) {
-    s_tmp[i77].re *= 12.0;
-    s_tmp[i77].im *= 12.0;
+  for (i78 = 0; i78 < 2048; i78++) {
+    s_tmp[i78].re *= 12.0;
+    s_tmp[i78].im *= 12.0;
   }
 
   b_exp(s_tmp);
-  for (i77 = 0; i77 < 2048; i77++) {
-    h_re = h[i77].re;
-    if (s_tmp[i77].im == 0.0) {
-      if (h[i77].im == 0.0) {
-        h[i77].re /= s_tmp[i77].re;
-        h[i77].im = 0.0;
-      } else if (h[i77].re == 0.0) {
-        h[i77].re = 0.0;
-        h[i77].im /= s_tmp[i77].re;
+  for (i78 = 0; i78 < 2048; i78++) {
+    h_re = h[i78].re;
+    if (s_tmp[i78].im == 0.0) {
+      if (h[i78].im == 0.0) {
+        h[i78].re /= s_tmp[i78].re;
+        h[i78].im = 0.0;
+      } else if (h[i78].re == 0.0) {
+        h[i78].re = 0.0;
+        h[i78].im /= s_tmp[i78].re;
       } else {
-        h[i77].re /= s_tmp[i77].re;
-        h[i77].im /= s_tmp[i77].re;
+        h[i78].re /= s_tmp[i78].re;
+        h[i78].im /= s_tmp[i78].re;
       }
-    } else if (s_tmp[i77].re == 0.0) {
-      if (h[i77].re == 0.0) {
-        h[i77].re = h[i77].im / s_tmp[i77].im;
-        h[i77].im = 0.0;
-      } else if (h[i77].im == 0.0) {
-        h[i77].re = 0.0;
-        h[i77].im = -(h_re / s_tmp[i77].im);
+    } else if (s_tmp[i78].re == 0.0) {
+      if (h[i78].re == 0.0) {
+        h[i78].re = h[i78].im / s_tmp[i78].im;
+        h[i78].im = 0.0;
+      } else if (h[i78].im == 0.0) {
+        h[i78].re = 0.0;
+        h[i78].im = -(h_re / s_tmp[i78].im);
       } else {
-        h[i77].re = h[i77].im / s_tmp[i77].im;
-        h[i77].im = -(h_re / s_tmp[i77].im);
+        h[i78].re = h[i78].im / s_tmp[i78].im;
+        h[i78].im = -(h_re / s_tmp[i78].im);
       }
     } else {
-      brm = fabs(s_tmp[i77].re);
-      re = fabs(s_tmp[i77].im);
+      brm = fabs(s_tmp[i78].re);
+      re = fabs(s_tmp[i78].im);
       if (brm > re) {
-        re = s_tmp[i77].im / s_tmp[i77].re;
-        re_tmp = s_tmp[i77].re + re * s_tmp[i77].im;
-        h[i77].re = (h[i77].re + re * h[i77].im) / re_tmp;
-        h[i77].im = (h[i77].im - re * h_re) / re_tmp;
+        re = s_tmp[i78].im / s_tmp[i78].re;
+        re_tmp = s_tmp[i78].re + re * s_tmp[i78].im;
+        h[i78].re = (h[i78].re + re * h[i78].im) / re_tmp;
+        h[i78].im = (h[i78].im - re * h_re) / re_tmp;
       } else if (re == brm) {
-        if (s_tmp[i77].re > 0.0) {
+        if (s_tmp[i78].re > 0.0) {
           re = 0.5;
         } else {
           re = -0.5;
         }
 
-        if (s_tmp[i77].im > 0.0) {
+        if (s_tmp[i78].im > 0.0) {
           re_tmp = 0.5;
         } else {
           re_tmp = -0.5;
         }
 
-        h[i77].re = (h[i77].re * re + h[i77].im * re_tmp) / brm;
-        h[i77].im = (h[i77].im * re - h_re * re_tmp) / brm;
+        h[i78].re = (h[i78].re * re + h[i78].im * re_tmp) / brm;
+        h[i78].im = (h[i78].im * re - h_re * re_tmp) / brm;
       } else {
-        re = s_tmp[i77].re / s_tmp[i77].im;
-        re_tmp = s_tmp[i77].im + re * s_tmp[i77].re;
-        h[i77].re = (re * h[i77].re + h[i77].im) / re_tmp;
-        h[i77].im = (re * h[i77].im - h_re) / re_tmp;
+        re = s_tmp[i78].re / s_tmp[i78].im;
+        re_tmp = s_tmp[i78].im + re * s_tmp[i78].re;
+        h[i78].re = (re * h[i78].re + h[i78].im) / re_tmp;
+        h[i78].im = (re * h[i78].im - h_re) / re_tmp;
       }
     }
   }
@@ -6406,7 +6419,7 @@ static void f_us(const double o[15], double u[57])
  */
 static void firfreqz(const struct_T *options, creal_T h[2048], double w[2048])
 {
-  int i72;
+  int i73;
   double re_tmp;
   double brm;
   double d;
@@ -6425,49 +6438,49 @@ static void firfreqz(const struct_T *options, creal_T h[2048], double w[2048])
   /*  Fs was specified, freq. vector is in Hz */
   /*  Convert from Hz to rad/sample for computational purposes */
   /*  Digital frequency must be used for this calculation */
-  for (i72 = 0; i72 < 2048; i72++) {
-    w[i72] = options->w[i72];
-    re_tmp = 6.2831853071795862 * options->w[i72] / options->Fs;
-    h[i72].re = 0.0 * (re_tmp * 0.0);
-    h[i72].im = 0.0 * re_tmp;
+  for (i73 = 0; i73 < 2048; i73++) {
+    w[i73] = options->w[i73];
+    re_tmp = 6.2831853071795862 * options->w[i73] / options->Fs;
+    h[i73].re = 0.0 * (re_tmp * 0.0);
+    h[i73].im = 0.0 * re_tmp;
   }
 
   b_exp(h);
-  for (i72 = 0; i72 < 2048; i72++) {
-    if (h[i72].im == 0.0) {
-      h[i72].re = 1.0 / h[i72].re;
-      h[i72].im = 0.0;
-    } else if (h[i72].re == 0.0) {
-      h[i72].re = 0.0;
-      h[i72].im = -(1.0 / h[i72].im);
+  for (i73 = 0; i73 < 2048; i73++) {
+    if (h[i73].im == 0.0) {
+      h[i73].re = 1.0 / h[i73].re;
+      h[i73].im = 0.0;
+    } else if (h[i73].re == 0.0) {
+      h[i73].re = 0.0;
+      h[i73].im = -(1.0 / h[i73].im);
     } else {
-      brm = fabs(h[i72].re);
-      re_tmp = fabs(h[i72].im);
+      brm = fabs(h[i73].re);
+      re_tmp = fabs(h[i73].im);
       if (brm > re_tmp) {
-        re_tmp = h[i72].im / h[i72].re;
-        d = h[i72].re + re_tmp * h[i72].im;
-        h[i72].re = (1.0 + re_tmp * 0.0) / d;
-        h[i72].im = (0.0 - re_tmp) / d;
+        re_tmp = h[i73].im / h[i73].re;
+        d = h[i73].re + re_tmp * h[i73].im;
+        h[i73].re = (1.0 + re_tmp * 0.0) / d;
+        h[i73].im = (0.0 - re_tmp) / d;
       } else if (re_tmp == brm) {
-        if (h[i72].re > 0.0) {
+        if (h[i73].re > 0.0) {
           re_tmp = 0.5;
         } else {
           re_tmp = -0.5;
         }
 
-        if (h[i72].im > 0.0) {
+        if (h[i73].im > 0.0) {
           d = 0.5;
         } else {
           d = -0.5;
         }
 
-        h[i72].re = (re_tmp + 0.0 * d) / brm;
-        h[i72].im = (0.0 * re_tmp - d) / brm;
+        h[i73].re = (re_tmp + 0.0 * d) / brm;
+        h[i73].im = (0.0 * re_tmp - d) / brm;
       } else {
-        re_tmp = h[i72].re / h[i72].im;
-        d = h[i72].im + re_tmp * h[i72].re;
-        h[i72].re = re_tmp / d;
-        h[i72].im = (re_tmp * 0.0 - 1.0) / d;
+        re_tmp = h[i73].re / h[i73].im;
+        d = h[i73].im + re_tmp * h[i73].re;
+        h[i73].re = re_tmp / d;
+        h[i73].im = (re_tmp * 0.0 - 1.0) / d;
       }
     }
   }
@@ -7070,7 +7083,7 @@ static void freqz_cg(const double w[2048], double Fs, creal_T hh[2048])
 static void g_firfreqz(const double b[57], const struct_T *options, creal_T h
   [2048], double w[2048])
 {
-  int i78;
+  int i79;
   creal_T dcv7[2048];
   double re_tmp;
   double re;
@@ -7092,76 +7105,76 @@ static void g_firfreqz(const double b[57], const struct_T *options, creal_T h
   /*  Fs was specified, freq. vector is in Hz */
   /*  Convert from Hz to rad/sample for computational purposes */
   /*  Digital frequency must be used for this calculation */
-  for (i78 = 0; i78 < 2048; i78++) {
-    w[i78] = options->w[i78];
-    re_tmp = 6.2831853071795862 * options->w[i78] / options->Fs;
+  for (i79 = 0; i79 < 2048; i79++) {
+    w[i79] = options->w[i79];
+    re_tmp = 6.2831853071795862 * options->w[i79] / options->Fs;
     re = re_tmp * 0.0;
-    s_tmp[i78].re = re;
-    s_tmp[i78].im = re_tmp;
-    dcv7[i78].re = re;
-    dcv7[i78].im = re_tmp;
+    s_tmp[i79].re = re;
+    s_tmp[i79].im = re_tmp;
+    dcv7[i79].re = re;
+    dcv7[i79].im = re_tmp;
   }
 
   b_exp(dcv7);
   f_polyval(b, dcv7, h);
-  for (i78 = 0; i78 < 2048; i78++) {
-    s_tmp[i78].re *= 56.0;
-    s_tmp[i78].im *= 56.0;
+  for (i79 = 0; i79 < 2048; i79++) {
+    s_tmp[i79].re *= 56.0;
+    s_tmp[i79].im *= 56.0;
   }
 
   b_exp(s_tmp);
-  for (i78 = 0; i78 < 2048; i78++) {
-    h_re = h[i78].re;
-    if (s_tmp[i78].im == 0.0) {
-      if (h[i78].im == 0.0) {
-        h[i78].re /= s_tmp[i78].re;
-        h[i78].im = 0.0;
-      } else if (h[i78].re == 0.0) {
-        h[i78].re = 0.0;
-        h[i78].im /= s_tmp[i78].re;
+  for (i79 = 0; i79 < 2048; i79++) {
+    h_re = h[i79].re;
+    if (s_tmp[i79].im == 0.0) {
+      if (h[i79].im == 0.0) {
+        h[i79].re /= s_tmp[i79].re;
+        h[i79].im = 0.0;
+      } else if (h[i79].re == 0.0) {
+        h[i79].re = 0.0;
+        h[i79].im /= s_tmp[i79].re;
       } else {
-        h[i78].re /= s_tmp[i78].re;
-        h[i78].im /= s_tmp[i78].re;
+        h[i79].re /= s_tmp[i79].re;
+        h[i79].im /= s_tmp[i79].re;
       }
-    } else if (s_tmp[i78].re == 0.0) {
-      if (h[i78].re == 0.0) {
-        h[i78].re = h[i78].im / s_tmp[i78].im;
-        h[i78].im = 0.0;
-      } else if (h[i78].im == 0.0) {
-        h[i78].re = 0.0;
-        h[i78].im = -(h_re / s_tmp[i78].im);
+    } else if (s_tmp[i79].re == 0.0) {
+      if (h[i79].re == 0.0) {
+        h[i79].re = h[i79].im / s_tmp[i79].im;
+        h[i79].im = 0.0;
+      } else if (h[i79].im == 0.0) {
+        h[i79].re = 0.0;
+        h[i79].im = -(h_re / s_tmp[i79].im);
       } else {
-        h[i78].re = h[i78].im / s_tmp[i78].im;
-        h[i78].im = -(h_re / s_tmp[i78].im);
+        h[i79].re = h[i79].im / s_tmp[i79].im;
+        h[i79].im = -(h_re / s_tmp[i79].im);
       }
     } else {
-      brm = fabs(s_tmp[i78].re);
-      re = fabs(s_tmp[i78].im);
+      brm = fabs(s_tmp[i79].re);
+      re = fabs(s_tmp[i79].im);
       if (brm > re) {
-        re = s_tmp[i78].im / s_tmp[i78].re;
-        re_tmp = s_tmp[i78].re + re * s_tmp[i78].im;
-        h[i78].re = (h[i78].re + re * h[i78].im) / re_tmp;
-        h[i78].im = (h[i78].im - re * h_re) / re_tmp;
+        re = s_tmp[i79].im / s_tmp[i79].re;
+        re_tmp = s_tmp[i79].re + re * s_tmp[i79].im;
+        h[i79].re = (h[i79].re + re * h[i79].im) / re_tmp;
+        h[i79].im = (h[i79].im - re * h_re) / re_tmp;
       } else if (re == brm) {
-        if (s_tmp[i78].re > 0.0) {
+        if (s_tmp[i79].re > 0.0) {
           re = 0.5;
         } else {
           re = -0.5;
         }
 
-        if (s_tmp[i78].im > 0.0) {
+        if (s_tmp[i79].im > 0.0) {
           re_tmp = 0.5;
         } else {
           re_tmp = -0.5;
         }
 
-        h[i78].re = (h[i78].re * re + h[i78].im * re_tmp) / brm;
-        h[i78].im = (h[i78].im * re - h_re * re_tmp) / brm;
+        h[i79].re = (h[i79].re * re + h[i79].im * re_tmp) / brm;
+        h[i79].im = (h[i79].im * re - h_re * re_tmp) / brm;
       } else {
-        re = s_tmp[i78].re / s_tmp[i78].im;
-        re_tmp = s_tmp[i78].im + re * s_tmp[i78].re;
-        h[i78].re = (re * h[i78].re + h[i78].im) / re_tmp;
-        h[i78].im = (re * h[i78].im - h_re) / re_tmp;
+        re = s_tmp[i79].re / s_tmp[i79].im;
+        re_tmp = s_tmp[i79].im + re * s_tmp[i79].re;
+        h[i79].re = (re * h[i79].re + h[i79].im) / re_tmp;
+        h[i79].im = (re * h[i79].im - h_re) / re_tmp;
       }
     }
   }
@@ -7726,7 +7739,7 @@ static void generateCascadedResponseRx(const char enables[4], const double w
 static void h_firfreqz(const double b[43], const struct_T *options, creal_T h
   [2048], double w[2048])
 {
-  int i79;
+  int i80;
   creal_T dcv8[2048];
   double re_tmp;
   double re;
@@ -7748,76 +7761,76 @@ static void h_firfreqz(const double b[43], const struct_T *options, creal_T h
   /*  Fs was specified, freq. vector is in Hz */
   /*  Convert from Hz to rad/sample for computational purposes */
   /*  Digital frequency must be used for this calculation */
-  for (i79 = 0; i79 < 2048; i79++) {
-    w[i79] = options->w[i79];
-    re_tmp = 6.2831853071795862 * options->w[i79] / options->Fs;
+  for (i80 = 0; i80 < 2048; i80++) {
+    w[i80] = options->w[i80];
+    re_tmp = 6.2831853071795862 * options->w[i80] / options->Fs;
     re = re_tmp * 0.0;
-    s_tmp[i79].re = re;
-    s_tmp[i79].im = re_tmp;
-    dcv8[i79].re = re;
-    dcv8[i79].im = re_tmp;
+    s_tmp[i80].re = re;
+    s_tmp[i80].im = re_tmp;
+    dcv8[i80].re = re;
+    dcv8[i80].im = re_tmp;
   }
 
   b_exp(dcv8);
   g_polyval(b, dcv8, h);
-  for (i79 = 0; i79 < 2048; i79++) {
-    s_tmp[i79].re *= 42.0;
-    s_tmp[i79].im *= 42.0;
+  for (i80 = 0; i80 < 2048; i80++) {
+    s_tmp[i80].re *= 42.0;
+    s_tmp[i80].im *= 42.0;
   }
 
   b_exp(s_tmp);
-  for (i79 = 0; i79 < 2048; i79++) {
-    h_re = h[i79].re;
-    if (s_tmp[i79].im == 0.0) {
-      if (h[i79].im == 0.0) {
-        h[i79].re /= s_tmp[i79].re;
-        h[i79].im = 0.0;
-      } else if (h[i79].re == 0.0) {
-        h[i79].re = 0.0;
-        h[i79].im /= s_tmp[i79].re;
+  for (i80 = 0; i80 < 2048; i80++) {
+    h_re = h[i80].re;
+    if (s_tmp[i80].im == 0.0) {
+      if (h[i80].im == 0.0) {
+        h[i80].re /= s_tmp[i80].re;
+        h[i80].im = 0.0;
+      } else if (h[i80].re == 0.0) {
+        h[i80].re = 0.0;
+        h[i80].im /= s_tmp[i80].re;
       } else {
-        h[i79].re /= s_tmp[i79].re;
-        h[i79].im /= s_tmp[i79].re;
+        h[i80].re /= s_tmp[i80].re;
+        h[i80].im /= s_tmp[i80].re;
       }
-    } else if (s_tmp[i79].re == 0.0) {
-      if (h[i79].re == 0.0) {
-        h[i79].re = h[i79].im / s_tmp[i79].im;
-        h[i79].im = 0.0;
-      } else if (h[i79].im == 0.0) {
-        h[i79].re = 0.0;
-        h[i79].im = -(h_re / s_tmp[i79].im);
+    } else if (s_tmp[i80].re == 0.0) {
+      if (h[i80].re == 0.0) {
+        h[i80].re = h[i80].im / s_tmp[i80].im;
+        h[i80].im = 0.0;
+      } else if (h[i80].im == 0.0) {
+        h[i80].re = 0.0;
+        h[i80].im = -(h_re / s_tmp[i80].im);
       } else {
-        h[i79].re = h[i79].im / s_tmp[i79].im;
-        h[i79].im = -(h_re / s_tmp[i79].im);
+        h[i80].re = h[i80].im / s_tmp[i80].im;
+        h[i80].im = -(h_re / s_tmp[i80].im);
       }
     } else {
-      brm = fabs(s_tmp[i79].re);
-      re = fabs(s_tmp[i79].im);
+      brm = fabs(s_tmp[i80].re);
+      re = fabs(s_tmp[i80].im);
       if (brm > re) {
-        re = s_tmp[i79].im / s_tmp[i79].re;
-        re_tmp = s_tmp[i79].re + re * s_tmp[i79].im;
-        h[i79].re = (h[i79].re + re * h[i79].im) / re_tmp;
-        h[i79].im = (h[i79].im - re * h_re) / re_tmp;
+        re = s_tmp[i80].im / s_tmp[i80].re;
+        re_tmp = s_tmp[i80].re + re * s_tmp[i80].im;
+        h[i80].re = (h[i80].re + re * h[i80].im) / re_tmp;
+        h[i80].im = (h[i80].im - re * h_re) / re_tmp;
       } else if (re == brm) {
-        if (s_tmp[i79].re > 0.0) {
+        if (s_tmp[i80].re > 0.0) {
           re = 0.5;
         } else {
           re = -0.5;
         }
 
-        if (s_tmp[i79].im > 0.0) {
+        if (s_tmp[i80].im > 0.0) {
           re_tmp = 0.5;
         } else {
           re_tmp = -0.5;
         }
 
-        h[i79].re = (h[i79].re * re + h[i79].im * re_tmp) / brm;
-        h[i79].im = (h[i79].im * re - h_re * re_tmp) / brm;
+        h[i80].re = (h[i80].re * re + h[i80].im * re_tmp) / brm;
+        h[i80].im = (h[i80].im * re - h_re * re_tmp) / brm;
       } else {
-        re = s_tmp[i79].re / s_tmp[i79].im;
-        re_tmp = s_tmp[i79].im + re * s_tmp[i79].re;
-        h[i79].re = (re * h[i79].re + h[i79].im) / re_tmp;
-        h[i79].im = (re * h[i79].im - h_re) / re_tmp;
+        re = s_tmp[i80].re / s_tmp[i80].im;
+        re_tmp = s_tmp[i80].im + re * s_tmp[i80].re;
+        h[i80].re = (re * h[i80].re + h[i80].im) / re_tmp;
+        h[i80].im = (re * h[i80].im - h_re) / re_tmp;
       }
     }
   }
@@ -7926,7 +7939,7 @@ static void h_us(const double o[7], double u[19])
 static void i_firfreqz(const double b[19], const struct_T *options, creal_T h
   [2048], double w[2048])
 {
-  int i80;
+  int i81;
   creal_T dcv9[2048];
   double re_tmp;
   double re;
@@ -7948,76 +7961,76 @@ static void i_firfreqz(const double b[19], const struct_T *options, creal_T h
   /*  Fs was specified, freq. vector is in Hz */
   /*  Convert from Hz to rad/sample for computational purposes */
   /*  Digital frequency must be used for this calculation */
-  for (i80 = 0; i80 < 2048; i80++) {
-    w[i80] = options->w[i80];
-    re_tmp = 6.2831853071795862 * options->w[i80] / options->Fs;
+  for (i81 = 0; i81 < 2048; i81++) {
+    w[i81] = options->w[i81];
+    re_tmp = 6.2831853071795862 * options->w[i81] / options->Fs;
     re = re_tmp * 0.0;
-    s_tmp[i80].re = re;
-    s_tmp[i80].im = re_tmp;
-    dcv9[i80].re = re;
-    dcv9[i80].im = re_tmp;
+    s_tmp[i81].re = re;
+    s_tmp[i81].im = re_tmp;
+    dcv9[i81].re = re;
+    dcv9[i81].im = re_tmp;
   }
 
   b_exp(dcv9);
   h_polyval(b, dcv9, h);
-  for (i80 = 0; i80 < 2048; i80++) {
-    s_tmp[i80].re *= 18.0;
-    s_tmp[i80].im *= 18.0;
+  for (i81 = 0; i81 < 2048; i81++) {
+    s_tmp[i81].re *= 18.0;
+    s_tmp[i81].im *= 18.0;
   }
 
   b_exp(s_tmp);
-  for (i80 = 0; i80 < 2048; i80++) {
-    h_re = h[i80].re;
-    if (s_tmp[i80].im == 0.0) {
-      if (h[i80].im == 0.0) {
-        h[i80].re /= s_tmp[i80].re;
-        h[i80].im = 0.0;
-      } else if (h[i80].re == 0.0) {
-        h[i80].re = 0.0;
-        h[i80].im /= s_tmp[i80].re;
+  for (i81 = 0; i81 < 2048; i81++) {
+    h_re = h[i81].re;
+    if (s_tmp[i81].im == 0.0) {
+      if (h[i81].im == 0.0) {
+        h[i81].re /= s_tmp[i81].re;
+        h[i81].im = 0.0;
+      } else if (h[i81].re == 0.0) {
+        h[i81].re = 0.0;
+        h[i81].im /= s_tmp[i81].re;
       } else {
-        h[i80].re /= s_tmp[i80].re;
-        h[i80].im /= s_tmp[i80].re;
+        h[i81].re /= s_tmp[i81].re;
+        h[i81].im /= s_tmp[i81].re;
       }
-    } else if (s_tmp[i80].re == 0.0) {
-      if (h[i80].re == 0.0) {
-        h[i80].re = h[i80].im / s_tmp[i80].im;
-        h[i80].im = 0.0;
-      } else if (h[i80].im == 0.0) {
-        h[i80].re = 0.0;
-        h[i80].im = -(h_re / s_tmp[i80].im);
+    } else if (s_tmp[i81].re == 0.0) {
+      if (h[i81].re == 0.0) {
+        h[i81].re = h[i81].im / s_tmp[i81].im;
+        h[i81].im = 0.0;
+      } else if (h[i81].im == 0.0) {
+        h[i81].re = 0.0;
+        h[i81].im = -(h_re / s_tmp[i81].im);
       } else {
-        h[i80].re = h[i80].im / s_tmp[i80].im;
-        h[i80].im = -(h_re / s_tmp[i80].im);
+        h[i81].re = h[i81].im / s_tmp[i81].im;
+        h[i81].im = -(h_re / s_tmp[i81].im);
       }
     } else {
-      brm = fabs(s_tmp[i80].re);
-      re = fabs(s_tmp[i80].im);
+      brm = fabs(s_tmp[i81].re);
+      re = fabs(s_tmp[i81].im);
       if (brm > re) {
-        re = s_tmp[i80].im / s_tmp[i80].re;
-        re_tmp = s_tmp[i80].re + re * s_tmp[i80].im;
-        h[i80].re = (h[i80].re + re * h[i80].im) / re_tmp;
-        h[i80].im = (h[i80].im - re * h_re) / re_tmp;
+        re = s_tmp[i81].im / s_tmp[i81].re;
+        re_tmp = s_tmp[i81].re + re * s_tmp[i81].im;
+        h[i81].re = (h[i81].re + re * h[i81].im) / re_tmp;
+        h[i81].im = (h[i81].im - re * h_re) / re_tmp;
       } else if (re == brm) {
-        if (s_tmp[i80].re > 0.0) {
+        if (s_tmp[i81].re > 0.0) {
           re = 0.5;
         } else {
           re = -0.5;
         }
 
-        if (s_tmp[i80].im > 0.0) {
+        if (s_tmp[i81].im > 0.0) {
           re_tmp = 0.5;
         } else {
           re_tmp = -0.5;
         }
 
-        h[i80].re = (h[i80].re * re + h[i80].im * re_tmp) / brm;
-        h[i80].im = (h[i80].im * re - h_re * re_tmp) / brm;
+        h[i81].re = (h[i81].re * re + h[i81].im * re_tmp) / brm;
+        h[i81].im = (h[i81].im * re - h_re * re_tmp) / brm;
       } else {
-        re = s_tmp[i80].re / s_tmp[i80].im;
-        re_tmp = s_tmp[i80].im + re * s_tmp[i80].re;
-        h[i80].re = (re * h[i80].re + h[i80].im) / re_tmp;
-        h[i80].im = (re * h[i80].im - h_re) / re_tmp;
+        re = s_tmp[i81].re / s_tmp[i81].im;
+        re_tmp = s_tmp[i81].im + re * s_tmp[i81].re;
+        h[i81].re = (re * h[i81].re + h[i81].im) / re_tmp;
+        h[i81].im = (re * h[i81].im - h_re) / re_tmp;
       }
     }
   }
@@ -8254,7 +8267,7 @@ static void interp1(const emxArray_real_T *varargin_1, const emxArray_real_T
 static void j_firfreqz(const double b[85], const struct_T *options, creal_T h
   [2048], double w[2048])
 {
-  int i81;
+  int i82;
   creal_T dcv10[2048];
   double re_tmp;
   double re;
@@ -8276,76 +8289,76 @@ static void j_firfreqz(const double b[85], const struct_T *options, creal_T h
   /*  Fs was specified, freq. vector is in Hz */
   /*  Convert from Hz to rad/sample for computational purposes */
   /*  Digital frequency must be used for this calculation */
-  for (i81 = 0; i81 < 2048; i81++) {
-    w[i81] = options->w[i81];
-    re_tmp = 6.2831853071795862 * options->w[i81] / options->Fs;
+  for (i82 = 0; i82 < 2048; i82++) {
+    w[i82] = options->w[i82];
+    re_tmp = 6.2831853071795862 * options->w[i82] / options->Fs;
     re = re_tmp * 0.0;
-    s_tmp[i81].re = re;
-    s_tmp[i81].im = re_tmp;
-    dcv10[i81].re = re;
-    dcv10[i81].im = re_tmp;
+    s_tmp[i82].re = re;
+    s_tmp[i82].im = re_tmp;
+    dcv10[i82].re = re;
+    dcv10[i82].im = re_tmp;
   }
 
   b_exp(dcv10);
   i_polyval(b, dcv10, h);
-  for (i81 = 0; i81 < 2048; i81++) {
-    s_tmp[i81].re *= 84.0;
-    s_tmp[i81].im *= 84.0;
+  for (i82 = 0; i82 < 2048; i82++) {
+    s_tmp[i82].re *= 84.0;
+    s_tmp[i82].im *= 84.0;
   }
 
   b_exp(s_tmp);
-  for (i81 = 0; i81 < 2048; i81++) {
-    h_re = h[i81].re;
-    if (s_tmp[i81].im == 0.0) {
-      if (h[i81].im == 0.0) {
-        h[i81].re /= s_tmp[i81].re;
-        h[i81].im = 0.0;
-      } else if (h[i81].re == 0.0) {
-        h[i81].re = 0.0;
-        h[i81].im /= s_tmp[i81].re;
+  for (i82 = 0; i82 < 2048; i82++) {
+    h_re = h[i82].re;
+    if (s_tmp[i82].im == 0.0) {
+      if (h[i82].im == 0.0) {
+        h[i82].re /= s_tmp[i82].re;
+        h[i82].im = 0.0;
+      } else if (h[i82].re == 0.0) {
+        h[i82].re = 0.0;
+        h[i82].im /= s_tmp[i82].re;
       } else {
-        h[i81].re /= s_tmp[i81].re;
-        h[i81].im /= s_tmp[i81].re;
+        h[i82].re /= s_tmp[i82].re;
+        h[i82].im /= s_tmp[i82].re;
       }
-    } else if (s_tmp[i81].re == 0.0) {
-      if (h[i81].re == 0.0) {
-        h[i81].re = h[i81].im / s_tmp[i81].im;
-        h[i81].im = 0.0;
-      } else if (h[i81].im == 0.0) {
-        h[i81].re = 0.0;
-        h[i81].im = -(h_re / s_tmp[i81].im);
+    } else if (s_tmp[i82].re == 0.0) {
+      if (h[i82].re == 0.0) {
+        h[i82].re = h[i82].im / s_tmp[i82].im;
+        h[i82].im = 0.0;
+      } else if (h[i82].im == 0.0) {
+        h[i82].re = 0.0;
+        h[i82].im = -(h_re / s_tmp[i82].im);
       } else {
-        h[i81].re = h[i81].im / s_tmp[i81].im;
-        h[i81].im = -(h_re / s_tmp[i81].im);
+        h[i82].re = h[i82].im / s_tmp[i82].im;
+        h[i82].im = -(h_re / s_tmp[i82].im);
       }
     } else {
-      brm = fabs(s_tmp[i81].re);
-      re = fabs(s_tmp[i81].im);
+      brm = fabs(s_tmp[i82].re);
+      re = fabs(s_tmp[i82].im);
       if (brm > re) {
-        re = s_tmp[i81].im / s_tmp[i81].re;
-        re_tmp = s_tmp[i81].re + re * s_tmp[i81].im;
-        h[i81].re = (h[i81].re + re * h[i81].im) / re_tmp;
-        h[i81].im = (h[i81].im - re * h_re) / re_tmp;
+        re = s_tmp[i82].im / s_tmp[i82].re;
+        re_tmp = s_tmp[i82].re + re * s_tmp[i82].im;
+        h[i82].re = (h[i82].re + re * h[i82].im) / re_tmp;
+        h[i82].im = (h[i82].im - re * h_re) / re_tmp;
       } else if (re == brm) {
-        if (s_tmp[i81].re > 0.0) {
+        if (s_tmp[i82].re > 0.0) {
           re = 0.5;
         } else {
           re = -0.5;
         }
 
-        if (s_tmp[i81].im > 0.0) {
+        if (s_tmp[i82].im > 0.0) {
           re_tmp = 0.5;
         } else {
           re_tmp = -0.5;
         }
 
-        h[i81].re = (h[i81].re * re + h[i81].im * re_tmp) / brm;
-        h[i81].im = (h[i81].im * re - h_re * re_tmp) / brm;
+        h[i82].re = (h[i82].re * re + h[i82].im * re_tmp) / brm;
+        h[i82].im = (h[i82].im * re - h_re * re_tmp) / brm;
       } else {
-        re = s_tmp[i81].re / s_tmp[i81].im;
-        re_tmp = s_tmp[i81].im + re * s_tmp[i81].re;
-        h[i81].re = (re * h[i81].re + h[i81].im) / re_tmp;
-        h[i81].im = (re * h[i81].im - h_re) / re_tmp;
+        re = s_tmp[i82].re / s_tmp[i82].im;
+        re_tmp = s_tmp[i82].im + re * s_tmp[i82].re;
+        h[i82].re = (re * h[i82].re + h[i82].im) / re_tmp;
+        h[i82].im = (re * h[i82].im - h_re) / re_tmp;
       }
     }
   }
@@ -8681,26 +8694,26 @@ static void l_freqz_cg(const double b[15], const emxArray_real_T *w, double Fs,
 static void lp2lp_cg(const emxArray_creal_T *a, const emxArray_real_T *b, double
                      wo, emxArray_creal_T *at, emxArray_real_T *bt, double *dt)
 {
-  int i66;
+  int i67;
   int loop_ub;
 
   /*  Transform lowpass to lowpass */
-  i66 = at->size[0] * at->size[1];
+  i67 = at->size[0] * at->size[1];
   at->size[0] = a->size[0];
   at->size[1] = a->size[1];
-  emxEnsureCapacity_creal_T(at, i66);
+  emxEnsureCapacity_creal_T(at, i67);
   loop_ub = a->size[0] * a->size[1];
-  for (i66 = 0; i66 < loop_ub; i66++) {
-    at->data[i66].re = wo * a->data[i66].re;
-    at->data[i66].im = wo * a->data[i66].im;
+  for (i67 = 0; i67 < loop_ub; i67++) {
+    at->data[i67].re = wo * a->data[i67].re;
+    at->data[i67].im = wo * a->data[i67].im;
   }
 
-  i66 = bt->size[0];
+  i67 = bt->size[0];
   bt->size[0] = b->size[0];
-  emxEnsureCapacity_real_T(bt, i66);
+  emxEnsureCapacity_real_T(bt, i67);
   loop_ub = b->size[0];
-  for (i66 = 0; i66 < loop_ub; i66++) {
-    bt->data[i66] = wo * b->data[i66];
+  for (i67 = 0; i67 < loop_ub; i67++) {
+    bt->data[i67] = wo * b->data[i67];
   }
 
   *dt = 0.0;
@@ -12377,6 +12390,128 @@ static void t_freqz_cg(const double b[85], const emxArray_real_T *w, double Fs,
 }
 
 /*
+ * FREQZ_CG Frequency response of digital filter with codegen support
+ *
+ *  This function is based on 'freqz' by The MathWorks Inc.
+ * Arguments    : const double b[128]
+ *                const emxArray_real_T *w
+ *                double Fs
+ *                emxArray_creal_T *hh
+ * Return Type  : void
+ */
+static void u_freqz_cg(const double b[128], const emxArray_real_T *w, double Fs,
+  emxArray_creal_T *hh)
+{
+  emxArray_real_T *digw;
+  int i66;
+  int loop_ub;
+  emxArray_creal_T *s;
+  emxArray_creal_T *y;
+  bool b12;
+  int k;
+  double b_re;
+  double s_re;
+  double s_im;
+  emxInit_real_T(&digw, 2);
+
+  /*  Cast to enforce precision rules */
+  /*  Remaining are default or for advanced use */
+  /*  Make b a row */
+  /* -------------------------------------------------------------------------- */
+  /*  Actual Frequency Response Computation */
+  /* if fvflag, */
+  /*    Frequency vector specified.  Use Horner's method of polynomial */
+  /*    evaluation at the frequency points and divide the numerator */
+  /*    by the denominator. */
+  /*  */
+  /*    Note: we use positive i here because of the relationship */
+  /*             polyval(a,exp(1i*w)) = fft(a).*exp(1i*w*(length(a)-1)) */
+  /*                ( assuming w = 2*pi*(0:length(a)-1)/length(a) ) */
+  /*  */
+  /*  Fs was specified, freq. vector is in Hz */
+  i66 = digw->size[0] * digw->size[1];
+  digw->size[0] = 1;
+  digw->size[1] = w->size[1];
+  emxEnsureCapacity_real_T(digw, i66);
+  loop_ub = w->size[0] * w->size[1];
+  for (i66 = 0; i66 < loop_ub; i66++) {
+    digw->data[i66] = 6.2831853071795862 * w->data[i66] / Fs;
+  }
+
+  emxInit_creal_T(&s, 2);
+
+  /*  Convert from Hz to rad/sample for computational purposes */
+  i66 = s->size[0] * s->size[1];
+  s->size[0] = 1;
+  s->size[1] = digw->size[1];
+  emxEnsureCapacity_creal_T(s, i66);
+  loop_ub = digw->size[0] * digw->size[1];
+  for (i66 = 0; i66 < loop_ub; i66++) {
+    s->data[i66].re = digw->data[i66] * 0.0;
+    s->data[i66].im = digw->data[i66];
+  }
+
+  emxInit_creal_T(&y, 2);
+  c_exp(s);
+
+  /*  Digital frequency must be used for this calculation */
+  i66 = y->size[0] * y->size[1];
+  y->size[0] = 1;
+  y->size[1] = s->size[1];
+  emxEnsureCapacity_creal_T(y, i66);
+  b12 = (y->size[1] == 0);
+  if (!b12) {
+    i66 = y->size[0] * y->size[1];
+    y->size[0] = 1;
+    emxEnsureCapacity_creal_T(y, i66);
+    loop_ub = y->size[1];
+    for (i66 = 0; i66 < loop_ub; i66++) {
+      y->data[i66].re = b[0];
+      y->data[i66].im = 0.0;
+    }
+
+    for (k = 0; k < 127; k++) {
+      i66 = s->size[0] * s->size[1];
+      loop_ub = y->size[0] * y->size[1];
+      y->size[0] = 1;
+      y->size[1] = s->size[1];
+      emxEnsureCapacity_creal_T(y, loop_ub);
+      b_re = b[k + 1];
+      loop_ub = i66 - 1;
+      for (i66 = 0; i66 <= loop_ub; i66++) {
+        s_re = s->data[i66].re * y->data[i66].re - s->data[i66].im * y->data[i66]
+          .im;
+        s_im = s->data[i66].re * y->data[i66].im + s->data[i66].im * y->data[i66]
+          .re;
+        y->data[i66].re = s_re + b_re;
+        y->data[i66].im = s_im;
+      }
+    }
+  }
+
+  i66 = s->size[0] * s->size[1];
+  s->size[0] = 1;
+  s->size[1] = digw->size[1];
+  emxEnsureCapacity_creal_T(s, i66);
+  loop_ub = digw->size[0] * digw->size[1];
+  for (i66 = 0; i66 < loop_ub; i66++) {
+    b_re = digw->data[i66] * 0.0;
+    s_re = digw->data[i66];
+    s->data[i66].re = 127.0 * b_re;
+    s->data[i66].im = 127.0 * s_re;
+  }
+
+  emxFree_real_T(&digw);
+  c_exp(s);
+  rdivide_helper(y, s, hh);
+
+  /*  Generate the default structure to pass to freqzplot */
+  /*  If rad/sample, Fs is empty */
+  emxFree_creal_T(&y);
+  emxFree_creal_T(&s);
+}
+
+/*
  * Arguments    : const double o[15]
  *                double u[15]
  * Return Type  : void
@@ -12478,7 +12613,7 @@ static void xgehrd(emxArray_creal_T *a)
   int ntau;
   emxArray_creal_T *tau;
   emxArray_creal_T *work;
-  int i67;
+  int i68;
   int i;
   int im1n_tmp;
   int in;
@@ -12491,7 +12626,7 @@ static void xgehrd(emxArray_creal_T *a)
   bool b_tau;
   int knt;
   double beta1_im;
-  int i68;
+  int i69;
   int lastv;
   int b_lastc;
   bool exitg1;
@@ -12501,7 +12636,7 @@ static void xgehrd(emxArray_creal_T *a)
   int ix;
   int exitg5;
   int exitg2;
-  int i69;
+  int i70;
   int exitg4;
   n = a->size[0];
   if (a->size[0] < 1) {
@@ -12512,20 +12647,20 @@ static void xgehrd(emxArray_creal_T *a)
 
   emxInit_creal_T(&tau, 1);
   emxInit_creal_T(&work, 1);
-  i67 = tau->size[0];
+  i68 = tau->size[0];
   tau->size[0] = ntau;
-  emxEnsureCapacity_creal_T(tau, i67);
+  emxEnsureCapacity_creal_T(tau, i68);
   ntau = a->size[0];
-  i67 = work->size[0];
+  i68 = work->size[0];
   work->size[0] = ntau;
-  emxEnsureCapacity_creal_T(work, i67);
-  for (i67 = 0; i67 < ntau; i67++) {
-    work->data[i67].re = 0.0;
-    work->data[i67].im = 0.0;
+  emxEnsureCapacity_creal_T(work, i68);
+  for (i68 = 0; i68 < ntau; i68++) {
+    work->data[i68].re = 0.0;
+    work->data[i68].im = 0.0;
   }
 
-  i67 = a->size[0];
-  for (i = 0; i <= i67 - 2; i++) {
+  i68 = a->size[0];
+  for (i = 0; i <= i68 - 2; i++) {
     im1n_tmp = i * n;
     in = (i + 1) * n;
     alpha1 = a->data[(i + a->size[0] * i) + 1];
@@ -12550,10 +12685,10 @@ static void xgehrd(emxArray_creal_T *a)
 
         if (fabs(beta1) < 1.0020841800044864E-292) {
           knt = -1;
-          i68 = (ntau + lastc) - 1;
+          i69 = (ntau + lastc) - 1;
           do {
             knt++;
-            for (k = ntau; k <= i68; k++) {
+            for (k = ntau; k <= i69; k++) {
               xnorm = a->data[k - 1].re;
               beta1_im = a->data[k - 1].im;
               a->data[k - 1].re = 9.9792015476736E+291 * xnorm - 0.0 * beta1_im;
@@ -12672,13 +12807,13 @@ static void xgehrd(emxArray_creal_T *a)
         }
 
         ix = iv0_tmp;
-        i68 = (in + n * (lastv - 1)) + 1;
-        for (knt = im1n_tmp; n < 0 ? knt >= i68 : knt <= i68; knt += n) {
+        i69 = (in + n * (lastv - 1)) + 1;
+        for (knt = im1n_tmp; n < 0 ? knt >= i69 : knt <= i69; knt += n) {
           c.re = a->data[ix - 1].re - 0.0 * a->data[ix - 1].im;
           c.im = a->data[ix - 1].im + 0.0 * a->data[ix - 1].re;
           ntau = 0;
-          i69 = (knt + b_lastc) - 1;
-          for (k = knt; k <= i69; k++) {
+          i70 = (knt + b_lastc) - 1;
+          for (k = knt; k <= i70; k++) {
             xnorm = a->data[k - 1].re * c.re - a->data[k - 1].im * c.im;
             beta1_im = a->data[k - 1].re * c.im + a->data[k - 1].im * c.re;
             work->data[ntau].re += xnorm;
@@ -12701,9 +12836,9 @@ static void xgehrd(emxArray_creal_T *a)
             beta1 = a->data[knt].re * c.re + a->data[knt].im * c.im;
             temp_im = a->data[knt].re * c.im - a->data[knt].im * c.re;
             ix = 0;
-            i68 = ntau + 1;
-            i69 = b_lastc + ntau;
-            for (im1n_tmp = i68; im1n_tmp <= i69; im1n_tmp++) {
+            i69 = ntau + 1;
+            i70 = b_lastc + ntau;
+            for (im1n_tmp = i69; im1n_tmp <= i70; im1n_tmp++) {
               xnorm = work->data[ix].re * beta1 - work->data[ix].im * temp_im;
               beta1_im = work->data[ix].re * temp_im + work->data[ix].im * beta1;
               a->data[im1n_tmp - 1].re += xnorm;
@@ -12779,13 +12914,13 @@ static void xgehrd(emxArray_creal_T *a)
         }
 
         ntau = 0;
-        i68 = im1n_tmp + n * lastc;
-        for (knt = im1n_tmp; n < 0 ? knt >= i68 : knt <= i68; knt += n) {
+        i69 = im1n_tmp + n * lastc;
+        for (knt = im1n_tmp; n < 0 ? knt >= i69 : knt <= i69; knt += n) {
           ix = iv0_tmp - 1;
           c.re = 0.0;
           c.im = 0.0;
-          i69 = (knt + lastv) - 1;
-          for (k = knt; k <= i69; k++) {
+          i70 = (knt + lastv) - 1;
+          for (k = knt; k <= i70; k++) {
             c.re += a->data[k - 1].re * a->data[ix].re + a->data[k - 1].im *
               a->data[ix].im;
             c.im += a->data[k - 1].re * a->data[ix].im - a->data[k - 1].im *
@@ -12810,9 +12945,9 @@ static void xgehrd(emxArray_creal_T *a)
             beta1 = work->data[knt].re * c.re + work->data[knt].im * c.im;
             temp_im = work->data[knt].re * c.im - work->data[knt].im * c.re;
             ix = iv0_tmp;
-            i68 = ntau + 1;
-            i69 = lastv + ntau;
-            for (im1n_tmp = i68; im1n_tmp <= i69; im1n_tmp++) {
+            i69 = ntau + 1;
+            i70 = lastv + ntau;
+            for (im1n_tmp = i69; im1n_tmp <= i70; im1n_tmp++) {
               xnorm = a->data[ix - 1].re * beta1 - a->data[ix - 1].im * temp_im;
               beta1_im = a->data[ix - 1].re * temp_im + a->data[ix - 1].im *
                 beta1;
@@ -12894,12 +13029,12 @@ static double xnrm2(int n, const emxArray_creal_T *x, int ix0)
  */
 static void xscal(int n, const creal_T a, emxArray_creal_T *x, int ix0)
 {
-  int i70;
+  int i71;
   int k;
   double x_re;
   double x_im;
-  i70 = (ix0 + n) - 1;
-  for (k = ix0; k <= i70; k++) {
+  i71 = (ix0 + n) - 1;
+  for (k = ix0; k <= i71; k++) {
     x_re = x->data[k - 1].re;
     x_im = x->data[k - 1].im;
     x->data[k - 1].re = a.re * x_re - a.im * x_im;
@@ -14220,6 +14355,8 @@ static void zp2ss_cg(emxArray_creal_T *a, emxArray_real_T *b, emxArray_real_T *c
  *                double *filterGain
  *                double *Apass_actual
  *                double *Astop_actual
+ *                double *maxInFS
+ *                double *maxIndB
  * Return Type  : void
  */
 void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
@@ -14228,7 +14365,7 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
   double RFbw, double DAC_div, double converter_rate, double PLL_rate, double
   Fcenter, double wnom, double FIRdBmin, double int_FIR, double maxTaps, short
   outputTaps[128], double *numOutputTaps, double *filterGain, double
-  *Apass_actual, double *Astop_actual)
+  *Apass_actual, double *Astop_actual, double *maxInFS, double *maxIndB)
 {
   emxArray_creal_T *a1;
   emxArray_creal_T *a2;
@@ -14272,7 +14409,7 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
 
   int nm1d2;
   int idx;
-  double sigmax;
+  double apnd;
   signed char i1;
   char enables[4];
   double w[2048];
@@ -14284,7 +14421,7 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
   static creal_T dcv0[2048];
   double b_combinedResponse[2048];
   double invariance[2048];
-  double apnd;
+  double sigmax;
   double b_phi[2048];
   double sigma;
   emxArray_real_T *fg;
@@ -14482,14 +14619,14 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
   }
 
   /*  convert the enables into a string */
-  sigmax = rt_roundd_snf(HB1);
-  if (sigmax < 128.0) {
-    if (sigmax >= -128.0) {
-      i1 = (signed char)sigmax;
+  apnd = rt_roundd_snf(HB1);
+  if (apnd < 128.0) {
+    if (apnd >= -128.0) {
+      i1 = (signed char)apnd;
     } else {
       i1 = MIN_int8_T;
     }
-  } else if (sigmax >= 128.0) {
+  } else if (apnd >= 128.0) {
     i1 = MAX_int8_T;
   } else {
     i1 = 0;
@@ -14501,14 +14638,14 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
   }
 
   enables[0] = (signed char)i0;
-  sigmax = rt_roundd_snf(HB2);
-  if (sigmax < 128.0) {
-    if (sigmax >= -128.0) {
-      i1 = (signed char)sigmax;
+  apnd = rt_roundd_snf(HB2);
+  if (apnd < 128.0) {
+    if (apnd >= -128.0) {
+      i1 = (signed char)apnd;
     } else {
       i1 = MIN_int8_T;
     }
-  } else if (sigmax >= 128.0) {
+  } else if (apnd >= 128.0) {
     i1 = MAX_int8_T;
   } else {
     i1 = 0;
@@ -14951,39 +15088,39 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
     d_combinedResponse->data[i0].im = sigmax * im + apnd * re;
   }
 
-  b_abs(d_combinedResponse, fg);
+  b_abs(d_combinedResponse, omega);
   if (b_strcmp(RxTx)) {
-    i0 = fg->size[0] * fg->size[1];
-    i2 = fg->size[0] * fg->size[1];
-    fg->size[0] = 1;
-    emxEnsureCapacity_real_T(fg, i2);
-    sigmax = dBinv(-Astop);
+    i0 = omega->size[0] * omega->size[1];
+    i2 = omega->size[0] * omega->size[1];
+    omega->size[0] = 1;
+    emxEnsureCapacity_real_T(omega, i2);
+    apnd = dBinv(-Astop);
     loop_ub = i0 - 1;
     for (i0 = 0; i0 <= loop_ub; i0++) {
-      fg->data[i0] /= sigmax;
+      omega->data[i0] /= apnd;
     }
   } else {
     sigma = FIR;
     b_sqrt(&sigma);
-    i0 = fg->size[0] * fg->size[1];
-    i2 = fg->size[0] * fg->size[1];
-    fg->size[0] = 1;
-    emxEnsureCapacity_real_T(fg, i2);
-    sigmax = dBinv(-Astop);
+    i0 = omega->size[0] * omega->size[1];
+    i2 = omega->size[0] * omega->size[1];
+    omega->size[0] = 1;
+    emxEnsureCapacity_real_T(omega, i2);
+    apnd = dBinv(-Astop);
     loop_ub = i0 - 1;
     for (i0 = 0; i0 <= loop_ub; i0++) {
-      fg->data[i0] = sigma * fg->data[i0] / sigmax;
+      omega->data[i0] = sigma * omega->data[i0] / apnd;
     }
   }
 
   sigma = dBinv(FIRdBmin);
-  i0 = omega->size[0] * omega->size[1];
-  omega->size[0] = 1;
-  omega->size[1] = fg->size[1];
-  emxEnsureCapacity_real_T(omega, i0);
-  nm1d2 = fg->size[1];
+  i0 = fg->size[0] * fg->size[1];
+  fg->size[0] = 1;
+  fg->size[1] = omega->size[1];
+  emxEnsureCapacity_real_T(fg, i0);
+  nm1d2 = omega->size[1];
   for (k = 0; k < nm1d2; k++) {
-    omega->data[k] = fmax(fg->data[k], sigma);
+    fg->data[k] = fmax(omega->data[k], sigma);
   }
 
   if (phEQ == -1.0) {
@@ -15001,30 +15138,30 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
 
   emxInit_real_T(&weight, 2);
   b_abs(rg1, F4);
-  sigmax = dBinv(Apass / 2.0) - 1.0;
+  apnd = dBinv(Apass / 2.0) - 1.0;
   i0 = weight->size[0] * weight->size[1];
   weight->size[0] = 1;
-  weight->size[1] = F4->size[1] + omega->size[1];
+  weight->size[1] = F4->size[1] + fg->size[1];
   emxEnsureCapacity_real_T(weight, i0);
   loop_ub = F4->size[1];
   for (i0 = 0; i0 < loop_ub; i0++) {
-    weight->data[i0] = F4->data[i0] / sigmax;
+    weight->data[i0] = F4->data[i0] / apnd;
   }
 
-  loop_ub = omega->size[1];
+  loop_ub = fg->size[1];
   for (i0 = 0; i0 < loop_ub; i0++) {
-    weight->data[i0 + F4->size[1]] = omega->data[i0];
+    weight->data[i0 + F4->size[1]] = fg->data[i0];
   }
 
   n = weight->size[1];
   if (weight->size[1] <= 2) {
     if (weight->size[1] == 1) {
-      apnd = weight->data[0];
+      sigmax = weight->data[0];
     } else if ((weight->data[0] < weight->data[1]) || (rtIsNaN(weight->data[0]) &&
                 (!rtIsNaN(weight->data[1])))) {
-      apnd = weight->data[1];
+      sigmax = weight->data[1];
     } else {
-      apnd = weight->data[0];
+      sigmax = weight->data[0];
     }
   } else {
     if (!rtIsNaN(weight->data[0])) {
@@ -15044,13 +15181,13 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
     }
 
     if (idx == 0) {
-      apnd = weight->data[0];
+      sigmax = weight->data[0];
     } else {
-      apnd = weight->data[idx - 1];
+      sigmax = weight->data[idx - 1];
       i0 = idx + 1;
       for (k = i0; k <= n; k++) {
-        if (apnd < weight->data[k - 1]) {
-          apnd = weight->data[k - 1];
+        if (sigmax < weight->data[k - 1]) {
+          sigmax = weight->data[k - 1];
         }
       }
     }
@@ -15062,7 +15199,7 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
   emxEnsureCapacity_real_T(weight, i2);
   loop_ub = i0 - 1;
   for (i0 = 0; i0 <= loop_ub; i0++) {
-    weight->data[i0] /= apnd;
+    weight->data[i0] /= sigmax;
   }
 
   /*  Set up design for FIR filter */
@@ -15829,12 +15966,12 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
     n = fg->size[1];
     if (fg->size[1] <= 2) {
       if (fg->size[1] == 1) {
-        apnd = fg->data[0];
+        sigmax = fg->data[0];
       } else if ((fg->data[0] < fg->data[1]) || (rtIsNaN(fg->data[0]) &&
                   (!rtIsNaN(fg->data[1])))) {
-        apnd = fg->data[1];
+        sigmax = fg->data[1];
       } else {
-        apnd = fg->data[0];
+        sigmax = fg->data[0];
       }
     } else {
       if (!rtIsNaN(fg->data[0])) {
@@ -15854,13 +15991,13 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
       }
 
       if (idx == 0) {
-        apnd = fg->data[0];
+        sigmax = fg->data[0];
       } else {
-        apnd = fg->data[idx - 1];
+        sigmax = fg->data[idx - 1];
         i0 = idx + 1;
         for (k = i0; k <= n; k++) {
-          if (apnd < fg->data[k - 1]) {
-            apnd = fg->data[k - 1];
+          if (sigmax < fg->data[k - 1]) {
+            sigmax = fg->data[k - 1];
           }
         }
       }
@@ -15907,16 +16044,16 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
     }
 
     i0 = (int)i - 1;
-    Apass_actual_vector->data[i0] = mag2db(apnd) - mag2db(sigma);
+    Apass_actual_vector->data[i0] = mag2db(sigmax) - mag2db(sigma);
     n = omega->size[1];
     if (omega->size[1] <= 2) {
       if (omega->size[1] == 1) {
-        apnd = omega->data[0];
+        sigmax = omega->data[0];
       } else if ((omega->data[0] < omega->data[1]) || (rtIsNaN(omega->data[0]) &&
                   (!rtIsNaN(omega->data[1])))) {
-        apnd = omega->data[1];
+        sigmax = omega->data[1];
       } else {
-        apnd = omega->data[0];
+        sigmax = omega->data[0];
       }
     } else {
       if (!rtIsNaN(omega->data[0])) {
@@ -15936,19 +16073,19 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
       }
 
       if (idx == 0) {
-        apnd = omega->data[0];
+        sigmax = omega->data[0];
       } else {
-        apnd = omega->data[idx - 1];
+        sigmax = omega->data[idx - 1];
         i2 = idx + 1;
         for (k = i2; k <= n; k++) {
-          if (apnd < omega->data[k - 1]) {
-            apnd = omega->data[k - 1];
+          if (sigmax < omega->data[k - 1]) {
+            sigmax = omega->data[k - 1];
           }
         }
       }
     }
 
-    Astop_actual_vector->data[i0] = -mag2db(apnd);
+    Astop_actual_vector->data[i0] = -mag2db(sigmax);
     if (int_FIR == 0.0) {
       if (1 > ccoef->size[1]) {
         loop_ub = 0;
@@ -16016,7 +16153,6 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
   emxFree_creal_T(&d_combinedResponse);
   emxFree_real_T(&b_W1);
   emxFree_real_T(&b_F1);
-  emxFree_creal_T(&r0);
   emxFree_creal_T(&c_combinedResponse);
   emxFree_real_T(&b_ccoef);
   emxFree_real_T(&F4);
@@ -16034,7 +16170,6 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
   emxFree_real_T(&F1);
   emxFree_real_T(&weight);
   emxFree_creal_T(&rgN);
-  emxFree_real_T(&omega2);
   emxFree_real_T(&fg2);
   emxFree_creal_T(&rg1);
   emxFree_creal_T(&a2);
@@ -16103,8 +16238,6 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
     }
   }
 
-  emxFree_real_T(&omega);
-
   /*  There will always be 128 taps output */
   memset(&firTapsPreScale[0], 0, sizeof(double) << 7);
   loop_ub = fg->size[1];
@@ -16150,19 +16283,19 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
   }
 
   if (idx == 0) {
-    apnd = firTapsPreScale[0];
+    sigmax = firTapsPreScale[0];
   } else {
-    apnd = firTapsPreScale[idx - 1];
+    sigmax = firTapsPreScale[idx - 1];
     i0 = idx + 1;
     for (k = i0; k < 129; k++) {
-      sigmax = firTapsPreScale[k - 1];
-      if (apnd < sigmax) {
-        apnd = sigmax;
+      apnd = firTapsPreScale[k - 1];
+      if (sigmax < apnd) {
+        sigmax = apnd;
       }
     }
   }
 
-  sigma = b_log2(apnd);
+  sigma = b_log2(sigmax);
   sigma = ceil(sigma);
   switch ((int)(1.0 + sigma)) {
    case 2:
@@ -16207,9 +16340,9 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
   /*  Scale taps */
   memcpy(&b_firTapsPreScale[0], &firTapsPreScale[0], sizeof(double) << 7);
   b_determineBestFractionLength(b_firTapsPreScale, firTapsPreScale);
-  sigmax = mpower(2.0, 16.0 - (1.0 + sigma));
+  apnd = mpower(2.0, 16.0 - (1.0 + sigma));
   for (i0 = 0; i0 < 128; i0++) {
-    sigma = rt_roundd_snf(firTapsPreScale[i0] * sigmax);
+    sigma = rt_roundd_snf(firTapsPreScale[i0] * apnd);
     if (sigma < 32768.0) {
       if (sigma >= -32768.0) {
         i3 = (short)sigma;
@@ -16224,6 +16357,57 @@ void internal_design_filter_cg(double Rdata, double Fpass, double Fstop, double
 
     outputTaps[i0] = i3;
   }
+
+  /*  Determine max possible inputs */
+  u_freqz_cg(firTapsPreScale, omega2, converter_rate, r0);
+  b_abs(r0, omega);
+  n = omega->size[1];
+  emxFree_creal_T(&r0);
+  emxFree_real_T(&omega2);
+  if (omega->size[1] <= 2) {
+    if (omega->size[1] == 1) {
+      sigmax = omega->data[0];
+    } else if ((omega->data[0] < omega->data[1]) || (rtIsNaN(omega->data[0]) &&
+                (!rtIsNaN(omega->data[1])))) {
+      sigmax = omega->data[1];
+    } else {
+      sigmax = omega->data[0];
+    }
+  } else {
+    if (!rtIsNaN(omega->data[0])) {
+      idx = 1;
+    } else {
+      idx = 0;
+      k = 2;
+      exitg1 = false;
+      while ((!exitg1) && (k <= omega->size[1])) {
+        if (!rtIsNaN(omega->data[k - 1])) {
+          idx = k;
+          exitg1 = true;
+        } else {
+          k++;
+        }
+      }
+    }
+
+    if (idx == 0) {
+      sigmax = omega->data[0];
+    } else {
+      sigmax = omega->data[idx - 1];
+      i0 = idx + 1;
+      for (k = i0; k <= n; k++) {
+        if (sigmax < omega->data[k - 1]) {
+          sigmax = omega->data[k - 1];
+        }
+      }
+    }
+  }
+
+  emxFree_real_T(&omega);
+  *maxInFS = 1.0 / sigmax;
+  apnd = *maxInFS;
+  b_log10(&apnd);
+  *maxIndB = 20.0 * apnd;
 
   /* output = input; */
   /*  %% Non-codegen outputs */

@@ -84,7 +84,8 @@ int create_filter_file(struct filter_design_parameters *fdpRX,
 
 int ad9361_generate_fir_taps(struct filter_design_parameters *parameters,
                              short *taps, int *num_taps, int *gain,
-                             double *Apass_actual, double *Astop_actual)
+                             double *Apass_actual, double *Astop_actual,
+                             double *maxInputFS, double *maxInputDB)
 {
     double dnum_taps = 0;
     double dgain = 0;
@@ -100,7 +101,8 @@ int ad9361_generate_fir_taps(struct filter_design_parameters *parameters,
         parameters->RxTx, parameters->RFbw, parameters->DAC_div,
         parameters->converter_rate, parameters->PLL_rate, parameters->Fcenter,
         parameters->wnom, parameters->FIRdBmin, parameters->int_FIR,
-        parameters->maxTaps, taps, &dnum_taps, &dgain, Apass_actual, Astop_actual);
+        parameters->maxTaps, taps, &dnum_taps, &dgain, Apass_actual, Astop_actual,
+        maxInputFS, maxInputDB);
     internal_design_filter_cg_terminate();
     *num_taps = (int)dnum_taps;
     *gain = (int)dgain;
@@ -381,17 +383,19 @@ int ad9361_set_bb_rate_custom_filter_auto(struct iio_device *dev,
     short taps_rx[128];
     int ret, num_taps_tx, num_taps_rx, gain_tx, gain_rx;
     unsigned dec_tx, dec_rx, num_taps;
-    double Apass, Astop;
+    double Apass, Astop, maxInputFS, maxInputDB;
 
     ret = ad9361_calculate_rf_clock_chain_fdp(&fdpTX, &fdpRX, rate);
     if (ret < 0)
         return ret;
 
-    ret = ad9361_generate_fir_taps(&fdpRX, taps_rx, &num_taps_rx, &gain_rx, &Apass, &Astop);
+    ret = ad9361_generate_fir_taps(&fdpRX, taps_rx, &num_taps_rx, &gain_rx, &Apass, &Astop,
+                                  &maxInputFS, &maxInputDB);
     if (ret < 0)
         return ret;
 
-    ret = ad9361_generate_fir_taps(&fdpTX, taps_tx, &num_taps_tx, &gain_tx, &Apass, &Astop);
+    ret = ad9361_generate_fir_taps(&fdpTX, taps_tx, &num_taps_tx, &gain_tx, &Apass, &Astop,
+                                  &maxInputFS, &maxInputDB);
     if (ret < 0)
         return ret;
 
@@ -416,7 +420,7 @@ int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
     short taps_rx[128];
     int ret, num_taps_tx, num_taps_rx, gain_tx, gain_rx;
     unsigned dec_tx, dec_rx, num_taps;
-    double Apass, Astop;
+    double Apass, Astop, maxInputFS, maxInputDB;
 
     if (Fpass >= Fstop)
         return -EINVAL;
@@ -426,11 +430,13 @@ int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
     if (ret<0)
         return ret;
 
-    ret = ad9361_generate_fir_taps(&fdpRX, taps_rx, &num_taps_rx, &gain_rx, &Apass, &Astop);
+    ret = ad9361_generate_fir_taps(&fdpRX, taps_rx, &num_taps_rx, &gain_rx, &Apass, &Astop,
+                                  &maxInputFS, &maxInputDB);
     if (ret < 0)
         return ret;
 
-    ret = ad9361_generate_fir_taps(&fdpTX, taps_tx, &num_taps_tx, &gain_tx, &Apass, &Astop);
+    ret = ad9361_generate_fir_taps(&fdpTX, taps_tx, &num_taps_tx, &gain_tx, &Apass, &Astop,
+                                  &maxInputFS, &maxInputDB);
     if (ret < 0)
         return ret;
 
@@ -449,7 +455,9 @@ int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
 int ad9361_set_bb_rate_custom_filter_manual_file(
     unsigned long rate, unsigned long Fpass,
     unsigned long Fstop, unsigned long wnom_tx, unsigned long wnom_rx,
-    char **filter_data, double *ApassTx, double *AstopTx, double *ApassRx, double *AstopRx)
+    char **filter_data, double *ApassTx, double *AstopTx,
+    double *ApassRx, double *AstopRx,
+    double *maxInputFS, double *maxInputDB)
 {
     struct filter_design_parameters fdpTX;
     struct filter_design_parameters fdpRX;
@@ -457,6 +465,7 @@ int ad9361_set_bb_rate_custom_filter_manual_file(
     short taps_rx[128];
     int ret, num_taps_tx, num_taps_rx, gain_tx, gain_rx;
     unsigned dec_tx, dec_rx, num_taps;
+    double maxInputFS_NA, maxInputDB_NA;
 
     if (Fpass >= Fstop)
         return -EINVAL;
@@ -465,11 +474,13 @@ int ad9361_set_bb_rate_custom_filter_manual_file(
     if (ret<0)
         return ret;
 
-    ret = ad9361_generate_fir_taps(&fdpRX, taps_rx, &num_taps_rx, &gain_rx, ApassTx, AstopTx);
+    ret = ad9361_generate_fir_taps(&fdpRX, taps_rx, &num_taps_rx, &gain_rx, ApassTx, AstopTx,
+                                  &maxInputFS_NA, &maxInputDB_NA);
     if (ret < 0)
         return ret;
 
-    ret = ad9361_generate_fir_taps(&fdpTX, taps_tx, &num_taps_tx, &gain_tx, ApassRx, AstopRx);
+    ret = ad9361_generate_fir_taps(&fdpTX, taps_tx, &num_taps_tx, &gain_tx, ApassRx, AstopRx,
+                                  maxInputFS, maxInputDB);
     if (ret < 0)
         return ret;
 

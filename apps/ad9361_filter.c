@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ad9361.h>
 
 #define MY_NAME "ad9361_filter"
 
@@ -73,7 +74,7 @@ int main(int argc, char **argv)
     const char *arg_uri = NULL;
     const char *filename = NULL;
     int ret;
-    double ApassTx, AstopTx, ApassRx, AstopRx;
+    double ApassTx, AstopTx, ApassRx, AstopRx, maxInputFS, maxInputDB;
 
     unsigned long rate = 0;
     unsigned long Fpass = -1;
@@ -147,7 +148,8 @@ int main(int argc, char **argv)
 
     // Design filter
     ret = ad9361_set_bb_rate_custom_filter_manual_file(rate, Fpass, Fstop,
-            wnomTX, wnomRX, &filter_data, &ApassTx, &AstopTx, &ApassRx, &AstopRx);
+            wnomTX, wnomRX, &filter_data, &ApassTx, &AstopTx, &ApassRx, &AstopRx,
+             &maxInputFS, &maxInputDB);
     if (ret<0)
     {
         fprintf(stderr, "Filter generation failed %d.\n\n", ret);
@@ -156,6 +158,7 @@ int main(int argc, char **argv)
     printf("Generated Filter Results\n");
     printf(" Passband Ripple: %f dB (Tx) | %f dB (Rx)\n", ApassTx, ApassRx);
     printf(" Stopband Attenuation: %f dB (Tx) | %f dB (Rx)\n", AstopTx, AstopRx);
+    printf(" Max input: %f FS (%f dB)\n", maxInputFS, maxInputDB);
 
     // Export filter
     if (filename!=NULL) {
