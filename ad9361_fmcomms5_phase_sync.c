@@ -50,7 +50,7 @@
 #define CALIBRATE_TRIES 30
 #define STEP_SIZE 0.5
 #define M_2PI 2 * M_PI
-#define STALE_BUFFERS 20
+#define STALE_BUFFERS 1
 
 // DEBUG = 0 Off
 // DEBUG = 1 Verbose
@@ -74,6 +74,10 @@ static struct iio_channel *dds_out[2][8];
 static struct iio_buffer *rxbuf;
 static struct iio_channel *rxa_chan_real, *rxa_chan_imag;
 static struct iio_channel *rxb_chan_real, *rxb_chan_imag;
+
+long long sample_rate_trx;
+
+int configure_dds(double fs, double scale);
 
 static void ad9361_sleep_ms(void)
 {
@@ -160,10 +164,11 @@ void near_end_loopback_ctrl(unsigned channel, bool enable)
     iio_device_reg_write(dev, 0x80000418 + channel * 0x40, tmp);
 }
 
-void configure_ports(unsigned val)
+int configure_ports(unsigned val)
 {
     unsigned lp_slave, lp_master, sw;
     char *rx_port, *tx_port;
+    int ret;
 
     // https://wiki.analog.com/resources/eval/user-guides/ad-fmcomms5-ebz/multi-chip-sync#rf_phase_difference
 
@@ -210,6 +215,10 @@ void configure_ports(unsigned val)
         break;
     }
 
+    // Disable DDSs before moving switches to prevent damage
+    ret = configure_dds(sample_rate_trx, 0.0);
+    CHECK(ret);
+
     // Set up ports for FPGA BIST Loopback
     near_end_loopback_ctrl(0, lp_slave);  /* HPC */
     near_end_loopback_ctrl(1, lp_slave);  /* HPC */
@@ -232,6 +241,12 @@ void configure_ports(unsigned val)
     iio_channel_attr_write(
         iio_device_find_channel(dev_phy_slave, "voltage0", true),
         "rf_port_select", tx_port);
+
+    // Enable DDSs
+    ret = configure_dds(sample_rate_trx, DDS_SCALE);
+    CHECK(ret);
+
+
 }
 
 int trx_phase_rotation(struct iio_device *dev, double val)
@@ -296,6 +311,9 @@ int streaming_interfaces(bool enable)
         iio_channel_enable(rxa_chan_imag);
         iio_channel_enable(rxb_chan_real);
         iio_channel_enable(rxb_chan_imag);
+
+        iio_device_set_kernel_buffers_count(dev_rx,1);
+
         rxbuf = iio_device_create_buffer(dev_rx, SAMPLES, false);
         if (!rxbuf)
             streaming_interfaces(false);
@@ -591,6 +609,7 @@ int ad9361_fmcomms5_phase_sync(struct iio_context *ctx, long long lo)
     ret = iio_channel_attr_read_longlong(chan, "sampling_frequency", &sample_rate);
     CHECK(ret);
 
+    sample_rate_trx = sample_rate;
     ret = phase_sync(ctx, sample_rate, lo);
 
     // Reset ports out to RF

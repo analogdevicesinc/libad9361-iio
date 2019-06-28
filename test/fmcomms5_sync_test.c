@@ -32,11 +32,11 @@
 #define DEV_PHY_NAME "ad9361-phy"
 #define DEV_PHY_SLAVE_NAME "ad9361-phy-B"
 
-#define SAMPLES 32768
+#define SAMPLES 8192
 #define M_2PI 2 * M_PI
-#define STALE_BUFFERS 20
+#define STALE_BUFFERS 1
 
-#define ENABLE_PERFORMANCE_TESTS 0
+#define ENABLE_PERFORMANCE_TESTS 1
 
 bool same_chip = 0;
 
@@ -104,6 +104,9 @@ int streaming_interfaces(bool enable)
         iio_channel_enable(rxa_chan_imag);
         iio_channel_enable(rxb_chan_real);
         iio_channel_enable(rxb_chan_imag);
+
+        iio_device_set_kernel_buffers_count(dev_rx,1);
+
         rxbuf = iio_device_create_buffer(dev_rx, SAMPLES, false);
         if (!rxbuf)
             streaming_interfaces(false);
@@ -204,7 +207,7 @@ int main(void)
 {
     // Set up context
     struct iio_context *ctx;
-    char * uri = "ip:192.168.1.208";
+    char * uri = "ip:192.168.86.35";
     ctx = iio_create_context_from_uri(uri);
     if (ctx==NULL)
         exit(0);// Cant find anything don't run tests
@@ -214,7 +217,7 @@ int main(void)
     // Test sync
     long long freq = 0;
     int freqGHZ, ret=0;
-    for (freqGHZ = 1; freqGHZ<9; freqGHZ++) {
+    for (freqGHZ = 19; freqGHZ<20; freqGHZ++) {
 
         printf("#### Calibrating FMComms5 at LO %f GHz ####\n",(double)freqGHZ/10);
         freq = 100000000*freqGHZ;
@@ -228,45 +231,54 @@ int main(void)
 
 #if (ENABLE_PERFORMANCE_TESTS > 0)
 
+    FILE *filePtr;
+    filePtr = fopen("phase_estimates.txt","w");
+    int runs_per_freq = 10;
+    int k;
     // Test sync performance
-    double phase_tolerance = 3; // Degrees
+    double phase_tolerance = 100; // Degrees
     // These tests assume you have a signal splitter from TX1A_A to
     // RX1A_A, RX2A_A, RX1A_B, and RX2A_B using matched length cables
     double est = 0, est2 = 0;
-    for (freqGHZ = 1; freqGHZ<9; freqGHZ++) {
+    for (freqGHZ = 10; freqGHZ<500; freqGHZ = freqGHZ + 5) {
 
-        printf("#### Calibrating FMComms5 at LO %f GHz ####\n",(double)freqGHZ/10);
-        freq = 100000000*freqGHZ;
+        printf("#### Calibrating FMComms5 at LO %f GHz ####\n",(double)freqGHZ/100);
+        freq = 10000000*(long long)freqGHZ;
 
-        ret = ad9361_fmcomms5_phase_sync(ctx, freq);
-        if (ret<0) {
-            printf("FS Error: %d\n",ret);
-            break;
-        }
-        // Check results
-        same_chip = 1;
-        ret = check_phase_sma(ctx, &est);
-        if (ret<0) {
-            printf("CP1 Error: %d\n",ret);
-            break;
-        }
+        for (k = 0; k<runs_per_freq; k++) {
 
-        same_chip = 0;
-        est2 = 0;
-        ret = check_phase_sma(ctx, &est2);
-        if (ret<0) {
-            printf("CP2 Error: %d\n",ret);
-            break;
-        }
-        printf("Same Chips Phase: %f | ",est);
-        printf("Accross Chips Phase: %f\n",est2);
+          ret = ad9361_fmcomms5_phase_sync(ctx, freq);
+          if (ret<0) {
+              printf("FS Error: %d\n",ret);
+              break;
+          }
+          // Check results
+          same_chip = 1;
+          ret = check_phase_sma(ctx, &est);
+          if (ret<0) {
+              printf("CP1 Error: %d\n",ret);
+              break;
+          }
 
-        if ((fabs(est)>phase_tolerance) || (fabs(est2)>phase_tolerance)) {
-            printf("Phase calibration not within tolerance\n");
-            ret = -2;
-            break;
+          same_chip = 0;
+          est2 = 0;
+          ret = check_phase_sma(ctx, &est2);
+          if (ret<0) {
+              printf("CP2 Error: %d\n",ret);
+              break;
+          }
+          printf("Same Chips Phase: %f | ",est);
+          printf("Accross Chips Phase: %f\n",est2);
+          fprintf(filePtr, "%llu,%0.5g,%0.5g,\n", freq, est, est2);
+
+          if ((fabs(est)>phase_tolerance) || (fabs(est2)>phase_tolerance)) {
+              printf("Phase calibration not within tolerance\n");
+              ret = -2;
+              break;
+          }
         }
     }
+    fclose(filePtr);
 
 #endif
 
