@@ -26,6 +26,16 @@ add_test(NAME FMComms5SyncTest
          COMMAND FMComms5SyncTest
          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
+ add_executable(FMComms5SyncExtLoTest fmcomms5_sync_test_ext_lo.c)
+ if(WIN32)
+   target_link_libraries(FMComms5SyncExtLoTest LINK_PRIVATE ${LIBIIO_LIBRARIES} ad9361)
+ else()
+   target_link_libraries(FMComms5SyncExtLoTest LINK_PRIVATE ${LIBIIO_LIBRARIES} ad9361 m)
+ endif()
+ add_test(NAME FMComms5SyncExtLoTest
+          COMMAND FMComms5SyncExtLoTest
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
 add_executable(AutoRateTest auto_rate_test_hw.c)
 target_link_libraries(AutoRateTest LINK_PRIVATE ${LIBIIO_LIBRARIES} ad9361)
 add_test(NAME AutoRateTest
