@@ -85,8 +85,8 @@ int linux_calculate_rf_clock_chain(
     struct PHY phy;
     phy.bypass_rx_fir = false;
     phy.bypass_tx_fir = false;
-    phy.rx_fir_dec = FIR;
-    phy.tx_fir_int = FIR;
+    phy.rx_fir_dec = 1;//FIR;
+    phy.tx_fir_int = 1;//FIR;
     //phy.tx_intdec = 4;
     phy.rx_eq_2tx = false;
 
@@ -220,7 +220,7 @@ bool check_result(unsigned long *rx1, unsigned long *rx2, unsigned long *tx1,
     for (o=0; o<6; o++)
         r |= ( (rx1[o] != rx2[o]) || (tx1[o] != tx2[o]) ) ;
 
-    if (r) {
+    if (true) {
         printf("LINUX\n");
         printf("BBPLL | RX %lu | TX %lu | MAX: %lu\n",rx1[o],tx1[o],RX_MAX_PATH_RATES[0]);
         for (o=1; o<6; o++)
@@ -255,7 +255,7 @@ int main(void)
     int ret, k;
     unsigned long rx1[6], tx1[6];
     unsigned long rx2[6], tx2[6];
-    unsigned long sample_rate = 5208334;
+    unsigned long sample_rate = 6000000;
 
     unsigned long max = 61440000;
     uint32_t rate_governor = 0; //phy->rate_governor ? 1500000U : 1000000U;
@@ -275,6 +275,7 @@ int main(void)
             return -1;
 
         sample_rate++;
+	break;
     }
     return 0;
 }

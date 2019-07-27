@@ -178,7 +178,7 @@ int ad9361_calculate_rf_clock_chain(unsigned long sample_rate,
                                     unsigned long *tx_path_clks)
 {
     int ret, k;
-    int FIR[] = {4,2,1};
+    int FIR[] = {1};
 
     // Check desired rate within bounds
     if (!check(sample_rate, MIN_DATA_RATE, MAX_DATA_RATE))
