@@ -45,12 +45,12 @@
 #define DEV_PHY_SLAVE_NAME "ad9361-phy-B"
 
 #define DDS_SCALE 0.2
-#define SAMPLES 8192
+#define SAMPLES 32768
 #define TOLERANCE 0.01 // Degrees
 #define CALIBRATE_TRIES 30
 #define STEP_SIZE 0.5
 #define M_2PI 2 * M_PI
-#define STALE_BUFFERS 20
+#define STALE_BUFFERS 30
 
 // DEBUG = 0 Off
 // DEBUG = 1 Verbose
@@ -362,8 +362,8 @@ int calibrate_chain(struct iio_device *dev, double scale, double *phase)
     double est = 0, tmp;
     int k = 0, ret = -2, g;
 
-    if (streaming_interfaces(true) < 0)
-        return -ENODEV;
+    // if (streaming_interfaces(true) < 0)
+        // return -ENODEV;
 
     *phase = 0;
 
@@ -388,12 +388,32 @@ int calibrate_chain(struct iio_device *dev, double scale, double *phase)
         est *= scale;
     }
 
-    streaming_interfaces(false);
+    // streaming_interfaces(false);
 
 #if (DEBUG > 0)
     printf("Remaining Phase error: %f\n", est);
     printf("Rotation: %f\n", *phase);
 #endif
+
+    return 0;
+}
+
+int check_chain(void)
+{
+    double est = 0, tmp;
+    int k = 0, ret = -2, g;
+
+    // if (streaming_interfaces(true) < 0)
+        // return -ENODEV;
+
+    for (; k < 4; k++) {
+
+        for (g=0; g<STALE_BUFFERS; g++)
+            ret = estimate_phase_diff(&est);
+        CHECK(ret);
+
+        printf("Phase error: %f\n", est);
+    }
 
     return 0;
 }
@@ -508,67 +528,85 @@ int phase_sync(struct iio_context *ctx, long long sample_rate, long long lo)
 {
     // Set analog bandwidth same as sample rate
     long long bw = sample_rate;
+    int ret;
+
+    bool config_trx = true; // Setting to true does not change phase
+    bool sync_chips = true; // Phase is random when true
+    bool config_dds = true; // Phase is random when true
 
     // Set up devices
     if (!setup_iio_devices(ctx))
         return -ENODEV;
 
-    // Set up DDSs
-    int ret = get_dds_channels();
-    CHECK(ret);
-
-    // Sync chips together
-    ret = ad9361_multichip_sync(dev_phy, &dev_phy_slave, 1,
-                                FIXUP_INTERFACE_TIMING | CHECK_SAMPLE_RATES);
-    CHECK(ret);
-
-    // Set up DDS at given frequency
-    ret = configure_dds(sample_rate, DDS_SCALE);
-    CHECK(ret);
-
-    // Set LO, bandwidth, and gain of transceivers
-    ret = configure_transceiver(dev_phy, bw, sample_rate, lo);
-    CHECK(ret);
-    ret = configure_transceiver(dev_phy_slave, bw, sample_rate, lo);
+    // Get DDS devices
+    ret = get_dds_channels();
     CHECK(ret);
 
     // Turn off quad tracking
     quad_tracking(false);
 
-    // Reset all phase shifts to zero
-    ret = trx_phase_rotation(dev_rx, 0.0);
-    CHECK(ret);
-    ret = trx_phase_rotation(dev_rx_slave, 0.0);
-    CHECK(ret);
-    ret = trx_phase_rotation(dev_tx, 0.0);
-    CHECK(ret);
-    ret = trx_phase_rotation(dev_tx_slave, 0.0);
-    CHECK(ret);
+    ////////////////////////////////////////////
+    //// RUN 1
+    ////////////////////////////////////////////
 
-    // Align receiver on Chip A (TX from chip A) with BIST loopback
-    configure_ports(1); // Chip A -> Chip A | FPGA Loopback on B
-    double phase_est_rx_slave = 0, phase_est = 0;
-    ret = calibrate_chain(dev_rx_slave, -1, &phase_est_rx_slave);
-    CHECK(ret);
+    if (config_dds) {
+      // Set up DDS at given frequency
+      ret = configure_dds(sample_rate, DDS_SCALE);
+      CHECK(ret);
+    }
 
-    // Align receiver on Chip B (TX from chip A) with BIST loopback
-    ret = trx_phase_rotation(dev_rx_slave, 0.0); // Reset reference channel
-    CHECK(ret);
-    configure_ports(3); // Chip A -> Chip B | FPGA Loopback on A
-    ret = calibrate_chain(dev_rx, 1, &phase_est);
-    CHECK(ret);
+    if (config_trx) {
+      // Set LO, bandwidth, and gain of transceivers
+      ret = configure_transceiver(dev_phy, bw, sample_rate, lo);
+      CHECK(ret);
+      ret = configure_transceiver(dev_phy_slave, bw, sample_rate, lo);
+      CHECK(ret);
+    }
 
-    // At this point both receivers are aligned with Chip A TX
-    // Align Chip B TX with a receiver
-    ret = trx_phase_rotation(dev_rx_slave, 0);
-    CHECK(ret);
-    configure_ports(4); // Chip B -> Chip B | FPGA Loopback on A
-    ret = calibrate_chain(dev_tx_slave, -1, &phase_est);
-    CHECK(ret);
+    if (sync_chips) {
+      // Sync chips together
+      ret = ad9361_multichip_sync(dev_phy, &dev_phy_slave, 1,
+                                  FIXUP_INTERFACE_TIMING | CHECK_SAMPLE_RATES);
+      CHECK(ret);
+    }
 
-    // Set rotation of chip B receiver to originally measured
-    ret = trx_phase_rotation(dev_rx_slave, phase_est_rx_slave);
-    CHECK(ret);
+    // Set up buffers
+    if (streaming_interfaces(true) < 0)
+        return -ENODEV;
+
+    printf("Check 1\n----------\n");
+    check_chain();
+
+
+    ////////////////////////////////////////////
+    //// RUN 2
+    ////////////////////////////////////////////
+
+    if (config_dds) {
+      // Set up DDS at given frequency
+      ret = configure_dds(sample_rate, DDS_SCALE);
+      CHECK(ret);
+    }
+
+    if (config_trx) {
+      // Set LO, bandwidth, and gain of transceivers
+      ret = configure_transceiver(dev_phy, bw, sample_rate, lo);
+      CHECK(ret);
+      ret = configure_transceiver(dev_phy_slave, bw, sample_rate, lo);
+      CHECK(ret);
+    }
+
+    if (sync_chips) {
+      // Sync chips together
+      ret = ad9361_multichip_sync(dev_phy, &dev_phy_slave, 1,
+                                  FIXUP_INTERFACE_TIMING | CHECK_SAMPLE_RATES);
+      CHECK(ret);
+    }
+
+    printf("Check 2\n----------\n");
+    check_chain();
+
+    streaming_interfaces(false);
 
     return 0;
 }
