@@ -17,11 +17,7 @@ matrix:
   include:
     - compiler: "clang"
       os: linux
-      dist: trusty
       env: LDIST=DO_NOT_DEPLOY
-    - compiler: "gcc"
-      os: linux
-      dist: trusty
     - compiler: "gcc"
       os: linux
       dist: xenial
