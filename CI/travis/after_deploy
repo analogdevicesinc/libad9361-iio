@@ -1,4 +1,4 @@
-#!/bin/sh -xe
+#!/bin/sh -e
 
 TRIGGERING_NEXT_BUILD=true
 
