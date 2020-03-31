@@ -15,7 +15,9 @@ services:
 
 matrix:
   include:
-    - compiler: "clang"
+    - stage: "Build & Deploy"
+
+      compiler: "clang"
       os: linux
       env: LDIST=DO_NOT_DEPLOY
     - compiler: "gcc"
@@ -54,6 +56,10 @@ matrix:
       env:
         - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
 
+    - stage: "Trigger Next In Pipeline"
+      env:
+        - TRIGGER_NEXT_BUILD=true
+
 addons:
   artifacts: true
   ssh_known_hosts:
@@ -69,6 +75,7 @@ before_install:
 script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ${TRAVIS_BUILD_DIR}/CI/travis/make_linux libad9361-iio "$OS_TYPE" "$OS_VERSION" ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ${TRAVIS_BUILD_DIR}/CI/travis/make_darwin; fi
+  - if [[ "$TRIGGER_NEXT_BUILD" == "true" ]]; then ${TRAVIS_BUILD_DIR}/CI/travis/after_deploy; fi
 
 notifications:
   email:
@@ -119,6 +126,3 @@ deploy:
     on:
       condition: "$TRAVIS_OS_NAME = osx"
       all_branches: true
-
-after_deploy:
-  - ${TRAVIS_BUILD_DIR}/CI/travis/after_deploy
