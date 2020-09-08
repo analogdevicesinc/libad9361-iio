@@ -22,13 +22,15 @@ int main(void)
 
     unsigned long rates[] = {1000000, 10000000, 20000000, 60000000};
 
-    char * uri = "ip:192.168.2.1";
+    const char* uri = getenv("URI_AD9361");
+    if (uri == NULL)
+        exit(0);// Cant find anything don't run tests
     ctx = iio_create_context_from_uri(uri);
     if (ctx == NULL)
         exit(0);// Cant find anything don't run tests
     dev = iio_context_find_device(ctx, "ad9361-phy");
 
-    for (k = 0; k < 1; k++) {
+    for (k = 0; k < 3; k++) {
 
         printf("Testing rate: %lu\n",rates[k]);
 

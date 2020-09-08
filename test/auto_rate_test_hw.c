@@ -52,7 +52,9 @@ int main(void)
 
     unsigned long rates[] = {520888, 600000, 1000000, 10000000, 20000000, 40000000, 60000000};
 
-    char * uri = "ip:192.168.2.1";
+    const char* uri = getenv("URI_AD9361");
+    if (uri == NULL)
+        exit(0);// Cant find anything don't run tests
     ctx = iio_create_context_from_uri(uri);
     if (ctx == NULL) {
         printf("No device found... skipping test");
