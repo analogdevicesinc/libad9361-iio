@@ -204,7 +204,9 @@ int main(void)
 {
     // Set up context
     struct iio_context *ctx;
-    char * uri = "ip:192.168.1.208";
+    const char* uri = getenv("URI_FMCOMMS5");
+    if (uri == NULL)
+        exit(0);// Cant find anything don't run tests
     ctx = iio_create_context_from_uri(uri);
     if (ctx==NULL)
         exit(0);// Cant find anything don't run tests
