@@ -3,6 +3,7 @@ sudo: required
 
 env:
   global:
+  - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
   # SSHHOST
   - secure: "Izx3rvvdDSlv26z0OLsyHj6uN5YoOz/Deg0bLx8IHRqPcRULJlQLqXOaeX41DmsltFq1X8AbVW2TmqzaLHnsGfM76IyqIWVLANC0TcevKyonDujkiuWoFDrYciKJyLS2aN4SgnG4jyp9977Z0Vc5EL9D61QDlh3LUU+x3+CYxQIWWpMoOsfyZUw8FU/b/KmjqE7zvtgN/RMAeuDIn7jLP9Yg9pFB8KnOFyWHSfT5cXux4WSYqwQasYf68+3JyuJSebS3kK/FgCJOODMs+xed9BjeP8QinhmXFdy+epIFXLARUKZrLzj9+94PZ8n0m0TV39yqFfk96qRjM4bJNwCqfUU6iaSsuLNlSU2HbQeqSDW//BsXFL3EicM+7xgYnx/luboLQZgqJYQAPk3ihaH456Gl9PNF6h4zv8vXsHE+nHDZvubwsgNdTk25YP+3GglQZdRHBhsdBSASGYc0CxYwPHsBi4/QD0RQ2k0W4D1dwJXXRXxTqoSfveP8QIsQVfDwfAhWLG9QMjVwp1dMl+5wIp25E4v1C2I2rQJVuc7pjPb/av34ltWBlQwcXkxUl3/E3qDrO4b5gS/UD47bRCCqYf9GLniXVBm7z+ebA7tW4G/q/RJvb3G7q59nAJXSwJOvB5Kt3pnfeCmfgv6wGeeNizQer+AjHkQy1uNQBBSI8Jw="
   # SSHUSER
@@ -23,33 +24,28 @@ matrix:
     - compiler: "gcc"
       os: linux
       dist: xenial
-      env:
-        - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
     - os: linux
       env:
         - OS_TYPE=centos_docker
         - OS_VERSION=6
-        - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
     - os: linux
       env:
         - OS_TYPE=centos_docker
         - OS_VERSION=7
-        - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
     - os: linux
       env:
-        - OS_TYPE=ubuntu_docker
-        - OS_VERSION=bionic
-        - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
+        - OS_TYPE=centos_docker
+        - OS_VERSION=8
+    - os: linux
+      dist: bionic
+    - os: linux
+      dist: focal
     - compiler: "gcc"
       os: osx
       osx_image: xcode10.1
-      env:
-        - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
     - compiler: "gcc"
       os: osx
       osx_image: xcode11
-      env:
-        - EXTRA_SSH=-oHostKeyAlgorithms=+ssh-dss
 
     - stage: "Trigger Next In Pipeline"
       env:
