@@ -8,3 +8,4 @@ cmake_install.cmake
 install_manifest.txt
 libad9361.pc
 libad9361.so*
+build/
