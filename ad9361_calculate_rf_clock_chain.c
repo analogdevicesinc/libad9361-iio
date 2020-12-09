@@ -5,7 +5,9 @@
 #include <errno.h>
 #include <math.h>
 
+#ifndef M_PI
 #define M_PI 3.14159265358979323846
+#endif
 
 #define MIN_ADC_CLK 25000000UL /* 25 MHz */
 #define MAX_ADC_CLK 640000000UL /* 640 MHz */
