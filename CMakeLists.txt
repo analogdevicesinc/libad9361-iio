@@ -57,7 +57,18 @@ if (NOT WIN32)
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
 endif()
 
-add_definitions(-D_POSIX_C_SOURCE=199309L -DLIBAD9361_EXPORTS=1)
+# based on host, set these on macos
+if(APPLE)
+        #full Single Unix Standard v3 (SUSv3) conformance (the Unix API)
+        add_definitions(-D_DARWIN_C_SOURCE)
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+        set(CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE=1")
+        add_definitions(-D_GNU_SOURCE=1)
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD|DragonFly|OpenBSD|NetBSD")
+        set(CMAKE_REQUIRED_DEFINITIONS "-D__BSD_VISIBLE")
+        add_definitions(-D__BSD_VISIBLE=1)
+endif()
+add_definitions(-D_POSIX_C_SOURCE=200809L -D__XSI_VISIBLE=500 -DLIBIIO_EXPORTS=1)
 
 set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
 	CACHE PATH "Installation directory for libraries")
