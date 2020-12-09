@@ -9,7 +9,7 @@ handle_centos() {
 	if is_centos_at_least_ver "8" ; then
 		# On CentOS 8, avahi-devel & doxygen are in this repo; enable it
 		yum -y install yum-utils
-		yum config-manager --set-enabled PowerTools
+		yum config-manager --set-enabled powertools
 	fi
 
 	yum -y install cmake libxml2-devel libusb1-devel doxygen libaio-devel \
@@ -38,7 +38,6 @@ handle_default() {
 	sudo dpkg -i ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
 }
 
-OS_TYPE=${1:-default}
-OS_VERSION=${2}
+OS_TYPE=${OS_TYPE:-default}
 
 handle_${OS_TYPE}
