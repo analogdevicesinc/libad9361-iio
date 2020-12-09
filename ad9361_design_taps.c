@@ -25,7 +25,9 @@
 #else
 #include <unistd.h>
 #endif
+#ifndef M_PI
 #define M_PI 3.14159265358979323846
+#endif
 #define FIR_BUF_SIZE	8192
 
 #ifdef _MSC_BUILD
