@@ -15,7 +15,9 @@ handle_centos() {
 	yum -y install cmake libxml2-devel libusb1-devel doxygen libaio-devel \
 		avahi-devel bzip2 gzip rpm rpm-build
 
-	if [ "$INSTALL_FROM_SW_DOWNLOADS" = "1" ] ; then
+	if [ -n "$PACKAGE_TO_INSTALL" ] ; then
+		sudo yum localinstall -y $PACKAGE_TO_INSTALL
+	elif [ "$INSTALL_FROM_SW_DOWNLOADS" = "1" ] ; then
 		wget http://swdownloads.analog.com/cse/travis_builds/${LIBIIO_BRANCH}_latest_libiio${LDIST}.rpm
 		sudo yum localinstall -y ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.rpm
 	fi
@@ -36,7 +38,9 @@ handle_default() {
 		sudo apt-get install -y libserialport-dev
 	fi
 
-	if [ "$INSTALL_FROM_SW_DOWNLOADS" = "1" ] ; then
+	if [ -n "$PACKAGE_TO_INSTALL" ] ; then
+		sudo dpkg -i $PACKAGE_TO_INSTALL
+	elif [ "$INSTALL_FROM_SW_DOWNLOADS" = "1" ] ; then
 		wget http://swdownloads.analog.com/cse/travis_builds/${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
 		sudo dpkg -i ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
 	fi

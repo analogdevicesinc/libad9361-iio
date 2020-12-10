@@ -4,7 +4,11 @@
 
 brew_install_if_not_exists cmake doxygen libusb libxml2
 
-if [ "$INSTALL_FROM_SW_DOWNLOADS" = "1" ] ; then
+if [ -n "$PACKAGE_TO_INSTALL" ] ; then
+	for file in $PACKAGE_TO_INSTALL ; do
+		sudo installer -pkg "${file}" -target /
+	done
+elif [ "$INSTALL_FROM_SW_DOWNLOADS" = "1" ] ; then
 	wget http://swdownloads.analog.com/cse/travis_builds/${LIBIIO_BRANCH}_latest_libiio${LDIST}.pkg
 	sudo installer -pkg ${LIBIIO_BRANCH}_latest_libiio${LDIST}.pkg -target /
 fi
