@@ -41,6 +41,8 @@ ensure_command_exists sudo
 
 . ${TRAVIS_BUILD_DIR}/build/lib.sh
 
+INSIDE_DOCKER_TRAVIS_CI_ENV="$INSIDE_DOCKER_TRAVIS_CI_ENV PACKAGE_TO_INSTALL"
+
 if [ -z "${LDIST}" -a -f "build/.LDIST" ] ; then
 	export LDIST="-$(cat build/.LDIST)"
 fi
