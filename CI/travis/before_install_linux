@@ -29,9 +29,9 @@ handle_generic_docker() {
 
 handle_default() {
 	sudo apt-get -qq update
-	sudo apt-get install -y cmake doxygen graphviz libaio-dev libavahi-client-dev \
-		libavahi-common-dev libusb-1.0-0-dev libxml2-dev rpm tar bzip2 gzip \
-		flex bison libserialport-dev
+	sudo DEBIAN_FRONTEND=noninteractive apt-get install -y cmake doxygen graphviz \
+		libaio-dev libavahi-client-dev libavahi-common-dev libusb-1.0-0-dev \
+		libxml2-dev rpm tar bzip2 gzip flex bison libserialport-dev
 
 	if [ -n "$PACKAGE_TO_INSTALL" ] ; then
 		sudo dpkg -i $PACKAGE_TO_INSTALL
