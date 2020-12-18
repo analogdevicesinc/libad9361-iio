@@ -23,20 +23,15 @@ handle_centos() {
 	fi
 }
 
-handle_centos_docker() {
-	prepare_docker_image "centos:centos${OS_VERSION}"
-}
-
-handle_ubuntu_docker() {
-	prepare_docker_image "ubuntu:${OS_VERSION}"
+handle_generic_docker() {
+	prepare_docker_image
 }
 
 handle_default() {
 	sudo apt-get -qq update
-	sudo apt-get install -y cmake doxygen graphviz libaio-dev libavahi-client-dev libavahi-common-dev libusb-1.0-0-dev libxml2-dev rpm tar bzip2 gzip flex bison git
-	if [ `sudo apt-cache search libserialport-dev | wc -l` -gt 0 ] ; then
-		sudo apt-get install -y libserialport-dev
-	fi
+	sudo apt-get install -y cmake doxygen graphviz libaio-dev libavahi-client-dev \
+		libavahi-common-dev libusb-1.0-0-dev libxml2-dev rpm tar bzip2 gzip \
+		flex bison libserialport-dev
 
 	if [ -n "$PACKAGE_TO_INSTALL" ] ; then
 		sudo dpkg -i $PACKAGE_TO_INSTALL
@@ -46,6 +41,14 @@ handle_default() {
 	fi
 }
 
-OS_TYPE=${OS_TYPE:-default}
+handle_ubuntu() {
+	handle_default
+}
 
-handle_${OS_TYPE}
+handle_debian() {
+	handle_default
+}
+
+setup_build_type_env_vars
+
+handle_${BUILD_TYPE}

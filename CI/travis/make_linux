@@ -20,16 +20,18 @@ handle_centos() {
 	cd ..
 }
 
-handle_centos_docker() {
-	run_docker_script inside_docker.sh \
-		"centos:centos${OS_VERSION}" "centos"
+handle_ubuntu() {
+	handle_default
 }
 
-handle_ubuntu_docker() {
-	run_docker_script inside_docker.sh \
-		"ubuntu:${OS_VERSION}"
+handle_debian() {
+	handle_default
 }
 
-OS_TYPE=${OS_TYPE:-default}
+handle_generic_docker() {
+	run_docker_script inside_docker.sh
+}
 
-handle_${OS_TYPE}
+setup_build_type_env_vars
+
+handle_${BUILD_TYPE}
