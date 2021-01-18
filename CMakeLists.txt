@@ -68,7 +68,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD|DragonFly|OpenBSD|NetBSD")
         set(CMAKE_REQUIRED_DEFINITIONS "-D__BSD_VISIBLE")
         add_definitions(-D__BSD_VISIBLE=1)
 endif()
-add_definitions(-D_POSIX_C_SOURCE=200809L -D__XSI_VISIBLE=500 -DLIBIIO_EXPORTS=1)
+add_definitions(-D_POSIX_C_SOURCE=200809L -D__XSI_VISIBLE=500 -DLIBAD9361_EXPORTS=1)
 
 set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
 	CACHE PATH "Installation directory for libraries")
