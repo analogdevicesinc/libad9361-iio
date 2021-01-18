@@ -30,7 +30,7 @@ int main(void)
         exit(0);// Cant find anything don't run tests
     dev = iio_context_find_device(ctx, "ad9361-phy");
 
-    for (k = 0; k < 3; k++) {
+    for (k = 0; k < 4; k++) {
 
         printf("Testing rate: %lu\n",rates[k]);
 
