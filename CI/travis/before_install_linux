@@ -12,7 +12,21 @@ handle_centos() {
 		yum config-manager --set-enabled powertools
 	fi
 
-	yum -y install cmake libxml2-devel libusb1-devel doxygen libaio-devel \
+	# CMake has a bug when installed from repos. Must grab from kitware
+	yum -y install wget
+	wget https://github.com/Kitware/CMake/releases/download/v3.15.2/cmake-3.15.2.tar.gz
+	tar -zxvf cmake-3.15.2.tar.gz
+	cd cmake-3.15.2
+	./bootstrap
+	make
+	make install
+	cd ..
+
+	# Need libzstd from EPEL
+	yum -y install epel-release
+	yum -y install libzstd
+
+	yum -y install libxml2-devel libusb1-devel doxygen libaio-devel \
 		avahi-devel bzip2 gzip rpm rpm-build
 
 	if [ -n "$PACKAGE_TO_INSTALL" ] ; then
