@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # SPDX-License-Identifier: LGPL-2.1-or-later
-"""
-SPDX-License-Identifier: LGPL-2.1-or-later
-Copyright (C) 2021 Analog Devices, Inc.
-Author: Travis F. Collins <travis.collins@analog.com>
-"""
+# Copyright (C) 2021 Analog Devices, Inc.
+# Author: Travis F. Collins <travis.collins@analog.com>
 
 from typing import List
 import math
@@ -70,8 +67,13 @@ _ad9361_set_bb_rate.argtypes = (_DevicePtr, c_ulong)
 _ad9361_set_bb_rate.errcheck = _check_negative
 
 
-def multichip_sync(main: iio.Device, secondaries: List[iio.Device], flags: int):
-    """ """
+def multichip_sync(main: iio.Device, secondaries: List[iio.Device], flags: int) -> None:
+    """Multi-chip synchronization (MCS) management.
+
+    :param: iio.Device master: IIO Device object of master AD9361 transceiver
+    :param: List[iio.Device] slaves: A list of IIO Device objects to child AD9361 transceivers
+    :param int flags: Control flags for MCS configuration
+    """
 
     if math.trunc(flags) != flags:
         raise Exception("flags must be an integer")
@@ -89,7 +91,11 @@ def multichip_sync(main: iio.Device, secondaries: List[iio.Device], flags: int):
 
 
 def fmcomms5_multichip_sync(ctx: iio.Context, flags: int):
-    """ """
+    """FMComms5 Multi-chip synchronization (MCS).
+
+    :param iio.Context ctx: IIO Context object of FMComms5
+    :param int flags: Control flags for MCS configuration
+    """
     if math.trunc(flags) != flags:
         raise Exception("flags must be an integer")
 

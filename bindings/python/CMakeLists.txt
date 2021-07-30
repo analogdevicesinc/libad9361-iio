@@ -1,32 +1,19 @@
-cmake_minimum_required(VERSION 2.8.7)
+cmake_minimum_required(VERSION 3.12)
 project(libad9361-py NONE)
 
-if(${CMAKE_VERSION} VERSION_LESS "3.12.0") 
-	message(STATUS "bin=${PYTHON_EXECUTABLE} lib=${PYTHON_LIBRARY} inc=${PYTHON_INCLUDE_DIR}")
-	include(FindPythonInterp)
 
-	# Set variables as they would be set by module FindPython,
-	# which is available from CMake 3.12.
-	set(Python_Interpreter_FOUND ${PYTHONINTERP_FOUND})
-	set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
-	message(STATUS "old")
-else()
-	if(PYTHON_EXECUTABLE)
-		set(Python_EXECUTABLE ${PYTHON_EXECUTABLE})
-	endif()
-	if (PYTHON_LIBRARY)
-		set(Python_LIBRARY ${PYTHON_LIBRARY})
-	endif()
-	if (PYTHON_INCLUDE_DIR)
-		set(Python_INCLUDE_DIR ${PYTHON_INCLUDE_DIR})
-	endif()
-	message(STATUS "bin=${Python_EXECUTABLE} lib=${Python_LIBRARY} inc=${Python_INCLUDE_DIR}")
-	find_package (Python COMPONENTS Interpreter)
-	message(STATUS "new")
-	message(STATUS "Python_EXECUTABLE ${Python_EXECUTABLE}")
+if(Python3_EXECUTABLE)
+	set(Python3_EXECUTABLE ${Python3_EXECUTABLE})
 endif()
+if (Python3_LIBRARY)
+	set(Python3_LIBRARY ${Python3_LIBRARY})
+endif()
+if (Python3_INCLUDE_DIR)
+	set(Python3_INCLUDE_DIR ${Python3_INCLUDE_DIR})
+endif()
+find_package (Python3 COMPONENTS Interpreter Development)
 
-if (Python_Interpreter_FOUND)
+if (Python3_FOUND)
 	message(STATUS "Found Python: Building bindings")
 	set(SETUP_PY_IN ${CMAKE_CURRENT_SOURCE_DIR}/setup.py.cmakein)
 	set(SETUP_PY ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
@@ -35,20 +22,16 @@ if (Python_Interpreter_FOUND)
 
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ad9361.py  ${CMAKE_CURRENT_BINARY_DIR}/ad9361.py COPYONLY)
 
-	add_custom_target(libad9361-py-py ALL DEPENDS ${SETUP_PY} COMMAND ${Python_EXECUTABLE} ${SETUP_PY} --quiet build)
+	add_custom_target(libad9361-py-py ALL DEPENDS ${SETUP_PY} COMMAND ${Python3_EXECUTABLE} ${SETUP_PY} --quiet build)
 
 	if(NOT SKIP_INSTALL_ALL)
-		install(CODE "execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMMAND ${Python_EXECUTABLE} ${SETUP_PY} install --root=\$ENV{DESTDIR}/ --prefix=${CMAKE_INSTALL_PREFIX})")
+		install(CODE "execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMMAND ${Python3_EXECUTABLE} ${SETUP_PY} install --root=\$ENV{DESTDIR}/ --prefix=${CMAKE_INSTALL_PREFIX})")
 	endif()
 else()
 	message(FATAL_ERROR "Python search failed : Can not build Python bindings")
 endif()
 
 if(WITH_DOC)
-	if(${CMAKE_VERSION} VERSION_LESS "3.2.0")
-		# cmake -E env was added in 3.2
-		message(FATAL_ERROR "Sorry, you can't build python doc with ancient cmake, please update")
-	endif()
 	find_program(SPHINX_EXECUTABLE
 		NAMES sphinx-build
 		DOC "Sphinx Documentation Builder (sphinx-doc.org)"
@@ -57,6 +40,7 @@ if(WITH_DOC)
 		message(FATAL_ERROR "Can not build python doc without sphinx-build")
 	endif()
 	message (STATUS "Building with Python Doc (Sphinx)")
+	set(CMAKE_HTML_DEST_DIR "${CMAKE_CURRENT_BINARY_DIR}/html/v${LIBAD9361_VERSION_MAJOR}.${LIBAD9361_VERSION_MINOR}")
 	configure_file(
 		${CMAKE_CURRENT_SOURCE_DIR}/doc/conf.py.in
 		${CMAKE_CURRENT_SOURCE_DIR}/doc/conf.py)
