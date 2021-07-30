@@ -1,0 +1,96 @@
+#!/usr/bin/env python
+# SPDX-License-Identifier: LGPL-2.1-or-later
+#
+# Copyright (C) 2021 Analog Devices, Inc.
+# Author: Travis Collins <travis.collins@analog.com>
+
+from setuptools import setup
+from setuptools.command.install import install
+
+config = dict(long_description_content_type="text/markdown")
+
+description = "Device specific library for AD936X transceivers"
+
+try:
+    with open("${CMAKE_CURRENT_SOURCE_DIR}/README.md", "r") as fh:
+        long_description = fh.read()
+except:
+    long_description = description
+
+
+def find_recursive(folder, filename):
+    import os
+
+    for root, dirs, files in os.walk(folder):
+        for file in files:
+            if file == filename:
+                return os.path.join(root, file)
+
+
+class InstallWrapper(install):
+    """Before installing we check if the
+    libad9361 library is actually installed"""
+
+    def run(self):
+        self._check_libad9361_installed()
+        # Run the standard PyPi copy
+        install.run(self)
+
+    def _check_libad9361_installed(self):
+        cross_compiling = ("${CMAKE_CROSSCOMPILING}" == "TRUE")
+        if cross_compiling:
+            # When cross-compiling, we generally cannot dlopen
+            # the libad9361 shared lib from the build platform.
+            # Simply skip this check in that case.
+            return
+
+        from platform import system as _system
+        from ctypes import CDLL as _cdll
+        from ctypes.util import find_library
+
+        if "Windows" in _system():
+            _ad9361lib = "libad9361.dll"
+        else:
+            # Non-windows, possibly Posix system
+            _ad9361lib = "ad9361"
+        try:
+            import os
+
+            destdir = os.getenv("DESTDIR", "")
+            if destdir:
+                destdir = os.path.join("${CMAKE_BINARY_DIR}", destdir)
+                fulllibpath = find_recursive(destdir, "libad9361.so")
+                _lib = _cdll(fulllibpath, use_errno=True, use_last_error=True)
+            else:
+                _lib = _cdll(find_library(_ad9361lib), use_errno=True, use_last_error=True)
+            if not _lib._name:
+                raise OSError
+        except OSError:
+            msg = "The libad9361 library could not be found.\n\
+            libad9361 needs to be installed first before the python bindings.\n\
+            The latest release can be found on GitHub:\n\
+            https://github.com/analogdevicesinc/libad9361-iio/releases"
+            raise Exception(msg)
+
+
+config.update(
+    dict(
+        name="pylibad9361",
+        version="${VERSION}",
+        maintainer="Analog Devices, Inc",
+        maintainer_email="travis.collins@analog.com",
+        description=description,
+        long_description=long_description,
+        url="https://github.com/analogdevicesinc/libad9361",
+        py_modules=["ad9361"],
+        cmdclass={"install": InstallWrapper},
+        classifiers=[
+            "Programming Language :: Python :: 3",
+            "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
+            "Operating System :: OS Independent",
+        ],
+    )
+)
+
+
+setup(**config)
