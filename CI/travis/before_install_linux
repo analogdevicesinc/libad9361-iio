@@ -2,6 +2,22 @@
 
 . CI/travis/lib.sh
 
+install_sphinx() {
+	# if [ "$CI_BUILD_SPHINX_DOCS" != "1" ] ; then
+	# 	return
+	# fi
+
+	if ! is_python_at_least_ver "$PYTHON" "3.6" ; then
+		echo_red "Python version is too old no python interpreter installed"
+		return 1
+	fi
+
+	$PYTHON --version
+	command -v $PYTHON
+	$PYTHON -m pip install sphinx
+	$PYTHON -m pip install sphinx-rtd-theme
+}
+
 handle_centos() {
 	# FIXME: see about adding `libserialport-dev` from EPEL ; maybe libusb-1.0.0-devel...
 	yum -y groupinstall 'Development Tools'
@@ -10,6 +26,8 @@ handle_centos() {
 		# On CentOS 8, avahi-devel & doxygen are in this repo; enable it
 		yum -y install yum-utils
 		yum config-manager --set-enabled powertools
+		yum -y install python3
+		install_sphinx
 	fi
 
 	# CMake has a bug when installed from repos. Must grab from kitware
@@ -35,6 +53,8 @@ handle_centos() {
 		wget http://swdownloads.analog.com/cse/travis_builds/${LIBIIO_BRANCH}_latest_libiio${LDIST}.rpm
 		sudo yum localinstall -y ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.rpm
 	fi
+
+	$PYTHON -m pip install pylibiio==0.21
 }
 
 handle_generic_docker() {
@@ -45,7 +65,8 @@ handle_default() {
 	sudo apt-get -qq update
 	sudo DEBIAN_FRONTEND=noninteractive apt-get install -y cmake doxygen graphviz \
 		libaio-dev libavahi-client-dev libavahi-common-dev libusb-1.0-0-dev \
-		libxml2-dev rpm tar bzip2 gzip flex bison libserialport-dev
+		libxml2-dev rpm tar bzip2 gzip flex bison libserialport-dev \
+		python3 python3-pip python3-setuptools
 
 	if [ -n "$PACKAGE_TO_INSTALL" ] ; then
 		sudo dpkg -i $PACKAGE_TO_INSTALL
@@ -53,6 +74,9 @@ handle_default() {
 		wget http://swdownloads.analog.com/cse/travis_builds/${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
 		sudo dpkg -i ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
 	fi
+
+	$PYTHON -m pip install pylibiio==0.21
+	install_sphinx
 }
 
 handle_ubuntu() {

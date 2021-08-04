@@ -4,7 +4,6 @@ import iio
 import ad9361
 import os
 import pathlib
-import numpy
 
 ad9361_all = ["fmcomms2", "fmcomms5", "ad9361", "ad9364"]
 path = pathlib.Path(__file__).parent.absolute()
