@@ -82,6 +82,7 @@ config.update(
         description=description,
         long_description=long_description,
         url="https://github.com/analogdevicesinc/libad9361",
+        install_requires=["pylibiio<=0.21.0"],
         py_modules=["ad9361"],
         cmdclass={"install": InstallWrapper},
         classifiers=[
