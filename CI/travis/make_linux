@@ -14,7 +14,7 @@ handle_default() {
 	cd ..
 	cd bindings/python
 	pip3 install -r requirements_dev.txt
-	python3 -m pytest -vs
+	python3 -m pytest -vs --skip-scan
 }
 
 handle_centos() {
@@ -27,7 +27,7 @@ handle_centos() {
 	cd ..
 	cd bindings/python
 	pip3 install -r requirements_dev.txt
-	python3 -m pytest -vs
+	python3 -m pytest -vs --skip-scan
 }
 
 handle_ubuntu() {
