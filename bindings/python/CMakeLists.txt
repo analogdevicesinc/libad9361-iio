@@ -10,7 +10,7 @@ if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
 	set(Python3_FOUND ${PYTHONINTERP_FOUND})
 	set(Python3_EXECUTABLE ${PYTHON_EXECUTABLE})
 else()
-	find_package(Python3 3.6 REQUIRED COMPONENTS Interpreter Development)
+	find_package(Python3 3.6 REQUIRED COMPONENTS Interpreter)
 endif()
 
 if (Python3_FOUND)
