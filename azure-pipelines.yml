@@ -28,12 +28,6 @@ jobs:
         OS_VERSION: centos8
         artifactName: 'Linux-CentOS-8-x86_64'
         PACKAGE_TO_INSTALL: 'build/*.rpm'
-      ubuntu_16_04_x86_64:
-        imageName: 'ubuntu-latest'
-        OS_TYPE: 'ubuntu_docker'
-        OS_VERSION: xenial
-        artifactName: 'Linux-Ubuntu-16.04-x86_64'
-        PACKAGE_TO_INSTALL: 'build/*.deb'
       ubuntu_18_04_x86_64:
         imageName: 'ubuntu-latest'
         OS_TYPE: 'ubuntu_docker'
