@@ -149,6 +149,7 @@ endif()
 
 option(PYTHON_BINDINGS "Install Python bindings" OFF)
 option(MATLAB_BINDINGS "Install MATLAB bindings" OFF)
+option(LIB_CHECK_PYINSTALL "Check for library during python install" OFF)
 
 add_subdirectory(bindings)
 
