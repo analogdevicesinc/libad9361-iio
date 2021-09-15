@@ -1,5 +1,7 @@
 #!/bin/sh -e
 
+set -x
+
 . CI/travis/lib.sh
 
 install_sphinx() {
