@@ -55,14 +55,14 @@ def test_mcs(iio_uri):
     assert main
     secondary = ctx.find_device("ad9361-phy-B")
     assert secondary
-    ret = ad9361.multichip_sync(main, [secondary], 2)
+    ret = ad9361.multichip_sync(main, [secondary], 3)
     assert ret == 0
 
 
 @pytest.mark.iio_hardware("fmcomms5")
 def test_fmc5_mcs(iio_uri):
     ctx = iio.Context(iio_uri)
-    ret = ad9361.fmcomms5_multichip_sync(ctx, 2)
+    ret = ad9361.fmcomms5_multichip_sync(ctx, 3)
     assert ret == 0
 
 
