@@ -35,8 +35,8 @@ lock(label: 'adgt_test_harness_boards') {
     harness.set_nebula_local_fs_source_root("artifactory.analog.com")
   
     // Set stages (Stages are run sequentially on agents.)
-    // harness.add_stage(harness.stage_library("UpdateBOOTFiles"), 'stopWhenFail',
-    //                   harness.stage_library("RecoverBoard"))
+    harness.add_stage(harness.stage_library("UpdateBOOTFiles"), 'stopWhenFail',
+                      harness.stage_library("RecoverBoard"))
   
     // Test stage
     def stage = { String board ->
