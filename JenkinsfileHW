@@ -1,6 +1,6 @@
 // Pipeline
 lock(label: 'adgt_test_harness_boards') {
-    @Library('sdgtt-lib@adgt-test-harness') _ // Not necessary when we turn on global libraries :)
+    @Library('sdgtt-lib@master') _
     def hdlBranch = "NA"
     def linuxBranch = "NA"
     def bootPartitionBranch = "release"
