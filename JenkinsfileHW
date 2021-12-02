@@ -1,53 +1,24 @@
 // Pipeline
 lock(label: 'adgt_test_harness_boards') {
-  // @Library('sdgtt-lib@adgt-test-harness') _ // Not necessary when we turn on global libraries :)
-  @Library('sdgtt-lib@fix_iio_not_defined') _
-  def dependencies = ["nebula", "libiio", "libiio-py"]
-  def hdlBranch = "hdl_2019_r2"
-  def linuxBranch = "2019_R2"
+  @Library('sdgtt-lib@master')
+  def hdlBranch = "NA"
+  def linuxBranch = "NA"
   def bootPartitionBranch = "release"
-  def jenkins_job_trigger = "-1"
   def firmwareVersion = 'v0.32'
   def bootfile_source = 'artifactory' // options: sftp, artifactory, http, local
-  def harness = getGauntlet(dependencies, hdlBranch, linuxBranch, bootPartitionBranch, firmwareVersion, bootfile_source)
-
+  def harness = getGauntlet(hdlBranch, linuxBranch, bootPartitionBranch, firmwareVersion, bootfile_source)
   //save what triggered the job
   harness.set_job_trigger(jenkins_job_trigger)
 
-  //udpate repos
+  //update repos
   harness.set_env('nebula_repo', 'https://github.com/sdgtt/nebula.git')
-  harness.set_env('nebula_branch', 'do_not_load_system_uart_if_zcu102')
-  // harness.set_env('nebula_branch','dev')
+  harness.set_env('nebula_branch', 'dev_fixes')
   harness.set_env('libiio_branch', 'v0.21')
-  harness.set_env('telemetry_repo', 'https://github.com/kimpaller/telemetry.git')
+  harness.set_env('telemetry_repo', 'https://github.com/sdg/telemetry.git')
   harness.set_env('telemetry_branch', 'master')
 
   //update first the agent with the required deps
   harness.update_agents()
-
-  //update nebula config
-  def jobs = [: ]
-  for (agent in harness.gauntEnv.agents_online) {
-    println('Agent: ' + agent)
-    def agent_name = agent
-    jobs[agent_name] = {
-      node(agent_name) {
-        stage('Update Nebula Config') {
-          sh 'if [ -d "nebula-config" ]; then rm -Rf nebula-config; fi'
-          sh 'git clone -b master https://github.com/kimpaller/nebula-config.git'
-          cmd = 'sudo mv nebula-config/' + agent_name + ' /etc/default/nebula'
-          sh cmd
-        }
-        stage('Clean up residue docker containers') {
-          sh 'sudo docker ps -q -f status=exited | xargs --no-run-if-empty sudo docker rm'
-        }
-      }
-    }
-  }
-
-  stage('Configure Agents') {
-    parallel jobs
-  }
 
   //set other test parameters
   harness.set_nebula_debug(true)
