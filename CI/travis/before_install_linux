@@ -54,7 +54,7 @@ handle_centos() {
 		sudo yum localinstall -y ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.rpm
 	fi
 
-	$PYTHON -m pip install pylibiio==0.21 --no-binary :all:
+	$PYTHON -m pip install pylibiio --no-binary :all:
 }
 
 handle_generic_docker() {
@@ -75,7 +75,7 @@ handle_default() {
 		sudo dpkg -i ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
 	fi
 
-	$PYTHON -m pip install pylibiio==0.21 --no-binary :all:
+	$PYTHON -m pip install pylibiio --no-binary :all:
 	install_sphinx
 }
 
