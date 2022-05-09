@@ -2,6 +2,26 @@
 
 . CI/travis/lib.sh
 
+install_iioemu() {
+	git clone https://github.com/analogdevicesinc/libtinyiiod.git
+	cd libtinyiiod
+	mkdir build && cd build
+	cmake -DBUILD_EXAMPLES=OFF ..
+	make
+	make install
+	ldconfig
+	cd ../..
+
+	git clone -b v0.1.0 https://github.com/analogdevicesinc/iio-emu.git
+	cd iio-emu
+	mkdir build && cd build
+	cmake ..
+	make
+	make install
+	ldconfig
+	cd ../..
+}
+
 install_sphinx() {
 	$PYTHON --version
 
@@ -45,7 +65,7 @@ handle_centos() {
 	yum -y install libzstd
 
 	yum -y install libxml2-devel libusb1-devel doxygen libaio-devel \
-		avahi-devel bzip2 gzip rpm rpm-build
+		avahi-devel bzip2 gzip rpm rpm-build git
 
 	if [ -n "$PACKAGE_TO_INSTALL" ] ; then
 		sudo yum localinstall -y $PACKAGE_TO_INSTALL
@@ -55,6 +75,7 @@ handle_centos() {
 	fi
 
 	$PYTHON -m pip install pylibiio --no-binary :all:
+	install_iioemu
 }
 
 handle_generic_docker() {
@@ -66,7 +87,7 @@ handle_default() {
 	sudo DEBIAN_FRONTEND=noninteractive apt-get install -y cmake doxygen graphviz \
 		libaio-dev libavahi-client-dev libavahi-common-dev libusb-1.0-0-dev \
 		libxml2-dev rpm tar bzip2 gzip flex bison libserialport-dev \
-		python3 python3-pip python3-setuptools
+		python3 python3-pip python3-setuptools git wget
 
 	if [ -n "$PACKAGE_TO_INSTALL" ] ; then
 		sudo dpkg -i $PACKAGE_TO_INSTALL
@@ -77,6 +98,7 @@ handle_default() {
 
 	$PYTHON -m pip install pylibiio --no-binary :all:
 	install_sphinx
+	install_iioemu
 }
 
 handle_ubuntu() {

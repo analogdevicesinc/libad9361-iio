@@ -14,7 +14,7 @@ handle_default() {
 	cd ..
 	cd bindings/python
 	pip3 install -r requirements_dev.txt
-	python3 -m pytest -vs --skip-scan
+	python3 -m pytest -vs --skip-scan --adi-hw-map
 }
 
 handle_centos() {
@@ -28,7 +28,7 @@ handle_centos() {
 	cd bindings/python
 	pip3 install -r requirements_dev.txt
 	export LD_LIBRARY_PATH=/usr/local/lib/
-	python3 -m pytest -vs --skip-scan
+	python3 -m pytest -vs ---skip-scan --adi-hw-map
 }
 
 handle_ubuntu() {
