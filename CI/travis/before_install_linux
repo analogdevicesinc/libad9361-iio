@@ -8,8 +8,8 @@ install_iioemu() {
 	mkdir build && cd build
 	cmake -DBUILD_EXAMPLES=OFF ..
 	make
-	make install
-	ldconfig
+	sudo make install
+	sudo ldconfig
 	cd ../..
 
 	git clone -b v0.1.0 https://github.com/analogdevicesinc/iio-emu.git
@@ -17,8 +17,8 @@ install_iioemu() {
 	mkdir build && cd build
 	cmake ..
 	make
-	make install
-	ldconfig
+	sudo make install
+	sudo ldconfig
 	cd ../..
 }
 
