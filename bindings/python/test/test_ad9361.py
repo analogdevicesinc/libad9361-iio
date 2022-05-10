@@ -10,7 +10,7 @@ path = pathlib.Path(__file__).parent.absolute()
 filterfile_name = os.path.join(path, "LTE15_MHz.ftr")
 
 
-@pytest.mark.iio_hardware(ad9361_all)
+@pytest.mark.iio_hardware(ad9361_all, True)
 @pytest.mark.parametrize("rate_msps", [*(range(1, 30))])
 def test_bb_rate(iio_uri, rate_msps):
     rate = rate_msps * 1e6
@@ -21,7 +21,7 @@ def test_bb_rate(iio_uri, rate_msps):
     assert abs(rate - hw) < 3
 
 
-@pytest.mark.iio_hardware(ad9361_all)
+@pytest.mark.iio_hardware(ad9361_all, True)
 @pytest.mark.parametrize("rate_msps", [*(range(1, 30))])
 def test_bb_rate_custom_filter_manual(iio_uri, rate_msps):
     rate = rate_msps * 1e6
@@ -37,7 +37,7 @@ def test_bb_rate_custom_filter_manual(iio_uri, rate_msps):
     assert abs(rate - hw) < 3
 
 
-@pytest.mark.iio_hardware(ad9361_all)
+@pytest.mark.iio_hardware(ad9361_all, True)
 @pytest.mark.parametrize("rate_msps", [*(range(1, 30))])
 def test_bb_rate_custom_filter(iio_uri, rate_msps):
     rate = rate_msps * 1e6
@@ -48,7 +48,7 @@ def test_bb_rate_custom_filter(iio_uri, rate_msps):
     assert abs(rate - hw) < 3
 
 
-@pytest.mark.iio_hardware("fmcomms5")
+@pytest.mark.iio_hardware("fmcomms5", True)
 def test_mcs(iio_uri):
     ctx = iio.Context(iio_uri)
     main = ctx.find_device("ad9361-phy")
@@ -59,14 +59,14 @@ def test_mcs(iio_uri):
     assert ret == 0
 
 
-@pytest.mark.iio_hardware("fmcomms5")
+@pytest.mark.iio_hardware("fmcomms5", True)
 def test_fmc5_mcs(iio_uri):
     ctx = iio.Context(iio_uri)
     ret = ad9361.fmcomms5_multichip_sync(ctx, 3)
     assert ret == 0
 
 
-@pytest.mark.iio_hardware(ad9361_all)
+@pytest.mark.iio_hardware(ad9361_all, True)
 def test_trx_fir_enable(iio_uri):
     ctx = iio.Context(iio_uri)
     dev = ctx.find_device("ad9361-phy")
@@ -97,7 +97,7 @@ def test_trx_fir_enable(iio_uri):
     assert dev.find_channel("voltage0", True).attrs["filter_fir_en"].value == "0"
 
 
-@pytest.mark.iio_hardware("fmcomms5")
+@pytest.mark.iio_hardware("fmcomms5", True)
 def test_fmc5_phase_sync(iio_uri):
     ctx = iio.Context(iio_uri)
     ret = ad9361.fmcomms5_phase_sync(ctx, 1e9)
