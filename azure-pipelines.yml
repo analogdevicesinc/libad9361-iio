@@ -21,7 +21,7 @@ jobs:
   strategy:
     matrix:
       ubuntu_18_04_x86_64:
-        imageName: 'ubuntu-latest'
+        imageName: 'ubuntu-18.04'
         OS_TYPE: 'ubuntu_docker'
         OS_VERSION: bionic
         artifactName: 'Linux-Ubuntu-18.04'
