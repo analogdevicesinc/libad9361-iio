@@ -2,6 +2,17 @@
 
 . CI/travis/lib.sh
 
+install_libiio_from_source() {
+	git clone https://github.com/analogdevicesinc/libiio.git
+	cd libiio
+	mkdir build && cd build
+	cmake ..
+	make
+	sudo make install
+	sudo ldconfig
+	cd ../..
+}
+
 install_iioemu() {
 	git clone https://github.com/analogdevicesinc/libtinyiiod.git
 	cd libtinyiiod
@@ -92,8 +103,12 @@ handle_default() {
 	if [ -n "$PACKAGE_TO_INSTALL" ] ; then
 		sudo dpkg -i $PACKAGE_TO_INSTALL
 	elif [ "$INSTALL_FROM_SW_DOWNLOADS" = "1" ] ; then
-		wget http://swdownloads.analog.com/cse/travis_builds/${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
-		sudo dpkg -i ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
+		wget http://swdownloads.analog.com/cse/travis_builds/${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb || true
+		if [ -f "${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb" ]
+			sudo dpkg -i ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
+		else
+			install_libiio_from_source
+		fi
 	fi
 
 	$PYTHON -m pip install pylibiio --no-binary :all:
