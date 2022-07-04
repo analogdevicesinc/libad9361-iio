@@ -63,32 +63,32 @@ jobs:
       artifactName: '$(artifactName)'
 
 - job: ARMBuilds
+  # Host Box
+  pool:
+    vmImage: "ubuntu-latest"
+  # Docker Images
   strategy:
     matrix:
       ubuntu-ppc64le:
-        imageName: 'ubuntu-18.04'
+        image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
         arch: ppc64le
+        build_script: ci-ubuntu.sh
         artifactName: 'Ubuntu-ppc64le'
-        PACKAGE_TO_INSTALL: 'build/*.deb'
       ubuntu-x390x:
-        imageName: 'ubuntu-18.04'
+        image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
         arch: s390x
+        build_script: ci-ubuntu.sh
         artifactName: 'Ubuntu-x390x'
-        PACKAGE_TO_INSTALL: 'build/*.deb'
       debian_buster_arm32v7:
-        imageName: 'ubuntu-18.04'
-        OS_TYPE: 'arm32v7/debian_docker'
-        OS_VERSION: 'buster'
+        image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
+        arch: arm
+        build_script: ci-ubuntu.sh
         artifactName: 'Ubuntu-arm32v7'
-        PACKAGE_TO_INSTALL: 'build/*.deb'
       debian_buster_arm64v8:
-        imageName: 'ubuntu-18.04'
-        OS_TYPE: 'arm64v8/debian_docker'
-        OS_VERSION: 'buster'
+        image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
+        arch: aarch64
+        build_script: ci-ubuntu.sh
         artifactName: 'Ubuntu-arm64v8'
-        PACKAGE_TO_INSTALL: 'build/*.deb'
-  pool:
-    vmImage: $(imageName)
   steps:
   - checkout: self
     fetchDepth: 1
@@ -102,9 +102,18 @@ jobs:
       runVersion: 'latestFromBranch'
       runBranch: 'refs/heads/master'
       path: '$(Agent.BuildDirectory)/s/build/'
-  - script: ./CI/travis/before_install_linux
-    displayName: "Install Dependencies"
-  - script: ./CI/travis/make_linux
+  - script: |
+      set -e 
+      sudo apt-get install -y gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
+      sudo apt-get install -y g++-arm-linux-gnueabihf
+      sudo apt-get install -y g++-aarch64-linux-gnu
+      sudo apt-get install -y qemu-system-ppc64
+      sudo apt-get install qemu binfmt-support qemu-user-static
+      sudo docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    displayName: "Setup"
+  - script: |
+      set -e
+      sudo docker run --platform "linux/$(arch)" --rm -t --privileged -e ARTIFACTNAME=$(artifactName) -v "$(Agent.BuildDirectory)/s":"/ci" -v "/usr/bin/qemu-$(arch)-static":"/usr/bin/qemu-$(arch)-static" "$(image)" /bin/bash -c "cd /ci/ && chmod +x ./CI/travis/$(build_script) && ./CI/travis/$(build_script)"
     displayName: "Build"
   - task: CopyFiles@2
     inputs:
