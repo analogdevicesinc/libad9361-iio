@@ -79,6 +79,7 @@ brew_install_if_not_exists() {
 }
 
 prepare_docker_image() {
+	echo "prepare_docker_image()"
 	local DOCKER_IMAGE="${OS_TYPE}:${OS_VERSION}"
 	# If arch is specified, setup multiarch support
 	if [ -n "$OS_ARCH" ] ; then
@@ -212,6 +213,7 @@ print_github_api_rate_limits() {
 }
 
 setup_build_type_env_vars() {
+	echo "setup_build_type_env_vars()"
 	OS_TYPE=${OS_TYPE:-default}
 
 	# For a 'arm32_v7/debian_docker' string, OS TYPE becomes 'debian'

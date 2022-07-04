@@ -1,5 +1,8 @@
 #!/bin/sh -e
 
+echo "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "inside docker"
+
 export INSIDE_DOCKER="1"
 
 INSIDE_DOCKER_BUILD_DIR=/docker_build_dir

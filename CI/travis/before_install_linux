@@ -3,6 +3,7 @@
 . CI/travis/lib.sh
 
 install_sphinx() {
+	echo "install_sphinx() BEFORE"
 	$PYTHON --version
 
 	if ! is_python_at_least_ver "$PYTHON" "3.6" ; then
@@ -17,6 +18,7 @@ install_sphinx() {
 
 handle_centos() {
 	# FIXME: see about adding `libserialport-dev` from EPEL ; maybe libusb-1.0.0-devel...
+	echo "handle_centos() BEFORE"
 	yum -y groupinstall 'Development Tools'
 
 	if is_centos_at_least_ver "8" ; then
@@ -58,10 +60,12 @@ handle_centos() {
 }
 
 handle_generic_docker() {
+	echo "handle_generic_docker() BEFORE"
 	prepare_docker_image
 }
 
 handle_default() {
+	echo "handle_default() BEFORE"
 	sudo apt-get -qq update
 	sudo DEBIAN_FRONTEND=noninteractive apt-get install -y cmake doxygen graphviz \
 		libaio-dev libavahi-client-dev libavahi-common-dev libusb-1.0-0-dev \
@@ -75,18 +79,24 @@ handle_default() {
 		sudo dpkg -i ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
 	fi
 
+	echo "########################################"
 	$PYTHON -m pip install pylibiio --no-binary :all:
 	install_sphinx
+	echo "########################################"
 }
 
 handle_ubuntu() {
+	echo "handle_ubuntu() BEFORE"
 	handle_default
 }
 
 handle_debian() {
+	echo "handle_debian() BEFORE"
 	handle_default
 }
 
 setup_build_type_env_vars
+
+echo "Build type is: ${BUILD_TYPE}"
 
 handle_${BUILD_TYPE}

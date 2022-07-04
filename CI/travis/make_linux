@@ -5,6 +5,7 @@ if [ "x${COVERITY_SCAN_PROJECT_NAME}" != "x" ] ; then exit 0; fi
 . CI/travis/lib.sh
 
 handle_default() {
+	echo "handle_default() MAKE"
 	mkdir -p build
 	cd build
 	cmake -DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON ..
@@ -18,6 +19,7 @@ handle_default() {
 }
 
 handle_centos() {
+	echo "handle_centos() MAKE"
 	mkdir -p build
 	cd build
 	cmake -DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON ..
@@ -32,14 +34,17 @@ handle_centos() {
 }
 
 handle_ubuntu() {
+	echo "handle_ubuntu() MAKE"
 	handle_default
 }
 
 handle_debian() {
+	echo "handle_debian() MAKE"
 	handle_default
 }
 
 handle_generic_docker() {
+	echo "handle_generic_docker() MAKE"
 	run_docker_script inside_docker.sh
 }
 
