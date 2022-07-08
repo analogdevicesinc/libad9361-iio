@@ -32,6 +32,12 @@ jobs:
         OS_VERSION: focal
         artifactName: 'Linux-Ubuntu-20.04'
         PACKAGE_TO_INSTALL: 'build/*.deb'
+      ubuntu_22_04_x86_64:
+        imageName: 'ubuntu-22.04'
+        OS_TYPE: 'ubuntu_docker'
+        OS_VERSION: focal
+        artifactName: 'Linux-Ubuntu-22.04'
+        PACKAGE_TO_INSTALL: 'build/*.deb'
   pool:
     vmImage: $(imageName)
   steps:
@@ -135,6 +141,9 @@ jobs:
       macOS_11:
         imageName: 'macOS-11'
         artifactName: 'macOS-11'
+      macOS_12:
+        imageName: 'macOS-12'
+        artifactName: 'macOS-12'
   pool:
     vmImage: $(imageName)
   variables:
