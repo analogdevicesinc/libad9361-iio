@@ -1,2 +1,2 @@
 pytest
-pytest-libiio
+pytest-libiio==0.0.13
