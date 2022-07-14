@@ -71,8 +71,8 @@ handle_default() {
 	if [ -n "$PACKAGE_TO_INSTALL" ] ; then
 		sudo dpkg -i $PACKAGE_TO_INSTALL
 	elif [ "$INSTALL_FROM_SW_DOWNLOADS" = "1" ] ; then
-		wget http://swdownloads.analog.com/cse/travis_builds/${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
-		sudo dpkg -i ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
+		wget http://swdownloads.analog.com/cse/azure_builds/Ubuntu-22.04_latest_master_libiio.deb
+		sudo dpkg -i ./Ubuntu-22.04_latest_master_libiio.deb
 	fi
 
 	$PYTHON -m pip install pylibiio --no-binary :all:
