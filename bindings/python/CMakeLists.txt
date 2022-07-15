@@ -21,6 +21,7 @@ if (Python3_FOUND)
 	configure_file(${SETUP_PY_IN} ${SETUP_PY})
 
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ad9361.py  ${CMAKE_CURRENT_BINARY_DIR}/ad9361.py COPYONLY)
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tasks.py  ${CMAKE_CURRENT_BINARY_DIR}/tasks.py COPYONLY)
 
 	add_custom_target(libad9361-py-py ALL DEPENDS ${SETUP_PY} COMMAND ${Python3_EXECUTABLE} ${SETUP_PY} --quiet build)
 

@@ -7,28 +7,28 @@ if [ "x${COVERITY_SCAN_PROJECT_NAME}" != "x" ] ; then exit 0; fi
 handle_default() {
 	mkdir -p build
 	cd build
-	cmake -DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON ..
+	sudo cmake -DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON ..
 	sudo make && make package && make test
 	sudo make install
 	ldconfig
 	cd ..
 	cd bindings/python
-	pip3 install -r requirements_dev.txt
-	python3 -m pytest -vs --skip-scan
+	sudo pip3 install -r requirements_dev.txt
+	sudo python3 -m pytest -vs --skip-scan
 }
 
 handle_centos() {
 	mkdir -p build
 	cd build
-	cmake -DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON ..
+	sudo cmake -DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON ..
 	sudo make && make package && make test
 	sudo make install
 	ldconfig
 	cd ..
 	cd bindings/python
-	pip3 install -r requirements_dev.txt
+	sudo pip3 install -r requirements_dev.txt
 	export LD_LIBRARY_PATH=/usr/local/lib/
-	python3 -m pytest -vs --skip-scan
+	sudo python3 -m pytest -vs --skip-scan
 }
 
 handle_ubuntu() {

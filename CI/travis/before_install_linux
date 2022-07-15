@@ -11,8 +11,8 @@ install_sphinx() {
 	fi
 
 	command -v $PYTHON
-	$PYTHON -m pip install sphinx
-	$PYTHON -m pip install sphinx-rtd-theme
+	sudo $PYTHON -m pip install sphinx
+	sudo $PYTHON -m pip install sphinx-rtd-theme
 }
 
 handle_centos() {
@@ -75,7 +75,7 @@ handle_default() {
 		sudo dpkg -i ./${LIBIIO_BRANCH}_latest_libiio${LDIST}.deb
 	fi
 
-	$PYTHON -m pip install pylibiio --no-binary :all:
+	sudo $PYTHON -m pip install pylibiio --no-binary :all:
 	install_sphinx
 }
 

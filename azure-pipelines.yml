@@ -67,6 +67,46 @@ jobs:
     inputs:
       targetPath: '$(Build.ArtifactStagingDirectory)'
       artifactName: '$(artifactName)'
+  - script: |
+      sudo pip install setuptools wheel twine build
+      cd /home/vsts/work/1/s/build/bindings/python
+      sudo python setup.py bdist_wheel
+    condition: eq(variables['artifactName'], 'Linux-Ubuntu-20.04')
+    displayName: "Install wheel and twine"
+  - task: TwineAuthenticate@1
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+    displayName: Twine Authenticate
+    inputs:
+      artifactFeed: libad9361-iio
+      pythonUploadServiceConnection: PyPi
+  - task: TwineAuthenticate@1
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+    displayName: Twine Authenticate
+    inputs:
+      artifactFeed: test-libad9361-iio
+      pythonUploadServiceConnection: PyPi_Test
+  - script: |
+      cd /home/vsts/work/1/s/build/bindings/python
+      python -m twine upload -u $(USERNAME) -p $(PASSWORD) --config-file $(PYPIRC_PATH) dist/*.whl
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+    displayName: "Deploy python package" 
+  - script: |
+      cd /home/vsts/work/1/s/build/bindings/python
+      sudo rm ./dist/*.whl
+      sudo pip3 install --upgrade requests
+      sudo pip install invoke
+      sudo invoke bumpversion-test
+      sudo python -m build
+      ls -al
+      cd dist
+      ls -al
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+    displayName: "Update to dev version"
+  - script: |
+      cd /home/vsts/work/1/s/build/bindings/python
+      sudo python -m twine upload --repository-url https://test.pypi.org/legacy/ -u $(USERNAME) -p $(PASSWORD) --skip-existing --config-file $(PYPIRC_PATH) dist/*.whl
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+    displayName: "Deploy python test package"
 
 - job: ARMBuilds
   # Host Box
