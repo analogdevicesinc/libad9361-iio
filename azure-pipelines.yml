@@ -20,12 +20,6 @@ jobs:
 - job: LinuxBuilds
   strategy:
     matrix:
-      ubuntu_18_04_x86_64:
-        imageName: 'ubuntu-18.04'
-        OS_TYPE: 'ubuntu_docker'
-        OS_VERSION: bionic
-        artifactName: 'Linux-Ubuntu-18.04'
-        PACKAGE_TO_INSTALL: 'build/*.deb'
       ubuntu_20_04_x86_64:
         imageName: 'ubuntu-20.04'
         OS_TYPE: 'ubuntu_docker'
