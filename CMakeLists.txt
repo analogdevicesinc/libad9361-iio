@@ -17,12 +17,19 @@ set(LIBAD9361_VERSION_MAJOR 0)
 set(LIBAD9361_VERSION_MINOR 2)
 set(VERSION ${LIBAD9361_VERSION_MAJOR}.${LIBAD9361_VERSION_MINOR})
 
+include(GNUInstallDirs)
+
 if (WIN32)
 	string(TIMESTAMP BUILD_YEAR "%Y")
 endif()
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+option(OSX_FRAMEWORK "Create a OSX_FRAMEWORK" ON)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND OSX_FRAMEWORK)
 	option(OSX_PACKAGE "Create a OSX package" ON)
+
+	set(OSX_INSTALL_FRAMEWORKSDIR "/Library/Frameworks" CACHE STRING "Installation directory for frameworks")
+	get_filename_component(OSX_INSTALL_FRAMEWORKSDIR "${OSX_INSTALL_FRAMEWORKSDIR}" REALPATH BASE_DIR "${CMAKE_BINARY_DIR}")
+
 	set(CMAKE_MACOSX_RPATH ON)
 	set(SKIP_INSTALL_ALL ${OSX_PACKAGE})
 endif()
@@ -89,7 +96,7 @@ add_subdirectory(test)
 set_target_properties(ad9361 PROPERTIES
 	VERSION ${VERSION}
 	SOVERSION ${LIBAD9361_VERSION_MAJOR}
-	FRAMEWORK TRUE
+	FRAMEWORK ${OSX_FRAMEWORK}
 	PUBLIC_HEADER ${LIBAD9361_HEADERS}
 	C_STANDARD 99
 	C_STANDARD_REQUIRED ON
@@ -106,7 +113,6 @@ configure_file(libad9361-iio.iss.cmakein ${CMAKE_CURRENT_BINARY_DIR}/libad9361-i
 set(LIBAD9361_PC ${CMAKE_CURRENT_BINARY_DIR}/libad9361.pc)
 configure_file(libad9361.pc.cmakein ${LIBAD9361_PC} @ONLY)
 
-include(GNUInstallDirs)
 if(NOT SKIP_INSTALL_ALL)
 	install(TARGETS ad9361
 		ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -152,7 +158,7 @@ option(LIB_CHECK_PYINSTALL "Check for library during python install" OFF)
 add_subdirectory(bindings)
 
 # Create an installer if compiling for OSX
-if(OSX_PACKAGE)
+if(OSX_PACKAGE AND OSX_FRAMEWORK)
 	set(LIBAD9361_PKG ${CMAKE_CURRENT_BINARY_DIR}/libad9361-${VERSION}.pkg)
 	set(LIBAD9361_TEMP_PKG ${CMAKE_CURRENT_BINARY_DIR}/libad9361-${VERSION}-temp.pkg)
 	set(LIBAD9361_DISTRIBUTION_XML ${CMAKE_CURRENT_BINARY_DIR}/Distribution.xml)
@@ -187,7 +193,9 @@ if(OSX_PACKAGE)
 	else()
 		message(WARNING "Missing pkgbuild or productbuild: OSX installer won't be created.")
 	endif()
-else()
+endif()
+
+if (NOT OSX_PACKAGE)
 	# Support creating some basic binpkgs via `make package`.
 	# Disabled if OSX_PACKAGE is enabled, as tarballs would
 	#   end up empty otherwise.
