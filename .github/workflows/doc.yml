@@ -1,0 +1,51 @@
+name: Documentation Build and Deploy
+
+on: [push, pull_request]
+
+jobs:
+  BuildDocs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Install dependencies
+        run: |
+          wget https://raw.githubusercontent.com/analogdevicesinc/pyadi-iio/master/.github/scripts/install_libiio.sh
+          bash install_libiio.sh
+          sudo apt-get install -y python3-pip python3-setuptools doxygen graphviz
+          pip3 install -r bindings/python/requirements_dev.txt
+          pip3 install -r bindings/python/requirements_doc.txt
+
+      - name: Build all components
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DPYTHON_BINDINGS=ON
+          make -j$(nproc)
+          mkdir all_doc
+          mkdir all_doc/python
+          mv bindings/python/html/* all_doc/python
+          mv html/* all_doc/
+          cd ..
+
+      # If on master deploy to gh-pages within dev folder
+      - name: Deploy development build to GitHub Pages
+        if: github.ref == 'refs/heads/master'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .build/all_doc
+          destination_dir: dev
+
+      # If on a release deploy to gh-pages top-level
+      - name: Deploy release to GitHub Pages
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .build/all_doc
