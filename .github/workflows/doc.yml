@@ -18,15 +18,20 @@ jobs:
           wget https://raw.githubusercontent.com/analogdevicesinc/pyadi-iio/master/.github/scripts/install_libiio.sh
           bash install_libiio.sh
           sudo apt-get install -y python3-pip python3-setuptools doxygen graphviz
-          pip3 install -r bindings/python/requirements_dev.txt
-          pip3 install -r bindings/python/requirements_doc.txt
+          sudo pip install -r bindings/python/requirements.txt
+          sudo pip install -r bindings/python/requirements_dev.txt
+          sudo pip install -r bindings/python/requirements_doc.txt
 
       - name: Build all components
         run: |
           mkdir build
           cd build
+          cmake .. -DPYTHON_BINDINGS=OFF
+          make -j$(nproc)
+          sudo make install
           cmake .. -DPYTHON_BINDINGS=ON
           make -j$(nproc)
+          make
           mkdir all_doc
           mkdir all_doc/python
           mv bindings/python/html/* all_doc/python
