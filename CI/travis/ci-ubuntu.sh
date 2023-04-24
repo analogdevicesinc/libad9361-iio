@@ -8,7 +8,7 @@ DEBIAN_FRONTEND=noninteractive apt install -y make graphviz libaio-dev \
 dpkg -i /ci/build/*.deb
 python3 -m pip install pylibiio --no-binary :all:
 python3 -m pip install sphinx
-python3 -m pip install sphinx-rtd-theme
+python3 -m pip install sphinx-rtd-theme furo
 
 echo "$PWD"
 

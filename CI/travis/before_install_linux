@@ -12,7 +12,7 @@ install_sphinx() {
 
 	command -v $PYTHON
 	sudo $PYTHON -m pip install sphinx
-	sudo $PYTHON -m pip install sphinx-rtd-theme
+	sudo $PYTHON -m pip install sphinx-rtd-theme furo
 }
 
 handle_centos() {
