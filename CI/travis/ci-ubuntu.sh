@@ -14,7 +14,7 @@ echo "$PWD"
 
 mkdir -p build
 cd build
-cmake -DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON ..
+cmake -DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON -DWITH_DOC=OFF ..
 make && make package && make test
 make install
 ldconfig
