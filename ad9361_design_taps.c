@@ -202,6 +202,29 @@ int build_configuration(struct filter_design_parameters *fdpTX,
 
 }
 
+int ad9361_calculate_rf_clock_chain_fdp(struct filter_design_parameters *fdpTX,
+                                        struct filter_design_parameters *fdpRX,
+                                        unsigned long sample_rate)
+{
+    int ret;
+
+    // Set default configuration
+    unsigned long Fpass = sample_rate / 3.0;
+    unsigned long Fstop = Fpass * 1.25;
+    unsigned long wnomTX = 1.6 * Fstop;
+    unsigned long wnomRX = 1.4 * Fstop;
+
+    ret = build_configuration(fdpTX, fdpRX, sample_rate, Fpass, Fstop, wnomTX,
+                              wnomRX);
+    if (ret<0)
+        return ret;
+
+    return 0;
+
+}
+
+#ifdef IIO_SUPPORT
+
 int apply_custom_filter(struct iio_device *dev, unsigned dec_tx,
                         unsigned dec_rx, short *tapsTx,
                         short *tapsRx, unsigned taps,
@@ -302,27 +325,6 @@ int apply_custom_filter(struct iio_device *dev, unsigned dec_tx,
     return 0;
 }
 
-int ad9361_calculate_rf_clock_chain_fdp(struct filter_design_parameters *fdpTX,
-                                        struct filter_design_parameters *fdpRX,
-                                        unsigned long sample_rate)
-{
-    int ret;
-
-    // Set default configuration
-    unsigned long Fpass = sample_rate / 3.0;
-    unsigned long Fstop = Fpass * 1.25;
-    unsigned long wnomTX = 1.6 * Fstop;
-    unsigned long wnomRX = 1.4 * Fstop;
-
-    ret = build_configuration(fdpTX, fdpRX, sample_rate, Fpass, Fstop, wnomTX,
-                              wnomRX);
-    if (ret<0)
-        return ret;
-
-    return 0;
-
-}
-
 int ad9361_set_bb_rate_custom_filter_auto(struct iio_device *dev,
         unsigned long rate)
 {
@@ -394,3 +396,5 @@ int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
 
     return 0;
 }
+
+#endif

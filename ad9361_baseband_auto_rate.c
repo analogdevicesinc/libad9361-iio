@@ -51,6 +51,8 @@ static int16_t fir_64_2[] = {
 
 #define FIR_BUF_SIZE	8192
 
+#ifdef IIO_SUPPORT
+
 int ad9361_set_trx_fir_enable(struct iio_device *dev, int enable)
 {
 	int ret = iio_device_attr_write_bool(dev,
@@ -177,3 +179,5 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 
 	return 0;
 }
+
+#endif

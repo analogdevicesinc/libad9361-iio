@@ -51,8 +51,10 @@ extern "C" {
 #   define __api
 #endif
 
+#ifdef IIO_SUPPORT
 struct iio_context;
 struct iio_device;
+#endif
 
 /**
  * @struct filter_design_parameters
@@ -92,7 +94,7 @@ struct filter_design_parameters {
 /** @defgroup TopLevel Top-level functions
  * @{ */
 
-
+#ifdef IIO_SUPPORT
 /** @brief Multi-chip synchronization (MCS) management
  * @param master A pointer to an iio_device structure
  * @param slaves A double pointer to an iio_device structure
@@ -136,38 +138,6 @@ __api int ad9361_set_trx_fir_enable(struct iio_device *dev, int enable);
  * @return On success, 0 is returned
  * @return On error, a negative errno code is returned */
 __api int ad9361_get_trx_fir_enable(struct iio_device *dev, int *enable);
-
-/** @brief Design custom FIR filter from specific design criteria
- * @param parameters A pointer filter designer structure
- * @param taps A pointer to taps of designed filter
- * @param num_taps A pointer to integer number of taps designed in taps
- * @param gain Integer gain for designed filter
- * @return On success, 0 is returned
- * @return On error, a negative errno code is returned */
-__api int ad9361_generate_fir_taps(struct filter_design_parameters *parameters,
-                                   short *taps, int *num_taps, int *gain);
-
-/** @brief Calculate the clock path rates for both transmit and receiver paths
- * @param tx_sample_rate Sample rate in samples per second of desired baseband rate
- * @param rate_gov Rate governor enable setting forcing HB3=3 when enabled
- * @param rx_path_clks A pointer to a unsigned long variable where the 6 RX path rates should be stored
- * @param tx_path_clks A pointer to a unsigned long variable where the 6 TX path rates should be stored
- * @return On success, 0 is returned
- * @return On error, a negative errno code is returned */
-__api int ad9361_calculate_rf_clock_chain(unsigned long tx_sample_rate,
-                                          unsigned long rate_gov,
-                                          unsigned long *rx_path_clks,
-                                          unsigned long *tx_path_clks);
-
-/** @brief Calculate the clock path rates and default filter settings for both transmit and receiver for a desired baseband rate
- * @param fdpTX Filter design parameters structure where TX filter design parameters will be stored
- * @param fdpRX Filter design parameters structure where RX filter design parameters will be stored
- * @param sample_rate Desired basedband sample rate in samples per second for both RX and TX filter configurations
- * @return On success, 0 is returned
- * @return On error, a negative errno code is returned */
-__api int ad9361_calculate_rf_clock_chain_fdp(struct filter_design_parameters *fdpTX,
-                                              struct filter_design_parameters *fdpRX,
-                                              unsigned long sample_rate);
 
 /** @brief Baseband rate configuration with custom filter support based on desired baseband sample rate
  * @param dev A pointer to an iio_device structure
@@ -215,6 +185,40 @@ __api int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
  * - <a href="https://wiki.analog.com/resources/eval/user-guides/ad-fmcomms5-ebz/multi-chip-sync">Detailed information on synchronization process</a>
  * - <a href="https://wiki.analog.com/resources/eval/user-guides/ad-fmcomms5-ebz/hardware">Phase synchronization performance can depend on revision of hardware</a>*/
 __api int ad9361_fmcomms5_phase_sync(struct iio_context *ctx, long long lo);
+
+#endif // IIO_SUPPORT
+
+/** @brief Design custom FIR filter from specific design criteria
+ * @param parameters A pointer filter designer structure
+ * @param taps A pointer to taps of designed filter
+ * @param num_taps A pointer to integer number of taps designed in taps
+ * @param gain Integer gain for designed filter
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned */
+__api int ad9361_generate_fir_taps(struct filter_design_parameters *parameters,
+                                   short *taps, int *num_taps, int *gain);
+
+/** @brief Calculate the clock path rates for both transmit and receiver paths
+ * @param tx_sample_rate Sample rate in samples per second of desired baseband rate
+ * @param rate_gov Rate governor enable setting forcing HB3=3 when enabled
+ * @param rx_path_clks A pointer to a unsigned long variable where the 6 RX path rates should be stored
+ * @param tx_path_clks A pointer to a unsigned long variable where the 6 TX path rates should be stored
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned */
+__api int ad9361_calculate_rf_clock_chain(unsigned long tx_sample_rate,
+                                          unsigned long rate_gov,
+                                          unsigned long *rx_path_clks,
+                                          unsigned long *tx_path_clks);
+
+/** @brief Calculate the clock path rates and default filter settings for both transmit and receiver for a desired baseband rate
+ * @param fdpTX Filter design parameters structure where TX filter design parameters will be stored
+ * @param fdpRX Filter design parameters structure where RX filter design parameters will be stored
+ * @param sample_rate Desired basedband sample rate in samples per second for both RX and TX filter configurations
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned */
+__api int ad9361_calculate_rf_clock_chain_fdp(struct filter_design_parameters *fdpTX,
+                                              struct filter_design_parameters *fdpRX,
+                                              unsigned long sample_rate);
 
 /** @} */
 

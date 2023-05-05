@@ -39,6 +39,8 @@ static void ad9361_sleep_ms(void)
 #endif
 }
 
+#ifdef IIO_SUPPORT
+
 int ad9361_multichip_sync(struct iio_device *master, struct iio_device **slaves,
 		unsigned int num_slaves, unsigned int flags)
 {
@@ -127,3 +129,5 @@ int ad9361_fmcomms5_multichip_sync(struct iio_context *ctx, unsigned int flags)
 
 	return ad9361_multichip_sync(master, &slave, 1, flags);
 }
+
+#endif

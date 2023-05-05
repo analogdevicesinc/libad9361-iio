@@ -17,6 +17,8 @@ set(LIBAD9361_VERSION_MAJOR 0)
 set(LIBAD9361_VERSION_MINOR 2)
 set(VERSION ${LIBAD9361_VERSION_MAJOR}.${LIBAD9361_VERSION_MINOR})
 
+option(IIO_SUPPORT "Enable IIO support" ON)
+
 if (WIN32)
 	string(TIMESTAMP BUILD_YEAR "%Y")
 endif()
@@ -74,13 +76,21 @@ set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib"
 	CACHE PATH "Installation directory for libraries")
 mark_as_advanced(INSTALL_LIB_DIR)
 
-find_library(LIBIIO_LIBRARIES iio)
-find_path(LIBIIO_INCLUDEDIR iio.h)
+if(IIO_SUPPORT)
+	find_library(LIBIIO_LIBRARIES iio)
+	find_path(LIBIIO_INCLUDEDIR iio.h)
+	if (NOT LIBIIO_LIBRARIES OR NOT LIBIIO_INCLUDEDIR)
+		message(FATAL_ERROR "libiio not found")
+	endif()
+	message(STATUS "libiio support enabled")
+endif()
 
 set(LIBAD9361_HEADERS ad9361.h)
 
 file(GLOB_RECURSE FD_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/filterdesigner/*.c)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LIBIIO_INCLUDEDIR})
+if(IIO_SUPPORT)
+	include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LIBIIO_INCLUDEDIR})
+endif()
 add_library(ad9361 ad9361_multichip_sync.c
             ad9361_baseband_auto_rate.c
             ad9361_design_taps.c
@@ -88,6 +98,9 @@ add_library(ad9361 ad9361_multichip_sync.c
             ad9361_fmcomms5_phase_sync.c
             ${FD_SRC_FILES}
             ${LIBAD9361_HEADERS})
+if(IIO_SUPPORT)
+	add_compile_definitions(IIO_SUPPORT=1)
+endif()
 enable_testing()
 add_subdirectory(test)
 set_target_properties(ad9361 PROPERTIES

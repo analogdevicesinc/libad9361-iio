@@ -67,6 +67,8 @@
     return expr;                                                               \
   }
 
+#ifdef IIO_SUPPORT
+
 static struct iio_device *dev_phy, *dev_phy_slave;
 static struct iio_device *dev_rx, *dev_rx_slave;
 static struct iio_device *dev_tx, *dev_tx_slave;
@@ -74,6 +76,7 @@ static struct iio_channel *dds_out[2][8];
 static struct iio_buffer *rxbuf;
 static struct iio_channel *rxa_chan_real, *rxa_chan_imag;
 static struct iio_channel *rxb_chan_real, *rxb_chan_imag;
+
 
 static void ad9361_sleep_ms(void)
 {
@@ -598,3 +601,5 @@ int ad9361_fmcomms5_phase_sync(struct iio_context *ctx, long long lo)
 
     return ret;
 }
+
+#endif
