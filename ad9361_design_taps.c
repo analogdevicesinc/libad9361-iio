@@ -398,3 +398,72 @@ int ad9361_set_bb_rate_custom_filter_manual(struct iio_device *dev,
 }
 
 #endif
+
+int ad9361_set_bb_rate_custom_filter_manual_bm(
+        unsigned long rate, unsigned long Fpass,
+        unsigned long Fstop, 
+        unsigned long wnom_tx,
+        unsigned long wnom_rx,
+        unsigned long *tx_path_clks,
+        unsigned long *rx_path_clks,
+        unsigned int *DAC_div,
+        unsigned int *tx_gain,
+        unsigned int *rx_gain,
+        short *taps_tx, 
+        short *taps_rx,
+        int *num_taps_rx,
+        int *num_taps_tx)
+{
+    struct filter_design_parameters fdpTX;
+    struct filter_design_parameters fdpRX;
+    // short taps_tx[128];
+    // short taps_rx[128];
+    int ret;
+    unsigned dec_tx, dec_rx, num_taps;
+
+    if (Fpass >= Fstop)
+        return -EINVAL;
+
+    ret = build_configuration(&fdpTX, &fdpRX, rate, Fpass, Fstop, wnom_tx,
+                              wnom_rx);
+    if (ret<0)
+        return ret;
+
+    ret = ad9361_generate_fir_taps(&fdpRX, taps_rx, num_taps_rx, rx_gain);
+    if (ret < 0)
+        return ret;
+
+    ret = ad9361_generate_fir_taps(&fdpTX, taps_tx, num_taps_tx, tx_gain);
+    if (ret < 0)
+        return ret;
+
+    dec_tx = (unsigned) fdpTX.FIR;
+    dec_rx = (unsigned) fdpRX.FIR;
+    num_taps = (unsigned) fdpTX.maxTaps;
+
+    // ret = apply_custom_filter(dev, dec_tx, dec_rx, taps_tx, taps_rx, num_taps,
+    //                           rate, gain_tx, gain_rx, wnom_tx, wnom_rx);
+
+
+    rx_path_clks[0] = (unsigned long) fdpRX.PLL_rate;
+    rx_path_clks[1] = (unsigned long) fdpRX.converter_rate;
+    rx_path_clks[2] = (unsigned long) rx_path_clks[1]/fdpRX.HB3;
+    rx_path_clks[3] = (unsigned long) rx_path_clks[2]/fdpRX.HB2;
+    rx_path_clks[4] = (unsigned long) rx_path_clks[3]/fdpRX.HB1;
+    rx_path_clks[5] = (unsigned long) rx_path_clks[4]/fdpRX.FIR;
+
+    tx_path_clks[0] = (unsigned long) fdpTX.PLL_rate;
+    tx_path_clks[1] = (unsigned long) fdpTX.converter_rate;
+    tx_path_clks[2] = (unsigned long) tx_path_clks[1]/fdpTX.HB3;
+    tx_path_clks[3] = (unsigned long) tx_path_clks[2]/fdpTX.HB2;
+    tx_path_clks[4] = (unsigned long) tx_path_clks[3]/fdpTX.HB1;
+    tx_path_clks[5] = (unsigned long) tx_path_clks[4]/fdpTX.FIR;
+
+    *DAC_div = (unsigned int) fdpTX.DAC_div;
+
+
+    if (ret < 0)
+        return ret;
+
+    return 0;
+}

@@ -220,6 +220,37 @@ __api int ad9361_calculate_rf_clock_chain_fdp(struct filter_design_parameters *f
                                               struct filter_design_parameters *fdpRX,
                                               unsigned long sample_rate);
 
+/** @brief Baseband rate configuration with custom filter support based on desired baseband sample rate and simplified filter configuration
+ * @param rate Rate in samples per second of desired baseband rate
+ * @param Fpass Stop edge frequency in hertz of passband
+ * @param Fstop Start edge frequency in hertz of stopband
+ * @param wnom_tx TX RF bandwidth of analog filter in hertz
+ * @param wnom_rx RX RF bandwidth of analog filter in hertz
+ * @param tx_path_clks A pointer to a unsigned long variable where the 6 TX path rates should be stored
+ * @param rx_path_clks A pointer to a unsigned long variable where the 6 RX path rates should be stored
+ * @param DAC_div A pointer to a unsigned int variable where the DAC divider should be stored
+ * @param tx_gain A pointer to a unsigned int variable where the TX gain should be stored
+ * @param rx_gain A pointer to a unsigned int variable where the RX gain should be stored
+ * @param taps_tx A pointer to a short array where the TX filter taps should be stored
+ * @param taps_rx A pointer to a short array where the RX filter taps should be stored
+ * @param num_taps_rx A pointer to a int variable where the number of RX filter taps should be stored
+ * @param num_taps_tx A pointer to a int variable where the number of TX filter taps should be stored
+ * @return On success, 0 is returned
+ * @return On error, a negative errno code is returned */
+__api int ad9361_set_bb_rate_custom_filter_manual_bm(
+                                                  unsigned long rate, unsigned long Fpass,
+                                                  unsigned long Fstop, unsigned long wnom_tx,
+                                                  unsigned long wnom_rx,
+                                                  unsigned long *tx_path_clks,
+                                                  unsigned long *rx_path_clks,
+                                                  unsigned int *DAC_div,
+                                                  unsigned int *tx_gain,
+                                                  unsigned int *rx_gain,
+                                                  short *taps_tx,
+                                                  short *taps_rx,
+                                                  int *num_taps_rx,
+                                                  int *num_taps_tx);
+
 /** @} */
 
 #ifdef __cplusplus
