@@ -33,3 +33,9 @@ if(IIO_SUPPORT)
           COMMAND AutoRateTest
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
+
+add_executable(FilterDesignerNOOS filter_designer_noos.c)
+target_link_libraries(FilterDesignerNOOS LINK_PRIVATE ad9361)
+add_test(NAME FilterDesignerNOOS
+        COMMAND FilterDesignerNOOS
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
