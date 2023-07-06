@@ -8,7 +8,7 @@ variables:
   ${{ elseif eq(variables['Build.Reason'], 'PullRequest') }}:
     downloadBranch: $[ format('refs/heads/{0}',replace(replace(variables['System.PullRequest.TargetBranch'], 'libad9361-iio-v0', 'libiio-v0'), 'master', 'main')) ]
   ${{ else }}:
-    downloadBranch: 'refs/heads/main'
+    downloadBranch: 'refs/heads/libiio-v0'
 
 trigger:
   branches:
@@ -34,8 +34,14 @@ pr:
 
 jobs:
 - job: LinuxBuilds
+  pool:
+      vmImage: 'ubuntu-latest'
   strategy:
     matrix:
+      ubuntu_18_04_x86_64:
+        image: 'tfcollins/libiio_ubuntu_18_04-ci:latest'
+        artifactName: 'Linux-Ubuntu-18.04'
+        build_script: ci-debian.sh
       ubuntu_20_04_x86_64:
         image: 'tfcollins/libiio_ubuntu_20_04-ci:latest'
         artifactName: 'Linux-Ubuntu-20.04'
@@ -48,8 +54,22 @@ jobs:
         image: 'tfcollins/libiio_debian_bullseye-ci:latest'
         artifactName: 'Linux-Debian-11'
         build_script: ci-debian.sh
-  pool:
-    vmImage: 'ubuntu-latest'
+      centos_7:
+        image: 'tfcollins/libiio_centos_7-ci:latest'
+        artifactName: 'Linux-CentOS-7'
+        build_script: ci-centos.sh
+      fedora28:
+        image: 'tfcollins/libiio_fedora_28-ci:latest'
+        artifactName: 'Linux-Fedora-28'
+        build_script: ci-centos.sh
+      fedora34:
+        image: 'tfcollins/libiio_fedora_34-ci:latest'
+        artifactName: 'Linux-Fedora-34'
+        build_script: ci-centos.sh
+      opensuse_15_4:
+        image: 'tfcollins/libiio_opensuse_15_4-ci:latest'
+        artifactName: 'Linux-openSUSE-15.4'
+        build_script: ci-centos.sh
   steps:
   - checkout: self
     fetchDepth: 1
@@ -184,16 +204,35 @@ jobs:
       artifactName: '$(artifactName)'
 
 - job: macOSBuilds
+  workspace:
+    clean: all
   strategy:
     matrix:
       macOS_11:
-        imageName: 'macOS-11'
+        poolName: 'Azure Pipelines'
+        vmImage: 'macOS-11'
+        agentName: 'Azure Pipelines 4'
         artifactName: 'macOS-11'
       macOS_12:
-        imageName: 'macOS-12'
+        poolName: 'Azure Pipelines'
+        vmImage: 'macOS-12'
+        agentName: 'Azure Pipelines 3'
         artifactName: 'macOS-12'
+      macOS_13_x64:
+        poolName: 'Azure Pipelines'
+        vmImage: 'macOS-13'
+        agentName: 'Azure Pipelines 2'
+        artifactName: 'macOS-13-x64'
+      macOS_13_arm64:
+        poolName: 'Default'
+        vmImage:
+        agentName: 'miniMAC_arm64'
+        artifactName: 'macOS-13-arm64'
   pool:
-    vmImage: $(imageName)
+    name: $(poolName)
+    vmImage: $(vmImage)
+    demands:
+      - agent.name -equals $(agentName)
   variables:
     PACKAGE_TO_INSTALL: 'build/*.pkg'
   steps:
