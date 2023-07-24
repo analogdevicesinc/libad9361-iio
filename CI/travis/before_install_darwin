@@ -2,7 +2,7 @@
 
 . CI/travis/lib.sh
 
-brew_install_if_not_exists cmake doxygen libusb libxml2
+brew_install_if_not_exists cmake doxygen libusb libxml2 libserialport
 
 if [ -n "$PACKAGE_TO_INSTALL" ] ; then
 	for file in $PACKAGE_TO_INSTALL ; do
