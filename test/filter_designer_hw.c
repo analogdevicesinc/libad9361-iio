@@ -7,11 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __APPLE__
 #include <iio/iio.h>
-#else
-#include <iio.h>
-#endif
 
 int main(void)
 {
@@ -25,7 +21,7 @@ int main(void)
     const char* uri = getenv("URI_AD9361");
     if (uri == NULL)
         exit(0);// Cant find anything don't run tests
-    ctx = iio_create_context_from_uri(uri);
+    ctx = iio_create_context(NULL, uri);
     if (ctx == NULL)
         exit(0);// Cant find anything don't run tests
     dev = iio_context_find_device(ctx, "ad9361-phy");

@@ -15,7 +15,7 @@
 #include "ad9361.h"
 
 #include <errno.h>
-#include <iio.h>
+#include <iio/iio.h>
 #include <stdio.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -82,11 +82,11 @@ int ad9361_multichip_sync(struct iio_device *master, struct iio_device **slaves,
 	}
 
 	/* Move the parts int ALERT for MCS */
-	iio_device_attr_read(master, "ensm_mode", ensm_mode[0], sizeof(ensm_mode));
+	iio_device_attr_read_raw(master, "ensm_mode", ensm_mode[0], sizeof(ensm_mode));
 	iio_device_attr_write(master, "ensm_mode", "alert");
 
 	for (i = 0; i < num_slaves; i++) {
-		iio_device_attr_read(slaves[i], "ensm_mode", ensm_mode[i + 1], sizeof(ensm_mode));
+		iio_device_attr_read_raw(slaves[i], "ensm_mode", ensm_mode[i + 1], sizeof(ensm_mode));
 		iio_device_attr_write(slaves[i], "ensm_mode", "alert");
 	}
 

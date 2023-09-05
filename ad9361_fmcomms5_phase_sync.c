@@ -15,7 +15,7 @@
 #include "ad9361.h"
 
 #include <errno.h>
-#include <iio.h>
+#include <iio/iio.h>
 #include <stdio.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -74,6 +74,8 @@ static struct iio_channel *dds_out[2][8];
 static struct iio_buffer *rxbuf;
 static struct iio_channel *rxa_chan_real, *rxa_chan_imag;
 static struct iio_channel *rxb_chan_real, *rxb_chan_imag;
+static struct iio_channels_mask *dev_rx_mask;
+static struct iio_stream *dev_rx_stream;
 
 static void ad9361_sleep_ms(void)
 {
@@ -292,43 +294,54 @@ int streaming_interfaces(bool enable)
         if (!(rxa_chan_real && rxa_chan_imag && rxb_chan_real && rxb_chan_imag))
             streaming_interfaces(false);
 
-        iio_channel_enable(rxa_chan_real);
-        iio_channel_enable(rxa_chan_imag);
-        iio_channel_enable(rxb_chan_real);
-        iio_channel_enable(rxb_chan_imag);
-        rxbuf = iio_device_create_buffer(dev_rx, SAMPLES, false);
-        if (!rxbuf)
+        iio_channel_enable(rxa_chan_real, dev_rx_mask);
+        iio_channel_enable(rxa_chan_imag, dev_rx_mask);
+        iio_channel_enable(rxb_chan_real, dev_rx_mask);
+        iio_channel_enable(rxb_chan_imag, dev_rx_mask);
+        rxbuf = iio_device_create_buffer(dev_rx, 0, dev_rx_mask);
+        if (iio_err(rxbuf)) {
+            rxbuf = NULL;
             streaming_interfaces(false);
+        }
+        dev_rx_stream = iio_buffer_create_stream(rxbuf, 4, SAMPLES);
+        if (iio_err(dev_rx_stream)) {
+            dev_rx_stream = NULL;
+            streaming_interfaces(false);
+        }
     } else {
+        if (dev_rx_stream) {
+            iio_stream_destroy(dev_rx_stream);
+        }
         if (rxbuf) {
             iio_buffer_destroy(rxbuf);
         }
         if (rxa_chan_real) {
-            iio_channel_disable(rxa_chan_real);
+            iio_channel_disable(rxa_chan_real, dev_rx_mask);
         }
         if (rxa_chan_imag) {
-            iio_channel_disable(rxa_chan_imag);
+            iio_channel_disable(rxa_chan_imag, dev_rx_mask);
         }
         if (rxb_chan_real) {
-            iio_channel_disable(rxb_chan_real);
+            iio_channel_disable(rxb_chan_real, dev_rx_mask);
         }
         if (rxb_chan_imag) {
-            iio_channel_disable(rxb_chan_imag);
+            iio_channel_disable(rxb_chan_imag, dev_rx_mask);
         }
         return -1;
     }
     return 0;
 }
 
-void read_buffer_data(struct iio_channel *chn, struct iio_buffer *buf,
+void read_buffer_data(struct iio_channel *chn, const struct iio_block *block,
                       void *dst, size_t len)
 {
     uintptr_t src_ptr, dst_ptr = (uintptr_t)dst, end = dst_ptr + len;
     unsigned int bytes = iio_channel_get_data_format(chn)->length / 8;
-    uintptr_t buf_end = (uintptr_t)iio_buffer_end(buf);
-    ptrdiff_t buf_step = iio_buffer_step(buf);
+    uintptr_t buf_end = (uintptr_t)iio_block_end(block);
+    const struct iio_device *rx = iio_channel_get_device(chn);
+    ptrdiff_t buf_step = iio_device_get_sample_size(rx, dev_rx_mask);
 
-    for (src_ptr = (uintptr_t)iio_buffer_first(buf, chn);
+    for (src_ptr = (uintptr_t)iio_block_first(block, chn);
          src_ptr < buf_end && dst_ptr + bytes <= end;
          src_ptr += buf_step, dst_ptr += bytes)
         iio_channel_convert(chn, (void *)dst_ptr, (const void *)src_ptr);
@@ -336,18 +349,20 @@ void read_buffer_data(struct iio_channel *chn, struct iio_buffer *buf,
 
 double estimate_phase_diff(double *estimate)
 {
-    ssize_t nbytes_rx = iio_buffer_refill(rxbuf);
-    if (!nbytes_rx)
-        return nbytes_rx;
+    const struct iio_block *rxblock;
+
+    rxblock = iio_stream_get_next_block(dev_rx_stream);
+    if (iio_err(rxblock))
+        return iio_err(rxblock);
 
     int16_t myData0_i[SAMPLES], myData0_q[SAMPLES];
     int16_t myData2_i[SAMPLES], myData2_q[SAMPLES];
 
     // Read data from all channels
-    read_buffer_data(rxa_chan_real, rxbuf, myData0_i, SAMPLES * sizeof(int16_t));
-    read_buffer_data(rxa_chan_imag, rxbuf, myData0_q, SAMPLES * sizeof(int16_t));
-    read_buffer_data(rxb_chan_real, rxbuf, myData2_i, SAMPLES * sizeof(int16_t));
-    read_buffer_data(rxb_chan_imag, rxbuf, myData2_q, SAMPLES * sizeof(int16_t));
+    read_buffer_data(rxa_chan_real, rxblock, myData0_i, SAMPLES * sizeof(int16_t));
+    read_buffer_data(rxa_chan_imag, rxblock, myData0_q, SAMPLES * sizeof(int16_t));
+    read_buffer_data(rxb_chan_real, rxblock, myData2_i, SAMPLES * sizeof(int16_t));
+    read_buffer_data(rxb_chan_imag, rxblock, myData2_q, SAMPLES * sizeof(int16_t));
 
     ad9361_sleep_ms();
 
@@ -508,6 +523,7 @@ int phase_sync(struct iio_context *ctx, long long sample_rate, long long lo)
 {
     // Set analog bandwidth same as sample rate
     long long bw = sample_rate;
+    unsigned int n_channels;
 
     // Set up devices
     if (!setup_iio_devices(ctx))
@@ -545,6 +561,11 @@ int phase_sync(struct iio_context *ctx, long long sample_rate, long long lo)
     ret = trx_phase_rotation(dev_tx_slave, 0.0);
     CHECK(ret);
 
+    n_channels = iio_device_get_channels_count(dev_rx);
+    dev_rx_mask = iio_create_channels_mask(n_channels);
+    if (!dev_rx_mask)
+        return -ENOMEM;
+
     // Align receiver on Chip A (TX from chip A) with BIST loopback
     configure_ports(1); // Chip A -> Chip A | FPGA Loopback on B
     double phase_est_rx_slave = 0, phase_est = 0;
@@ -569,6 +590,7 @@ int phase_sync(struct iio_context *ctx, long long sample_rate, long long lo)
     // Set rotation of chip B receiver to originally measured
     ret = trx_phase_rotation(dev_rx_slave, phase_est_rx_slave);
     CHECK(ret);
+    iio_channels_mask_destroy(dev_rx_mask);
 
     return 0;
 }

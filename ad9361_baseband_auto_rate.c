@@ -15,7 +15,7 @@
 #include "ad9361.h"
 
 #include <errno.h>
-#include <iio.h>
+#include <iio/iio.h>
 #include <stdio.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -146,7 +146,7 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 		int dacrate, txrate, max;
 		char readbuf[100];
 
-		ret = iio_device_attr_read(dev, "tx_path_rates", readbuf, sizeof(readbuf));
+		ret = iio_device_attr_read_raw(dev, "tx_path_rates", readbuf, sizeof(readbuf));
 		if (ret < 0)
 			return ret;
 		ret = sscanf(readbuf, "BBPLL:%*d DAC:%d T2:%*d T1:%*d TF:%*d TXSAMP:%d", &dacrate, &txrate);
