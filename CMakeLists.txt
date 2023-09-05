@@ -86,7 +86,7 @@ execute_process(COMMAND dpkg-architecture -qDEB_HOST_MULTIARCH
 
 # Find libiio library with multiarch path hint
 find_library(LIBIIO_LIBRARIES iio)
-find_path(LIBIIO_INCLUDEDIR iio.h)
+find_path(LIBIIO_INCLUDEDIR iio/iio.h)
 
 set(LIBAD9361_HEADERS ad9361.h)
 

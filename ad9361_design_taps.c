@@ -15,7 +15,7 @@
 #include "ad9361.h"
 #include "filterdesigner/internal_design_filter_cg.h"
 #include <errno.h>
-#include <iio.h>
+#include <iio/iio.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -260,7 +260,7 @@ int apply_custom_filter(struct iio_device *dev, unsigned dec_tx,
 
         int dacrate, txrate, max;
         char readbuf[100];
-        ret = iio_device_attr_read(dev, "tx_path_rates", readbuf, sizeof(readbuf));
+        ret = iio_device_attr_read_raw(dev, "tx_path_rates", readbuf, sizeof(readbuf));
         if (ret < 0)
             return ret;
         ret = sscanf(readbuf, "BBPLL:%*d DAC:%d T2:%*d T1:%*d TF:%*d TXSAMP:%d",
