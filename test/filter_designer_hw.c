@@ -10,7 +10,7 @@
 #ifdef __APPLE__
 #include <iio/iio.h>
 #else
-#include <iio.h>
+#include <iio/iio.h>
 #endif
 
 int main(void)

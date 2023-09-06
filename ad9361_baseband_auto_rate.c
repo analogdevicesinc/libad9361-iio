@@ -15,7 +15,7 @@
 #include "ad9361.h"
 
 #include <errno.h>
-#include <iio.h>
+#include <iio/iio.h>
 #include <stdio.h>
 #ifdef _WIN32
 #include <windows.h>

@@ -78,7 +78,7 @@ endif()
 add_definitions(-D_POSIX_C_SOURCE=200809L -D__XSI_VISIBLE=500 -DLIBAD9361_EXPORTS=1)
 
 find_library(LIBIIO_LIBRARIES iio)
-find_path(LIBIIO_INCLUDEDIR iio.h)
+find_path(LIBIIO_INCLUDEDIR iio/iio.h)
 
 set(LIBAD9361_HEADERS ad9361.h)
 

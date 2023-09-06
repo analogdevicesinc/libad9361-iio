@@ -3,11 +3,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
-#ifdef __APPLE__
 #include <iio/iio.h>
-#else
-#include <iio.h>
-#endif
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
