@@ -48,7 +48,7 @@ jobs:
       pipeline: $(libiioPipelineId)
       artifact: '$(artifactName)'
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: 'refs/heads/main'
       path: '$(Agent.BuildDirectory)/s/build/'
   - script: |
       set -e
@@ -143,7 +143,7 @@ jobs:
       pipeline: $(libiioPipelineId)
       artifact: '$(artifactName)'
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: 'refs/heads/main'
       path: '$(Agent.BuildDirectory)/s/build/'
   - script: |
       set -e 
@@ -194,7 +194,7 @@ jobs:
       pipeline: $(libiioPipelineId)
       artifact: '$(artifactName)'
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: 'refs/heads/main'
       path: '$(Agent.BuildDirectory)/s/build/'
   - script: ./CI/travis/before_install_darwin
     displayName: "Install Dependencies"
@@ -240,7 +240,7 @@ jobs:
       pipeline: $(libiioPipelineId)
       artifact: '$(artifactName)'
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: 'refs/heads/main'
       path: '$(Agent.BuildDirectory)/s/build/'
   - task: PowerShell@2
     inputs:
