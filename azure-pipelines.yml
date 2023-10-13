@@ -1,5 +1,6 @@
 variables:
   libiioPipelineId: 9
+  downlaodBranch: 'refs/heads/libiio-v0'
 
 trigger:
   branches:
@@ -7,6 +8,7 @@ trigger:
     - main
     - master
     - staging/*
+    - libad9361-iio-v0
     - 20*
   tags:
     include:
@@ -17,6 +19,7 @@ pr:
     include:
     - main
     - master
+    - libad9361-iio-v0
     - 20*
 
 jobs:
@@ -48,7 +51,7 @@ jobs:
       pipeline: $(libiioPipelineId)
       artifact: '$(artifactName)'
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: $(downlaodBranch)
       path: '$(Agent.BuildDirectory)/s/build/'
   - script: |
       set -e
@@ -143,7 +146,7 @@ jobs:
       pipeline: $(libiioPipelineId)
       artifact: '$(artifactName)'
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: $(downlaodBranch)
       path: '$(Agent.BuildDirectory)/s/build/'
   - script: |
       set -e 
@@ -194,7 +197,7 @@ jobs:
       pipeline: $(libiioPipelineId)
       artifact: '$(artifactName)'
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: $(downlaodBranch)
       path: '$(Agent.BuildDirectory)/s/build/'
   - script: ./CI/travis/before_install_darwin
     displayName: "Install Dependencies"
@@ -240,7 +243,7 @@ jobs:
       pipeline: $(libiioPipelineId)
       artifact: '$(artifactName)'
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: $(downlaodBranch)
       path: '$(Agent.BuildDirectory)/s/build/'
   - task: PowerShell@2
     inputs:
