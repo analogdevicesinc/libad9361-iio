@@ -1,6 +1,15 @@
 variables:
   libiioPipelineId: 9
 
+  ${{ if eq(variables['Build.SourceBranchName'], 'libad9361-iio-v0') }}:
+    downloadBranch: 'refs/heads/libiio-v0'
+  ${{ elseif eq(variables['Build.SourceBranchName'], 'next_stable') }}:
+    downloadBranch: 'refs/heads/next_stable'
+  ${{ elseif eq(variables['Build.Reason'], 'PullRequest') }}:
+    downloadBranch: $[ format('refs/heads/{0}',replace(replace(variables['System.PullRequest.TargetBranch'], 'libad9361-iio-v0', 'libiio-v0'), 'master', 'main')) ]
+  ${{ else }}:
+    downloadBranch: 'refs/heads/main'
+
 trigger:
   branches:
     include:
@@ -52,7 +61,7 @@ jobs:
       pipeline: $(libiioPipelineId)
       artifact: '$(artifactName)'
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: $(downloadBranch)
       path: '$(Agent.BuildDirectory)/s/build/'
   - script: |
       set -e
@@ -147,7 +156,7 @@ jobs:
       pipeline: $(libiioPipelineId)
       artifact: '$(artifactName)'
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: $(downloadBranch)
       path: '$(Agent.BuildDirectory)/s/build/'
   - script: |
       set -e 
@@ -198,7 +207,7 @@ jobs:
       pipeline: $(libiioPipelineId)
       artifact: '$(artifactName)'
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: $(downloadBranch)
       path: '$(Agent.BuildDirectory)/s/build/'
   - script: ./CI/travis/before_install_darwin
     displayName: "Install Dependencies"
@@ -244,7 +253,7 @@ jobs:
       pipeline: $(libiioPipelineId)
       artifact: '$(artifactName)'
       runVersion: 'latestFromBranch'
-      runBranch: 'refs/heads/master'
+      runBranch: $(downloadBranch)
       path: '$(Agent.BuildDirectory)/s/build/'
   - task: PowerShell@2
     inputs:
