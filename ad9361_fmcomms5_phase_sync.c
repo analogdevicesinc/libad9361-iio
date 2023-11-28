@@ -103,6 +103,7 @@ double scale_phase_0_360(double val)
 
 void dds_tx_phase_rotation(struct iio_device *dev, double val)
 {
+    const struct iio_attr *attr;
     long long i, q;
     int d, j;
 
@@ -115,15 +116,19 @@ void dds_tx_phase_rotation(struct iio_device *dev, double val)
     q = scale_phase_0_360(val) * 1000;
 
     for (j = 0; j < 8; j++) {
+        attr = iio_channel_find_attr(dds_out[d][j], "phase");
+        if (!attr)
+            continue;
+
         switch (j) {
         case 0:
         case 1:
         case 4:
         case 5:
-            iio_channel_attr_write_longlong(dds_out[d][j], "phase", i);
+            iio_attr_write_longlong(attr, i);
             break;
         default:
-            iio_channel_attr_write_longlong(dds_out[d][j], "phase", q);
+            iio_attr_write_longlong(attr, q);
         }
     }
 }
@@ -164,6 +169,8 @@ void near_end_loopback_ctrl(unsigned channel, bool enable)
 
 void configure_ports(unsigned val)
 {
+    const struct iio_attr *attr;
+    struct iio_channel *chan;
     unsigned lp_slave, lp_master, sw;
     char *rx_port, *tx_port;
 
@@ -220,24 +227,35 @@ void configure_ports(unsigned val)
 
     // Configure ADG918 switches
 #if !EXTERNAL_REFERENCE_TONE
-    iio_device_debug_attr_write_longlong(dev_phy, "calibration_switch_control",
-                                         sw);
+    attr = iio_device_find_debug_attr(dev_phy, "calibration_switch_control");
+    if (attr)
+        iio_attr_write_longlong(attr, sw);
 #endif
     // Map ports to switch orientation
-    iio_channel_attr_write(iio_device_find_channel(dev_phy, "voltage0", false),
-                           "rf_port_select", rx_port);
-    iio_channel_attr_write(iio_device_find_channel(dev_phy, "voltage0", true),
-                           "rf_port_select", tx_port);
-    iio_channel_attr_write(
-        iio_device_find_channel(dev_phy_slave, "voltage0", false),
-        "rf_port_select", rx_port);
-    iio_channel_attr_write(
-        iio_device_find_channel(dev_phy_slave, "voltage0", true),
-        "rf_port_select", tx_port);
+    chan = iio_device_find_channel(dev_phy, "voltage0", false);
+    attr = iio_channel_find_attr(chan, "rf_port_select");
+    if (attr)
+        iio_attr_write_string(attr, rx_port);
+
+    chan = iio_device_find_channel(dev_phy, "voltage0", true);
+    attr = iio_channel_find_attr(chan, "rf_port_select");
+    if (attr)
+        iio_attr_write_string(attr, tx_port);
+
+    chan = iio_device_find_channel(dev_phy_slave, "voltage0", false);
+    attr = iio_channel_find_attr(chan, "rf_port_select");
+    if (attr)
+        iio_attr_write_string(attr, rx_port);
+
+    chan = iio_device_find_channel(dev_phy_slave, "voltage0", true);
+    attr = iio_channel_find_attr(chan, "rf_port_select");
+    if (attr)
+        iio_attr_write_string(attr, tx_port);
 }
 
 int trx_phase_rotation(struct iio_device *dev, double val)
 {
+    const struct iio_attr *attr;
     struct iio_channel *out0, *out1;
     double phase, vcos, vsin;
     unsigned offset;
@@ -271,13 +289,32 @@ int trx_phase_rotation(struct iio_device *dev, double val)
             return -ENODEV;
 
         if (out1 && out0) {
-            ret = iio_channel_attr_write_double(out0, "calibscale", (double)vcos);
+            attr = iio_channel_find_attr(out0, "calibscale");
+            if (!attr)
+                return -ENOENT;
+
+            ret = iio_attr_write_double(attr, (double)vcos);
             CHECK(ret);
-            ret = iio_channel_attr_write_double(out0, "calibphase", (double)(-1.0 * vsin));
+
+            attr = iio_channel_find_attr(out0, "calibphase");
+            if (!attr)
+                return -ENOENT;
+
+            ret = iio_attr_write_double(attr, (double)(-1.0 * vsin));
             CHECK(ret);
-            ret = iio_channel_attr_write_double(out1, "calibscale", (double)vcos);
+
+            attr = iio_channel_find_attr(out1, "calibscale");
+            if (!attr)
+                return -ENOENT;
+
+            ret = iio_attr_write_double(attr, (double)vcos);
             CHECK(ret);
-            ret = iio_channel_attr_write_double(out1, "calibphase", (double)vsin);
+
+            attr = iio_channel_find_attr(out1, "calibphase");
+            if (!attr)
+                return -ENOENT;
+
+            ret = iio_attr_write_double(attr, (double)vsin);
             CHECK(ret);
         }
     }
@@ -415,15 +452,28 @@ int calibrate_chain(struct iio_device *dev, double scale, double *phase)
 
 int quad_tracking(bool enable)
 {
+    const struct iio_attr *attr;
     struct iio_channel *chn =
         iio_device_find_channel(dev_phy, "voltage0", enable);
     if (chn == NULL)
         return -ENODEV;
-    iio_channel_attr_write(chn, "quadrature_tracking_en", "0");
+
+    attr = iio_channel_find_attr(chn, "quadrature_tracking_en");
+    if (!attr)
+        return -ENOENT;
+
+    iio_attr_write_string(attr, "0");
+
     chn = iio_device_find_channel(dev_phy_slave, "voltage0", enable);
     if (chn == NULL)
         return -ENODEV;
-    iio_channel_attr_write(chn, "quadrature_tracking_en", "0");
+
+    attr = iio_channel_find_attr(chn, "quadrature_tracking_en");
+    if (!attr)
+        return -ENOENT;
+
+    iio_attr_write_string(attr, "0");
+
     return 0;
 }
 
@@ -432,6 +482,7 @@ int configure_transceiver(struct iio_device *dev, long long bw_hz,
 {
     int ret = 0;
     // Set up channels
+    const struct iio_attr *attr;
     struct iio_channel *chnRX1;
     struct iio_channel *chnTX1;
     struct iio_channel *chnRX2;
@@ -441,10 +492,21 @@ int configure_transceiver(struct iio_device *dev, long long bw_hz,
     chnTX1 = iio_device_find_channel(dev, "altvoltage1", true);
     if (!(chnRX1 && chnTX1))
         return -ENODEV;
-    ret = iio_channel_attr_write_longlong(chnRX1, "frequency", lo_hz);
+
+    attr = iio_channel_find_attr(chnRX1, "frequency");
+    if (!attr)
+        return -ENOENT;
+
+    ret = iio_attr_write_longlong(attr, lo_hz);
     CHECK(ret);
-    ret = iio_channel_attr_write_longlong(chnTX1, "frequency", lo_hz);
+
+    attr = iio_channel_find_attr(chnTX1, "frequency");
+    if (!attr)
+        return -ENOENT;
+
+    ret = iio_attr_write_longlong(attr, lo_hz);
     CHECK(ret);
+
     // Set up gains to know good values
     chnRX1 = iio_device_find_channel(dev, "voltage0", false);
     chnTX1 = iio_device_find_channel(dev, "voltage0", true);
@@ -452,18 +514,47 @@ int configure_transceiver(struct iio_device *dev, long long bw_hz,
     chnTX2 = iio_device_find_channel(dev, "voltage1", true);
     if (!(chnRX1 && chnTX1 && chnRX2 && chnTX2))
         return -ENODEV;
-    ret = iio_channel_attr_write(chnRX1, "gain_control_mode", "manual");
-    CHECK(ret);
-    ret = iio_channel_attr_write(chnRX2, "gain_control_mode", "manual");
-    CHECK(ret);
-    ret = iio_channel_attr_write_double(chnRX1, "hardwaregain", 32.0);
+
+    attr = iio_channel_find_attr(chnRX1, "gain_control_mode");
+    if (!attr)
+        return -ENOENT;
+
+    ret = iio_attr_write_string(attr, "manual");
     CHECK(ret);
 
-    ret = iio_channel_attr_write_double(chnRX2, "hardwaregain", 32.0);
+    attr = iio_channel_find_attr(chnRX2, "gain_control_mode");
+    if (!attr)
+        return -ENOENT;
+
+    ret = iio_attr_write_string(attr, "manual");
     CHECK(ret);
-    ret = iio_channel_attr_write_double(chnTX1, "hardwaregain", -20);
+
+    attr = iio_channel_find_attr(chnRX1, "hardwaregain");
+    if (!attr)
+        return -ENOENT;
+
+    ret = iio_attr_write_double(attr, 32.0);
     CHECK(ret);
-    ret = iio_channel_attr_write_double(chnTX2, "hardwaregain", -20);
+
+    attr = iio_channel_find_attr(chnRX2, "hardwaregain");
+    if (!attr)
+        return -ENOENT;
+
+    ret = iio_attr_write_double(attr, 32.0);
+    CHECK(ret);
+
+    attr = iio_channel_find_attr(chnTX1, "hardwaregain");
+    if (!attr)
+        return -ENOENT;
+
+    ret = iio_attr_write_double(attr, -20);
+    CHECK(ret);
+
+    attr = iio_channel_find_attr(chnTX2, "hardwaregain");
+    if (!attr)
+        return -ENOENT;
+
+    ret = iio_attr_write_double(attr, -20);
     CHECK(ret);
 
     return 0;
@@ -471,13 +562,23 @@ int configure_transceiver(struct iio_device *dev, long long bw_hz,
 
 int configure_dds(double fs, double scale)
 {
+    const struct iio_attr *attr;
     long long freq = (long long)fs * 0.01;
     int i, j, ret = 0;
 
     for (i = 0; i < 2; i++) {
         for (j = 0; j < 8; j++) {
-            ret |= iio_channel_attr_write_longlong(dds_out[i][j], "frequency", freq);
-            ret |= iio_channel_attr_write_double(dds_out[i][j], "scale", scale);
+            attr = iio_channel_find_attr(dds_out[i][j], "frequency");
+            if (!attr)
+                continue;
+
+            ret |= iio_attr_write_longlong(attr, freq);
+
+            attr = iio_channel_find_attr(dds_out[i][j], "scale");
+            if (!attr)
+                continue;
+
+            ret |= iio_attr_write_double(attr, scale);
         }
 
         dds_tx_phase_rotation(i ? dev_tx_slave : dev_tx, 0.0);
@@ -598,6 +699,7 @@ int phase_sync(struct iio_context *ctx, long long sample_rate, long long lo)
 /* Synchronize all transmit and receive channels for FMComms5*/
 int ad9361_fmcomms5_phase_sync(struct iio_context *ctx, long long lo)
 {
+    const struct iio_attr *attr;
     struct iio_channel *chan;
     struct iio_device *dev;
     long long sample_rate;
@@ -607,10 +709,16 @@ int ad9361_fmcomms5_phase_sync(struct iio_context *ctx, long long lo)
     dev = iio_context_find_device(ctx, DEV_PHY_NAME);
     if (dev == NULL)
         return -ENODEV;
+
     chan = iio_device_find_channel(dev, "voltage0", true);
     if (chan == NULL)
         return -ENODEV;
-    ret = iio_channel_attr_read_longlong(chan, "sampling_frequency", &sample_rate);
+
+    attr = iio_channel_find_attr(chan, "sampling_frequency");
+    if (!attr)
+        return -ENOENT;
+
+    ret = iio_attr_read_longlong(attr, &sample_rate);
     CHECK(ret);
 
     ret = phase_sync(ctx, sample_rate, lo);
