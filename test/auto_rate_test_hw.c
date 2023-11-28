@@ -14,6 +14,7 @@
 
 int run_test(unsigned long rate, struct iio_device *dev)
 {
+    const struct iio_attr *attr;
     struct iio_channel *chan;
     long long current_rate;
     int ret;
@@ -25,13 +26,20 @@ int run_test(unsigned long rate, struct iio_device *dev)
         printf("ad9361_set_bb_rate Failed: %d\n",ret);
         return ret;
     }
+
     // Checks
     chan = iio_device_find_channel(dev, "voltage0", true);
     if (chan == NULL)
         return -ENODEV;
-    ret = iio_channel_attr_read_longlong(chan, "sampling_frequency", &current_rate);
+
+    attr = iio_channel_find_attr(chan, "sampling_frequency");
+    if (!attr)
+        return -ENOENT;
+
+    ret = iio_attr_read_longlong(attr, &current_rate);
     if (ret < 0)
         return ret;
+
     if (abs(current_rate != (long long) rate)> RATE_TOLERANCE_HZ)
         return -1;
 
