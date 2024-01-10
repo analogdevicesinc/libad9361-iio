@@ -1,12 +1,13 @@
 variables:
   libiioPipelineId: 9
+  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
 
   ${{ if eq(variables['Build.SourceBranchName'], 'libad9361-iio-v0') }}:
     downloadBranch: 'refs/heads/libiio-v0'
   ${{ elseif eq(variables['Build.SourceBranchName'], 'next_stable') }}:
     downloadBranch: 'refs/heads/next_stable'
   ${{ elseif eq(variables['Build.Reason'], 'PullRequest') }}:
-    downloadBranch: $[ format('refs/heads/{0}',replace(replace(variables['System.PullRequest.TargetBranch'], 'libad9361-iio-v0', 'libiio-v0'), 'master', 'main')) ]
+    downloadBranch: $[ format('refs/heads/{0}',replace(variables['System.PullRequest.TargetBranch'], 'libad9361-iio-v0', 'libiio-v0')) ]
   ${{ else }}:
     downloadBranch: 'refs/heads/main'
 
@@ -14,7 +15,6 @@ trigger:
   branches:
     include:
     - main
-    - master
     - next_stable
     - libad9361-iio-v0
     - staging/*
@@ -27,7 +27,6 @@ pr:
   branches:
     include:
     - main
-    - master
     - next_stable
     - libad9361-iio-v0
     - 20*
@@ -90,7 +89,7 @@ jobs:
       artifactFeed: libad9361-iio
       pythonUploadServiceConnection: PyPi
   - task: TwineAuthenticate@1
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+    condition: and(succeeded(), variables.isMain, eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
     displayName: Twine Authenticate
     inputs:
       artifactFeed: test-libad9361-iio
@@ -110,12 +109,12 @@ jobs:
       ls -al
       cd dist
       ls -al
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+    condition: and(succeeded(), variables.isMain, eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
     displayName: "Update to dev version"
   - script: |
       cd /home/vsts/work/1/s/build/bindings/python
       sudo python -m twine upload --repository-url https://test.pypi.org/legacy/ -u $(USERNAME) -p $(PASSWORD) --skip-existing --config-file $(PYPIRC_PATH) dist/*.whl
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+    condition: and(succeeded(), variables.isMain, eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
     displayName: "Deploy python test package"
 
 - job: ARMBuilds
