@@ -15,7 +15,7 @@
 #include "ad9361.h"
 #include "filterdesigner/internal_design_filter_cg.h"
 #include <errno.h>
-#include <iio.h>
+#include <iio/iio.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>

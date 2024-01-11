@@ -15,7 +15,7 @@
 #include "ad9361.h"
 
 #include <errno.h>
-#include <iio.h>
+#include <iio/iio.h>
 #include <stdio.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -74,6 +74,7 @@ static struct iio_channel *dds_out[2][8];
 static struct iio_buffer *rxbuf;
 static struct iio_channel *rxa_chan_real, *rxa_chan_imag;
 static struct iio_channel *rxb_chan_real, *rxb_chan_imag;
+static struct iio_channels_mask *rxmask = NULL;
 
 static void ad9361_sleep_ms(void)
 {
@@ -289,13 +290,20 @@ int streaming_interfaces(bool enable)
         rxa_chan_imag = iio_device_find_channel(dev_rx, "voltage1", false);
         rxb_chan_real = iio_device_find_channel(dev_rx, "voltage4", false);
         rxb_chan_imag = iio_device_find_channel(dev_rx, "voltage5", false);
+
+        rxmask = iio_create_channels_mask(iio_device_get_channels_count(dev_rx));
+        if (!rxmask) {
+		fprintf(stderr, "Unable to alloc channels mask\n");
+		shutdown();
+	    }
+
         if (!(rxa_chan_real && rxa_chan_imag && rxb_chan_real && rxb_chan_imag))
             streaming_interfaces(false);
 
-        iio_channel_enable(rxa_chan_real);
-        iio_channel_enable(rxa_chan_imag);
-        iio_channel_enable(rxb_chan_real);
-        iio_channel_enable(rxb_chan_imag);
+        iio_channel_enable(rxa_chan_real, rxmask);
+        iio_channel_enable(rxa_chan_imag, rxmask);
+        iio_channel_enable(rxb_chan_real, rxmask);
+        iio_channel_enable(rxb_chan_imag, rxmask);
         rxbuf = iio_device_create_buffer(dev_rx, SAMPLES, false);
         if (!rxbuf)
             streaming_interfaces(false);
@@ -304,16 +312,16 @@ int streaming_interfaces(bool enable)
             iio_buffer_destroy(rxbuf);
         }
         if (rxa_chan_real) {
-            iio_channel_disable(rxa_chan_real);
+            iio_channel_disable(rxa_chan_real, rxmask);
         }
         if (rxa_chan_imag) {
-            iio_channel_disable(rxa_chan_imag);
+            iio_channel_disable(rxa_chan_imag, rxmask);
         }
         if (rxb_chan_real) {
-            iio_channel_disable(rxb_chan_real);
+            iio_channel_disable(rxb_chan_real, rxmask);
         }
         if (rxb_chan_imag) {
-            iio_channel_disable(rxb_chan_imag);
+            iio_channel_disable(rxb_chan_imag, rxmask);
         }
         return -1;
     }
