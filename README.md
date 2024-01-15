@@ -3,7 +3,11 @@
 This is a simple library used for userspace,
  - which manages multi-chip sync (on platforms (FMCOMMS5) where multiple AD9361 devices are use)
  - can create AD9361 specific FIR filters on the fly,
- 
+
+**Dependencies**
+
+ - [libiio IIO interface library (Version less than v1.0)](https://github.com/analogdevicesinc/libiio)
+
 **Docs**
 
 Doxygen-based documentation is available at: http://analogdevicesinc.github.io/libad9361-iio/
