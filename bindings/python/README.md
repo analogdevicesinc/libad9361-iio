@@ -11,7 +11,7 @@ If you have a question about libad9361-iio or the AD9361 transceiver please ask 
 
 ## Requirements
 To use these bindings naturally you need the core library they depend upon, libad9361-iio. This is not packaged with the pypi release but there are a number of options:
-  - If you want to just use libad9361-iio, we suggest using the [latest release](https://github.com/analogdevicesinc/libad9361-iio/releases/latest).
+  - If you want to just use libad9361-iio, we suggest using the [latest v0.XX release](https://github.com/analogdevicesinc/libad9361-iio/releases/latest) (v1.XX is not supported yet).
   - If you think you have found a bug in the release, or need a feature which isn't in the release, try the latest **untested** binaries from the master branch and check out the [documentation](https://codedocs.xyz/analogdevicesinc/libad9361-iio/) based on the master branch. We provide builds for a few operating systems. If you need something else, we can most likely add that -- just ask.
 
 ### Installing the bindings

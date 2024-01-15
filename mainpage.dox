@@ -18,6 +18,8 @@ This is a simple library used for userspace management control and configuration
  - which manages multi-chip sync (on platforms (FMCOMMS5) where multiple AD9361 devices are use)
  - can create AD9361 specific FIR filters on the fly
 
+The library requires:
+  - libiio version 0.X (>= 1.0.0 is not supported yet): http://analogdevicesinc.github.io/libiio/
 
 @section ad9361_hardware AD9361 Transceiver Internals
 
