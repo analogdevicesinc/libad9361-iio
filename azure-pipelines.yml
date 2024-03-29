@@ -5,6 +5,8 @@ variables:
     downloadBranch: 'refs/heads/libiio-v0'
   ${{ elseif eq(variables['Build.SourceBranchName'], 'next_stable') }}:
     downloadBranch: 'refs/heads/next_stable'
+  ${{ elseif startsWith(variables['Build.SourceBranchName'], '20') }}:
+    downloadBranch: $(Build.SourceBranch)
   ${{ elseif eq(variables['Build.Reason'], 'PullRequest') }}:
     downloadBranch: $[ format('refs/heads/{0}',replace(replace(variables['System.PullRequest.TargetBranch'], 'libad9361-iio-v0', 'libiio-v0'), 'master', 'main')) ]
   ${{ else }}:
