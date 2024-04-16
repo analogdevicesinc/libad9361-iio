@@ -33,22 +33,64 @@ pr:
 
 jobs:
 - job: LinuxBuilds
+  pool:
+      vmImage: 'ubuntu-latest'
   strategy:
     matrix:
+      ubuntu_18_04_x86_64:
+        image: 'tfcollins/libiio_ubuntu_18_04-ci:latest'
+        artifactName: 'Linux-Ubuntu-18.04'
+        build_script: ci-linux.sh
+        OS_TYPE: default
+        PACKAGE_TO_INSTALL: '/ci/build/*.deb'
       ubuntu_20_04_x86_64:
         image: 'tfcollins/libiio_ubuntu_20_04-ci:latest'
         artifactName: 'Linux-Ubuntu-20.04'
-        build_script: ci-debian.sh
+        build_script: ci-linux.sh
+        OS_TYPE: default
+        PACKAGE_TO_INSTALL: '/ci/build/*.deb'
       ubuntu_22_04_x86_64:
         image: 'tfcollins/libiio_ubuntu_22_04-ci:latest'
         artifactName: 'Linux-Ubuntu-22.04'
-        build_script: ci-debian.sh
+        build_script: ci-linux.sh
+        OS_TYPE: default
+        PACKAGE_TO_INSTALL: '/ci/build/*.deb'
       debian_bullseye:
         image: 'tfcollins/libiio_debian_bullseye-ci:latest'
         artifactName: 'Linux-Debian-11'
-        build_script: ci-debian.sh
-  pool:
-    vmImage: 'ubuntu-latest'
+        build_script: ci-linux.sh
+        OS_TYPE: default
+        PACKAGE_TO_INSTALL: '/ci/build/*.deb'
+      debian_bookworm:
+        image: 'tfcollins/libiio_debian_bookworm-ci:latest'
+        artifactName: 'Linux-Debian-12'
+        build_script: ci-linux.sh
+        OS_TYPE: default
+        PACKAGE_TO_INSTALL: '/ci/build/*.deb'
+      centos_7:
+        image: 'tfcollins/libiio_centos_7-ci:latest'
+        artifactName: 'Linux-CentOS-7'
+        build_script: ci-linux.sh
+        OS_TYPE: centos
+        PACKAGE_TO_INSTALL: '/ci/build/*.rpm'
+      fedora28:
+        image: 'tfcollins/libiio_fedora_28-ci:latest'
+        artifactName: 'Linux-Fedora-28'
+        build_script: ci-linux.sh
+        OS_TYPE: centos
+        PACKAGE_TO_INSTALL: '/ci/build/*.rpm'
+      fedora34:
+        image: 'tfcollins/libiio_fedora_34-ci:latest'
+        artifactName: 'Linux-Fedora-34'
+        build_script: ci-linux.sh
+        OS_TYPE: centos
+        PACKAGE_TO_INSTALL: '/ci/build/*.rpm'
+      opensuse_15_4:
+        image: 'tfcollins/libiio_opensuse_15_4-ci:latest'
+        artifactName: 'Linux-openSUSE-15.4'
+        build_script: ci-linux.sh
+        OS_TYPE: opensuse
+        PACKAGE_TO_INSTALL: '/ci/build/*.rpm'
   steps:
   - checkout: self
     fetchDepth: 1
@@ -64,7 +106,7 @@ jobs:
       path: '$(Agent.BuildDirectory)/s/build/'
   - script: |
       set -e
-      sudo docker run --rm -t --privileged -e ARTIFACTNAME=$(artifactName) -v "$(Agent.BuildDirectory)/s":"/ci" "$(image)" /bin/bash -c "cd /ci/ && chmod +x ./CI/travis/$(build_script) && ./CI/travis/$(build_script)"
+      sudo docker run --rm -t --privileged -e ARTIFACTNAME=$(artifactName) -v "$(Agent.BuildDirectory)/s":"/ci" "$(image)" /bin/bash -c "cd /ci/ && chmod +x ./CI/travis/$(build_script) && ./CI/travis/$(build_script) $(OS_TYPE) $(PACKAGE_TO_INSTALL)"
     displayName: "Build"
   - task: CopyFiles@2
     inputs:
@@ -89,7 +131,7 @@ jobs:
       artifactFeed: libad9361-iio
       pythonUploadServiceConnection: PyPi
   - task: TwineAuthenticate@1
-    condition: and(succeeded(), variables.isMain, eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+    condition: and(succeeded(), eq(variables.isMain, true), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
     displayName: Twine Authenticate
     inputs:
       artifactFeed: test-libad9361-iio
@@ -109,12 +151,12 @@ jobs:
       ls -al
       cd dist
       ls -al
-    condition: and(succeeded(), variables.isMain, eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+    condition: and(succeeded(), eq(variables.isMain, true), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
     displayName: "Update to dev version"
   - script: |
       cd /home/vsts/work/1/s/build/bindings/python
       sudo python -m twine upload --repository-url https://test.pypi.org/legacy/ -u $(USERNAME) -p $(PASSWORD) --skip-existing --config-file $(PYPIRC_PATH) dist/*.whl
-    condition: and(succeeded(), variables.isMain, eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+    condition: and(succeeded(), eq(variables.isMain, true), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
     displayName: "Deploy python test package"
 
 - job: ARMBuilds
