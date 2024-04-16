@@ -185,16 +185,35 @@ jobs:
       artifactName: '$(artifactName)'
 
 - job: macOSBuilds
+  workspace:
+    clean: all
   strategy:
     matrix:
       macOS_11:
-        imageName: 'macOS-11'
+        poolName: 'Azure Pipelines'
+        vmImage: 'macOS-11'
+        agentName: 'Azure Pipelines 4'
         artifactName: 'macOS-11'
       macOS_12:
-        imageName: 'macOS-12'
+        poolName: 'Azure Pipelines'
+        vmImage: 'macOS-12'
+        agentName: 'Azure Pipelines 3'
         artifactName: 'macOS-12'
+      macOS_13_x64:
+        poolName: 'Azure Pipelines'
+        vmImage: 'macOS-13'
+        agentName: 'Azure Pipelines 2'
+        artifactName: 'macOS-13-x64'
+      macOS_13_arm64:
+        poolName: 'Default'
+        vmImage:
+        agentName: 'miniMAC_arm64'
+        artifactName: 'macOS-13-arm64'
   pool:
-    vmImage: $(imageName)
+    name: $(poolName)
+    vmImage: $(vmImage)
+    demands:
+      - agent.name -equals $(agentName)
   variables:
     PACKAGE_TO_INSTALL: 'build/*.pkg'
   steps:
