@@ -45,4 +45,26 @@ ad9361_lib = library(
   install: true,
 )
 
+doxygen = find_program('doxygen', required: false)
+cdata = configuration_data()
+cdata.set('CMAKE_SOURCE_DIR', meson.current_source_dir())
+ver = meson.project_version().split('.')
+cdata.set('LIBAD9361_VERSION_MAJOR', ver[0])
+cdata.set('LIBAD9361_VERSION_MINOR', ver[1])
+doxyfile = configure_file(
+  input: 'Doxyfile.in',
+  output: 'Doxyfile',
+  configuration: cdata,
+  install: false,
+)
+
+custom_target(
+  'libad9361-docs',
+  input: doxyfile,
+  output: 'html',
+  command: [doxygen, doxyfile],
+  install: true,
+  install_dir: get_option('datadir') / 'doc' / 'libad9361',
+)
+
 subdir('test')
