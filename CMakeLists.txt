@@ -10,7 +10,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
 
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.10)
 project(ad9361 C)
 
 set(LIBAD9361_VERSION_MAJOR 0)
@@ -78,7 +78,7 @@ endif()
 add_definitions(-D_POSIX_C_SOURCE=200809L -D__XSI_VISIBLE=500 -DLIBAD9361_EXPORTS=1)
 
 find_library(LIBIIO_LIBRARIES iio)
-find_path(LIBIIO_INCLUDEDIR iio.h)
+find_path(LIBIIO_INCLUDEDIR iio/iio.h)
 
 set(LIBAD9361_HEADERS ad9361.h)
 
