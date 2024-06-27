@@ -182,6 +182,11 @@ jobs:
         arch: aarch64
         build_script: ci-ubuntu.sh
         artifactName: 'Ubuntu-arm64v8'
+      debian_bookworm_arm:
+        image: tfcollins/libiio_debian_bookworm-ci-arm-ppc:latest
+        arch: arm
+        build_script: ci-ubuntu.sh
+        artifactName: 'Debian12-arm'
   steps:
   - checkout: self
     fetchDepth: 1
