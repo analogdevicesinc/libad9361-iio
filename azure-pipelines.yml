@@ -30,340 +30,373 @@ pr:
     - next_stable
     - libad9361-iio-v0
     - 20*
+stages:
+- stage: Builds
+  #############################################
+  # Builds
+  #############################################
+  jobs:
+  - job: LinuxBuilds
+    pool:
+        vmImage: 'ubuntu-latest'
+    strategy:
+      matrix:
+        ubuntu_18_04_x86_64:
+          image: 'tfcollins/libiio_ubuntu_18_04-ci:latest'
+          artifactName: 'Linux-Ubuntu-18.04'
+          build_script: ci-linux.sh
+          OS_TYPE: default
+          PACKAGE_TO_INSTALL: '/ci/build/*.deb'
+        ubuntu_20_04_x86_64:
+          image: 'tfcollins/libiio_ubuntu_20_04-ci:latest'
+          artifactName: 'Linux-Ubuntu-20.04'
+          build_script: ci-linux.sh
+          OS_TYPE: default
+          PACKAGE_TO_INSTALL: '/ci/build/*.deb'
+        ubuntu_22_04_x86_64:
+          image: 'tfcollins/libiio_ubuntu_22_04-ci:latest'
+          artifactName: 'Linux-Ubuntu-22.04'
+          build_script: ci-linux.sh
+          OS_TYPE: default
+          PACKAGE_TO_INSTALL: '/ci/build/*.deb'
+        debian_bullseye:
+          image: 'tfcollins/libiio_debian_bullseye-ci:latest'
+          artifactName: 'Linux-Debian-11'
+          build_script: ci-linux.sh
+          OS_TYPE: default
+          PACKAGE_TO_INSTALL: '/ci/build/*.deb'
+        debian_bookworm:
+          image: 'tfcollins/libiio_debian_bookworm-ci:latest'
+          artifactName: 'Linux-Debian-12'
+          build_script: ci-linux.sh
+          OS_TYPE: default
+          PACKAGE_TO_INSTALL: '/ci/build/*.deb'
+        centos_7:
+          image: 'tfcollins/libiio_centos_7-ci:latest'
+          artifactName: 'Linux-CentOS-7'
+          build_script: ci-linux.sh
+          OS_TYPE: centos
+          PACKAGE_TO_INSTALL: '/ci/build/*.rpm'
+        fedora28:
+          image: 'tfcollins/libiio_fedora_28-ci:latest'
+          artifactName: 'Linux-Fedora-28'
+          build_script: ci-linux.sh
+          OS_TYPE: centos
+          PACKAGE_TO_INSTALL: '/ci/build/*.rpm'
+        fedora34:
+          image: 'tfcollins/libiio_fedora_34-ci:latest'
+          artifactName: 'Linux-Fedora-34'
+          build_script: ci-linux.sh
+          OS_TYPE: centos
+          PACKAGE_TO_INSTALL: '/ci/build/*.rpm'
+        opensuse_15_4:
+          image: 'tfcollins/libiio_opensuse_15_4-ci:latest'
+          artifactName: 'Linux-openSUSE-15.4'
+          build_script: ci-linux.sh
+          OS_TYPE: opensuse
+          PACKAGE_TO_INSTALL: '/ci/build/*.rpm'
+    steps:
+    - checkout: self
+      fetchDepth: 1
+      clean: true
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: 'specific'
+        project: '$(System.TeamProjectId)'
+        pipeline: $(libiioPipelineId)
+        artifact: '$(artifactName)'
+        runVersion: 'latestFromBranch'
+        runBranch: $(downloadBranch)
+        path: '$(Agent.BuildDirectory)/s/build/'
+    - script: |
+        set -e
+        sudo docker run --rm -t --privileged -e ARTIFACTNAME=$(artifactName) -v "$(Agent.BuildDirectory)/s":"/ci" "$(image)" /bin/bash -c "cd /ci/ && chmod +x ./CI/travis/$(build_script) && ./CI/travis/$(build_script) $(OS_TYPE) $(PACKAGE_TO_INSTALL)"
+      displayName: "Build"
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/build/'
+        contents: '$(Agent.BuildDirectory)/s/build/?(*.deb|*.rpm)'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: PublishPipelineArtifact@1
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifactName: '$(artifactName)'
+    - script: |
+        sudo pip install setuptools wheel twine build
+        cd /home/vsts/work/1/s/build/bindings/python
+        sudo python setup.py bdist_wheel
+      condition: eq(variables['artifactName'], 'Linux-Ubuntu-20.04')
+      displayName: "Install wheel and twine"
+    - task: TwineAuthenticate@1
+      condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+      displayName: Twine Authenticate
+      inputs:
+        artifactFeed: libad9361-iio
+        pythonUploadServiceConnection: PyPi
+    - task: TwineAuthenticate@1
+      condition: and(succeeded(), eq(variables.isMain, true), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+      displayName: Twine Authenticate
+      inputs:
+        artifactFeed: test-libad9361-iio
+        pythonUploadServiceConnection: PyPi_Test
+    - script: |
+        cd /home/vsts/work/1/s/build/bindings/python
+        python -m twine upload -u $(USERNAME) -p $(PASSWORD) --config-file $(PYPIRC_PATH) dist/*.whl
+      condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+      displayName: "Deploy python package" 
+    - script: |
+        cd /home/vsts/work/1/s/build/bindings/python
+        sudo rm ./dist/*.whl
+        sudo pip3 install --upgrade requests
+        sudo pip install invoke
+        sudo invoke bumpversion-test
+        sudo python -m build
+        ls -al
+        cd dist
+        ls -al
+      condition: and(succeeded(), eq(variables.isMain, true), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+      displayName: "Update to dev version"
+    - script: |
+        cd /home/vsts/work/1/s/build/bindings/python
+        sudo python -m twine upload --repository-url https://test.pypi.org/legacy/ -u $(USERNAME) -p $(PASSWORD) --skip-existing --config-file $(PYPIRC_PATH) dist/*.whl
+      condition: and(succeeded(), eq(variables.isMain, true), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
+      displayName: "Deploy python test package"
 
-jobs:
-- job: LinuxBuilds
-  pool:
-      vmImage: 'ubuntu-latest'
-  strategy:
-    matrix:
-      ubuntu_18_04_x86_64:
-        image: 'tfcollins/libiio_ubuntu_18_04-ci:latest'
-        artifactName: 'Linux-Ubuntu-18.04'
-        build_script: ci-linux.sh
-        OS_TYPE: default
-        PACKAGE_TO_INSTALL: '/ci/build/*.deb'
-      ubuntu_20_04_x86_64:
-        image: 'tfcollins/libiio_ubuntu_20_04-ci:latest'
-        artifactName: 'Linux-Ubuntu-20.04'
-        build_script: ci-linux.sh
-        OS_TYPE: default
-        PACKAGE_TO_INSTALL: '/ci/build/*.deb'
-      ubuntu_22_04_x86_64:
-        image: 'tfcollins/libiio_ubuntu_22_04-ci:latest'
-        artifactName: 'Linux-Ubuntu-22.04'
-        build_script: ci-linux.sh
-        OS_TYPE: default
-        PACKAGE_TO_INSTALL: '/ci/build/*.deb'
-      debian_bullseye:
-        image: 'tfcollins/libiio_debian_bullseye-ci:latest'
-        artifactName: 'Linux-Debian-11'
-        build_script: ci-linux.sh
-        OS_TYPE: default
-        PACKAGE_TO_INSTALL: '/ci/build/*.deb'
-      debian_bookworm:
-        image: 'tfcollins/libiio_debian_bookworm-ci:latest'
-        artifactName: 'Linux-Debian-12'
-        build_script: ci-linux.sh
-        OS_TYPE: default
-        PACKAGE_TO_INSTALL: '/ci/build/*.deb'
-      centos_7:
-        image: 'tfcollins/libiio_centos_7-ci:latest'
-        artifactName: 'Linux-CentOS-7'
-        build_script: ci-linux.sh
-        OS_TYPE: centos
-        PACKAGE_TO_INSTALL: '/ci/build/*.rpm'
-      fedora28:
-        image: 'tfcollins/libiio_fedora_28-ci:latest'
-        artifactName: 'Linux-Fedora-28'
-        build_script: ci-linux.sh
-        OS_TYPE: centos
-        PACKAGE_TO_INSTALL: '/ci/build/*.rpm'
-      fedora34:
-        image: 'tfcollins/libiio_fedora_34-ci:latest'
-        artifactName: 'Linux-Fedora-34'
-        build_script: ci-linux.sh
-        OS_TYPE: centos
-        PACKAGE_TO_INSTALL: '/ci/build/*.rpm'
-      opensuse_15_4:
-        image: 'tfcollins/libiio_opensuse_15_4-ci:latest'
-        artifactName: 'Linux-openSUSE-15.4'
-        build_script: ci-linux.sh
-        OS_TYPE: opensuse
-        PACKAGE_TO_INSTALL: '/ci/build/*.rpm'
-  steps:
-  - checkout: self
-    fetchDepth: 1
-    clean: true
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      source: 'specific'
-      project: '$(System.TeamProjectId)'
-      pipeline: $(libiioPipelineId)
-      artifact: '$(artifactName)'
-      runVersion: 'latestFromBranch'
-      runBranch: $(downloadBranch)
-      path: '$(Agent.BuildDirectory)/s/build/'
-  - script: |
-      set -e
-      sudo docker run --rm -t --privileged -e ARTIFACTNAME=$(artifactName) -v "$(Agent.BuildDirectory)/s":"/ci" "$(image)" /bin/bash -c "cd /ci/ && chmod +x ./CI/travis/$(build_script) && ./CI/travis/$(build_script) $(OS_TYPE) $(PACKAGE_TO_INSTALL)"
-    displayName: "Build"
-  - task: CopyFiles@2
-    inputs:
-      sourceFolder: '$(Agent.BuildDirectory)/s/build/'
-      contents: '$(Agent.BuildDirectory)/s/build/?(*.deb|*.rpm)'
-      targetFolder: '$(Build.ArtifactStagingDirectory)'
-  - task: PublishPipelineArtifact@1
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-    inputs:
-      targetPath: '$(Build.ArtifactStagingDirectory)'
-      artifactName: '$(artifactName)'
-  - script: |
-      sudo pip install setuptools wheel twine build
-      cd /home/vsts/work/1/s/build/bindings/python
-      sudo python setup.py bdist_wheel
-    condition: eq(variables['artifactName'], 'Linux-Ubuntu-20.04')
-    displayName: "Install wheel and twine"
-  - task: TwineAuthenticate@1
-    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
-    displayName: Twine Authenticate
-    inputs:
-      artifactFeed: libad9361-iio
-      pythonUploadServiceConnection: PyPi
-  - task: TwineAuthenticate@1
-    condition: and(succeeded(), eq(variables.isMain, true), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
-    displayName: Twine Authenticate
-    inputs:
-      artifactFeed: test-libad9361-iio
-      pythonUploadServiceConnection: PyPi_Test
-  - script: |
-      cd /home/vsts/work/1/s/build/bindings/python
-      python -m twine upload -u $(USERNAME) -p $(PASSWORD) --config-file $(PYPIRC_PATH) dist/*.whl
-    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/v'), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
-    displayName: "Deploy python package" 
-  - script: |
-      cd /home/vsts/work/1/s/build/bindings/python
-      sudo rm ./dist/*.whl
-      sudo pip3 install --upgrade requests
-      sudo pip install invoke
-      sudo invoke bumpversion-test
-      sudo python -m build
-      ls -al
-      cd dist
-      ls -al
-    condition: and(succeeded(), eq(variables.isMain, true), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
-    displayName: "Update to dev version"
-  - script: |
-      cd /home/vsts/work/1/s/build/bindings/python
-      sudo python -m twine upload --repository-url https://test.pypi.org/legacy/ -u $(USERNAME) -p $(PASSWORD) --skip-existing --config-file $(PYPIRC_PATH) dist/*.whl
-    condition: and(succeeded(), eq(variables.isMain, true), eq(variables['artifactName'], 'Linux-Ubuntu-20.04'))
-    displayName: "Deploy python test package"
+  - job: ARMBuilds
+    # Host Box
+    pool:
+      vmImage: "ubuntu-latest"
+    # Docker Images
+    strategy:
+      matrix:
+        ubuntu-ppc64le:
+          image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
+          arch: ppc64le
+          build_script: ci-ubuntu.sh
+          artifactName: 'Ubuntu-ppc64le'
+        ubuntu-x390x:
+          image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
+          arch: s390x
+          build_script: ci-ubuntu.sh
+          artifactName: 'Ubuntu-x390x'
+        debian_buster_arm32v7:
+          image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
+          arch: arm
+          build_script: ci-ubuntu.sh
+          artifactName: 'Ubuntu-arm32v7'
+        debian_buster_arm64v8:
+          image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
+          arch: aarch64
+          build_script: ci-ubuntu.sh
+          artifactName: 'Ubuntu-arm64v8'
+    steps:
+    - checkout: self
+      fetchDepth: 1
+      clean: true
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: 'specific'
+        project: '$(System.TeamProjectId)'
+        pipeline: $(libiioPipelineId)
+        artifact: '$(artifactName)'
+        runVersion: 'latestFromBranch'
+        runBranch: $(downloadBranch)
+        path: '$(Agent.BuildDirectory)/s/build/'
+    - script: |
+        set -e 
+        sudo apt-get update
+        sudo apt-get install -y gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
+        sudo apt-get install -y g++-arm-linux-gnueabihf
+        sudo apt-get install -y g++-aarch64-linux-gnu
+        sudo apt-get install -y qemu-system-ppc64
+        sudo apt-get install qemu binfmt-support qemu-user-static
+        sudo docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      displayName: "Setup"
+    - script: |
+        set -e
+        sudo docker run --platform "linux/$(arch)" --rm -t --privileged -e ARTIFACTNAME=$(artifactName) -v "$(Agent.BuildDirectory)/s":"/ci" -v "/usr/bin/qemu-$(arch)-static":"/usr/bin/qemu-$(arch)-static" "$(image)" /bin/bash -c "cd /ci/ && chmod +x ./CI/travis/$(build_script) && ./CI/travis/$(build_script)"
+      displayName: "Build"
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/build/'
+        contents: '$(Agent.BuildDirectory)/s/build/?(*.deb|*.rpm)'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: PublishPipelineArtifact@1
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifactName: '$(artifactName)'
 
-- job: ARMBuilds
-  # Host Box
-  pool:
-    vmImage: "ubuntu-latest"
-  # Docker Images
-  strategy:
-    matrix:
-      ubuntu-ppc64le:
-        image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
-        arch: ppc64le
-        build_script: ci-ubuntu.sh
-        artifactName: 'Ubuntu-ppc64le'
-      ubuntu-x390x:
-        image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
-        arch: s390x
-        build_script: ci-ubuntu.sh
-        artifactName: 'Ubuntu-x390x'
-      debian_buster_arm32v7:
-        image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
-        arch: arm
-        build_script: ci-ubuntu.sh
-        artifactName: 'Ubuntu-arm32v7'
-      debian_buster_arm64v8:
-        image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
-        arch: aarch64
-        build_script: ci-ubuntu.sh
-        artifactName: 'Ubuntu-arm64v8'
-  steps:
-  - checkout: self
-    fetchDepth: 1
-    clean: true
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      source: 'specific'
-      project: '$(System.TeamProjectId)'
-      pipeline: $(libiioPipelineId)
-      artifact: '$(artifactName)'
-      runVersion: 'latestFromBranch'
-      runBranch: $(downloadBranch)
-      path: '$(Agent.BuildDirectory)/s/build/'
-  - script: |
-      set -e 
-      sudo apt-get update
-      sudo apt-get install -y gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
-      sudo apt-get install -y g++-arm-linux-gnueabihf
-      sudo apt-get install -y g++-aarch64-linux-gnu
-      sudo apt-get install -y qemu-system-ppc64
-      sudo apt-get install qemu binfmt-support qemu-user-static
-      sudo docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-    displayName: "Setup"
-  - script: |
-      set -e
-      sudo docker run --platform "linux/$(arch)" --rm -t --privileged -e ARTIFACTNAME=$(artifactName) -v "$(Agent.BuildDirectory)/s":"/ci" -v "/usr/bin/qemu-$(arch)-static":"/usr/bin/qemu-$(arch)-static" "$(image)" /bin/bash -c "cd /ci/ && chmod +x ./CI/travis/$(build_script) && ./CI/travis/$(build_script)"
-    displayName: "Build"
-  - task: CopyFiles@2
-    inputs:
-      sourceFolder: '$(Agent.BuildDirectory)/s/build/'
-      contents: '$(Agent.BuildDirectory)/s/build/?(*.deb|*.rpm)'
-      targetFolder: '$(Build.ArtifactStagingDirectory)'
-  - task: PublishPipelineArtifact@1
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-    inputs:
-      targetPath: '$(Build.ArtifactStagingDirectory)'
-      artifactName: '$(artifactName)'
+  - job: macOSBuilds
+    workspace:
+      clean: all
+    strategy:
+      matrix:
+        macOS_12:
+          poolName: 'Azure Pipelines'
+          vmImage: 'macOS-12'
+          agentName: 'Azure Pipelines 3'
+          artifactName: 'macOS-12'
+        macOS_13_x64:
+          poolName: 'Azure Pipelines'
+          vmImage: 'macOS-13'
+          agentName: 'Azure Pipelines 2'
+          artifactName: 'macOS-13-x64'
+        macOS_13_arm64:
+          poolName: 'Default'
+          vmImage:
+          agentName: 'miniMAC_arm64'
+          artifactName: 'macOS-13-arm64'
+    pool:
+      name: $(poolName)
+      vmImage: $(vmImage)
+      demands:
+        - agent.name -equals $(agentName)
+    variables:
+      PACKAGE_TO_INSTALL: 'build/*.pkg'
+    steps:
+    - checkout: self
+      fetchDepth: 1
+      clean: true
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: 'specific'
+        project: '$(System.TeamProjectId)'
+        pipeline: $(libiioPipelineId)
+        artifact: '$(artifactName)'
+        runVersion: 'latestFromBranch'
+        runBranch: $(downloadBranch)
+        path: '$(Agent.BuildDirectory)/s/build/'
+    - script: ./CI/travis/before_install_darwin
+      displayName: "Install Dependencies"
+    - script: ./CI/travis/make_darwin
+      displayName: "Build"
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/build/'
+        contents: '$(Agent.BuildDirectory)/s/build/?(*.pkg)'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: PublishPipelineArtifact@1
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifactName: '$(artifactName)'
 
-- job: macOSBuilds
-  workspace:
-    clean: all
-  strategy:
-    matrix:
-      macOS_12:
-        poolName: 'Azure Pipelines'
-        vmImage: 'macOS-12'
-        agentName: 'Azure Pipelines 3'
-        artifactName: 'macOS-12'
-      macOS_13_x64:
-        poolName: 'Azure Pipelines'
-        vmImage: 'macOS-13'
-        agentName: 'Azure Pipelines 2'
-        artifactName: 'macOS-13-x64'
-      macOS_13_arm64:
-        poolName: 'Default'
-        vmImage:
-        agentName: 'miniMAC_arm64'
-        artifactName: 'macOS-13-arm64'
-  pool:
-    name: $(poolName)
-    vmImage: $(vmImage)
-    demands:
-      - agent.name -equals $(agentName)
-  variables:
-    PACKAGE_TO_INSTALL: 'build/*.pkg'
-  steps:
-  - checkout: self
-    fetchDepth: 1
-    clean: true
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      source: 'specific'
-      project: '$(System.TeamProjectId)'
-      pipeline: $(libiioPipelineId)
-      artifact: '$(artifactName)'
-      runVersion: 'latestFromBranch'
-      runBranch: $(downloadBranch)
-      path: '$(Agent.BuildDirectory)/s/build/'
-  - script: ./CI/travis/before_install_darwin
-    displayName: "Install Dependencies"
-  - script: ./CI/travis/make_darwin
-    displayName: "Build"
-  - task: CopyFiles@2
-    inputs:
-      sourceFolder: '$(Agent.BuildDirectory)/s/build/'
-      contents: '$(Agent.BuildDirectory)/s/build/?(*.pkg)'
-      targetFolder: '$(Build.ArtifactStagingDirectory)'
-  - task: PublishPipelineArtifact@1
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-    inputs:
-      targetPath: '$(Build.ArtifactStagingDirectory)'
-      artifactName: '$(artifactName)'
-
-- job: WindowsBuilds
-  strategy:
-    matrix:
-      VS2022:
-          imageName: 'windows-2022'
-          COMPILER: 'Visual Studio 17 2022'
+  - job: WindowsBuilds
+    strategy:
+      matrix:
+        VS2022:
+            imageName: 'windows-2022'
+            COMPILER: 'Visual Studio 17 2022'
+            ARCH: 'x64'
+            artifactName: 'Windows-VS-2022-x64'
+        VS2019_Win64:
+          imageName: 'windows-2019'
+          COMPILER: 'Visual Studio 16 2019'
           ARCH: 'x64'
-          artifactName: 'Windows-VS-2022-x64'
-      VS2019_Win64:
-        imageName: 'windows-2019'
-        COMPILER: 'Visual Studio 16 2019'
-        ARCH: 'x64'
-        artifactName: 'Windows-VS-2019-x64'
-  pool:
-    vmImage: $[ variables['imageName'] ]
-  steps:
-  - checkout: self
-    fetchDepth: 1
-    clean: true
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.9'
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      source: 'specific'
-      project: '$(System.TeamProjectId)'
-      pipeline: $(libiioPipelineId)
-      artifact: '$(artifactName)'
-      runVersion: 'latestFromBranch'
-      runBranch: $(downloadBranch)
-      path: '$(Agent.BuildDirectory)/s/build/'
-  - task: PowerShell@2
-    inputs:
-      targetType: 'filePath'
-      filePath: .\CI\build_win.ps1
-    displayName: Build
-  - task: CopyFiles@2
-    displayName: 'Copy libraries'
-    inputs:
-      sourceFolder: '$(Agent.BuildDirectory)/s/build/Release'
-      targetFolder: '$(Build.ArtifactStagingDirectory)'
-  - task: CopyFiles@2
-    displayName: 'Copy ad9361.h header'
-    inputs:
-      sourceFolder: '$(Agent.BuildDirectory)/s/'
-      contents: 'ad9361.h'
-      targetFolder: '$(Build.ArtifactStagingDirectory)'
-  - task: CopyFiles@2
-    displayName: 'Copy .exe files'
-    inputs:
-      sourceFolder: '$(Agent.BuildDirectory)/s/build'
-      contents: '*.exe'
-      targetFolder: '$(Build.ArtifactStagingDirectory)'
-  - task: CopyFiles@2
-    displayName: 'Copy libiio.dll'
-    inputs:
-      sourceFolder: '$(Agent.BuildDirectory)/s/build'
-      contents: 'libiio.dll'
-      targetFolder: '$(Build.ArtifactStagingDirectory)'
-  - task: PowerShell@2
-    displayName: 'Copy dependencies'
-    inputs:
-      targetType: 'filePath'
-      filePath: .\CI\publish_deps.ps1
-  - task: PublishPipelineArtifact@1
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-    inputs:
-      targetPath: '$(Build.ArtifactStagingDirectory)'
-      artifactName: '$(artifactName)'
+          artifactName: 'Windows-VS-2019-x64'
+    pool:
+      vmImage: $[ variables['imageName'] ]
+    steps:
+    - checkout: self
+      fetchDepth: 1
+      clean: true
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.9'
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        source: 'specific'
+        project: '$(System.TeamProjectId)'
+        pipeline: $(libiioPipelineId)
+        artifact: '$(artifactName)'
+        runVersion: 'latestFromBranch'
+        runBranch: $(downloadBranch)
+        path: '$(Agent.BuildDirectory)/s/build/'
+    - task: PowerShell@2
+      inputs:
+        targetType: 'filePath'
+        filePath: .\CI\build_win.ps1
+      displayName: Build
+    - task: CopyFiles@2
+      displayName: 'Copy libraries'
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/build/Release'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: CopyFiles@2
+      displayName: 'Copy ad9361.h header'
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/'
+        contents: 'ad9361.h'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: CopyFiles@2
+      displayName: 'Copy .exe files'
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/build'
+        contents: '*.exe'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: CopyFiles@2
+      displayName: 'Copy libiio.dll'
+      inputs:
+        sourceFolder: '$(Agent.BuildDirectory)/s/build'
+        contents: 'libiio.dll'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: PowerShell@2
+      displayName: 'Copy dependencies'
+      inputs:
+        targetType: 'filePath'
+        filePath: .\CI\publish_deps.ps1
+    - task: PublishPipelineArtifact@1
+      condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifactName: '$(artifactName)'
 
-- job: GenerateSetupExe
-  dependsOn: WindowsBuilds
-  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-  pool:
-    vmImage: 'windows-2019'
-  steps:
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      path: '$(Build.ArtifactStagingDirectory)'
-  - task: PowerShell@2
-    inputs:
-      targetType: 'filePath'
-      filePath: .\CI\generate_exe.ps1
-    displayName: 'Generate libad9361-setup.exe'
-  - task: PublishPipelineArtifact@1
-    inputs:
-      targetPath: '$(Build.ArtifactStagingDirectory)'
-      artifactName: 'Libad9361-Setup-Exe'
+  - job: GenerateSetupExe
+    dependsOn: WindowsBuilds
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    pool:
+      vmImage: 'windows-2019'
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        path: '$(Build.ArtifactStagingDirectory)'
+    - task: PowerShell@2
+      inputs:
+        targetType: 'filePath'
+        filePath: .\CI\generate_exe.ps1
+      displayName: 'Generate libad9361-setup.exe'
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifactName: 'Libad9361-Setup-Exe'
+
+  #############################################
+- stage: ManageArtifacts
+  dependsOn: Builds
+  jobs:
+  #############################################
+  # Deploy
+  #############################################
+  - job: PushToSWDownloads
+    condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'main'), eq(variables['Build.SourceBranchName'], 'libad9361-iio-v0')))
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        path: '$(Build.ArtifactStagingDirectory)'
+    - bash: ./CI/azure/prepare_assets.sh swdownloads $(Build.SourceBranchName)
+      displayName: "Prepare artifacts for SWDownloads"
+    - bash: ls -al $(Build.ArtifactStagingDirectory)
+      displayName: "test artifacts"
+    - task: DownloadSecureFile@1
+      name: key
+      displayName: 'Download rsa key'
+      inputs:
+        secureFile: 'id_rsa'
+    - bash: chmod 600 $(key.secureFilePath) ; scp -2 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o HostKeyAlgorithms=+ssh-dss -i $(key.secureFilePath) -r /home/vsts/work/1/a/* $MAPPED_VAR
+      env:
+        MAPPED_VAR: $(SERVER_ADDRESS)
+      displayName: 'Push artifacts to SW Downloads'
