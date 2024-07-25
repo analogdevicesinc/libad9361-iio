@@ -91,8 +91,13 @@ add_library(ad9361 ad9361_multichip_sync.c
             ad9361_fmcomms5_phase_sync.c
             ${FD_SRC_FILES}
             ${LIBAD9361_HEADERS})
-enable_testing()
-add_subdirectory(test)
+
+option(BUILD_TESTS "Build tests" ON)
+if (BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+endif()
+
 set_target_properties(ad9361 PROPERTIES
 	VERSION ${VERSION}
 	SOVERSION ${LIBAD9361_VERSION_MAJOR}
@@ -214,7 +219,8 @@ endif()
 ########################################################################
 # uninstall target
 ########################################################################
-add_custom_target(uninstall
+set(LIBAD9361_TARGETNAME_UNINSTALL "uninstall" CACHE STRING "Name of 'uninstall' build target")
+add_custom_target(${LIBAD9361_TARGETNAME_UNINSTALL}
     "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
