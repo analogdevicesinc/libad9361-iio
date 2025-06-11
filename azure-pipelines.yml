@@ -69,12 +69,6 @@ jobs:
         build_script: ci-linux.sh
         OS_TYPE: default
         PACKAGE_TO_INSTALL: '/ci/build/*.deb'
-      centos_7:
-        image: 'tfcollins/libiio_centos_7-ci:latest'
-        artifactName: 'Linux-CentOS-7'
-        build_script: ci-linux.sh
-        OS_TYPE: centos
-        PACKAGE_TO_INSTALL: '/ci/build/*.rpm'
       fedora28:
         image: 'tfcollins/libiio_fedora_28-ci:latest'
         artifactName: 'Linux-Fedora-28'
