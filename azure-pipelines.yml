@@ -51,6 +51,12 @@ jobs:
         build_script: ci-linux.sh
         OS_TYPE: default
         PACKAGE_TO_INSTALL: '/ci/build/*.deb'
+      ubuntu_24_04_x86_64:
+        image: 'tfcollins/libiio_ubuntu_24_04-ci:latest'
+        artifactName: 'Linux-Ubuntu-24.04'
+        build_script: ci-linux.sh
+        OS_TYPE: default
+        PACKAGE_TO_INSTALL: '/ci/build/*.deb'
       debian_bullseye:
         image: 'tfcollins/libiio_debian_bullseye-ci:latest'
         artifactName: 'Linux-Debian-11'
