@@ -230,11 +230,16 @@ jobs:
     clean: all
   strategy:
     matrix:
-      macOS_12:
+      macOS_15_x64:
         poolName: 'Azure Pipelines'
-        vmImage: 'macOS-12'
+        vmImage: 'macOS-15'
+        agentName: 'Azure Pipelines 11'
+        artifactName: 'macOS-15-x64'
+      macOS_14_x64:
+        poolName: 'Azure Pipelines'
+        vmImage: 'macOS-14'
         agentName: 'Azure Pipelines 3'
-        artifactName: 'macOS-12'
+        artifactName: 'macOS-14-x64'
       macOS_13_x64:
         poolName: 'Azure Pipelines'
         vmImage: 'macOS-13'
