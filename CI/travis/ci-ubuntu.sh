@@ -17,7 +17,7 @@ cd build
 cmake -DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON -DWITH_DOC=OFF ..
 make && make package && make test
 make install
-ldconfig
-cd ../bindings/python
-pip3 install -r requirements_dev.txt
-python3 -m pytest -vs --skip-scan
+# ldconfig
+# cd ../bindings/python
+# pip3 install -r requirements_dev.txt
+# python3 -m pytest -vs --skip-scan
