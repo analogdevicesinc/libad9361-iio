@@ -15,7 +15,7 @@
 #include "ad9361.h"
 #include "filterdesigner/internal_design_filter_cg.h"
 #include <errno.h>
-#include <iio.h>
+#include <iio/iio.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -210,6 +210,7 @@ int apply_custom_filter(struct iio_device *dev, unsigned dec_tx,
                         unsigned long wnom_tx, unsigned long wnom_rx)
 {
     struct iio_channel *chanTX, *chanRX;
+    const struct iio_attr *attr;
     long long current_rate;
     int ret, i, enable, len = 0;
     char *buf;
@@ -218,7 +219,11 @@ int apply_custom_filter(struct iio_device *dev, unsigned dec_tx,
     if (chanTX == NULL)
         return -ENODEV;
 
-    ret = iio_channel_attr_read_longlong(chanTX, "sampling_frequency", &current_rate);
+    attr = iio_channel_find_attr(chanTX, "sampling_frequency");
+    if (!attr)
+        return -ENOENT;
+
+    ret = iio_attr_read_longlong(attr, &current_rate);
     if (ret < 0)
         return ret;
 
@@ -228,7 +233,7 @@ int apply_custom_filter(struct iio_device *dev, unsigned dec_tx,
 
     if (enable) {
         if (current_rate <= (25000000 / 12))
-            iio_channel_attr_write_longlong(chanTX, "sampling_frequency", 3000000);
+            iio_attr_write_longlong(attr, 3000000);
 
         ret = ad9361_set_trx_fir_enable(dev, false);
         if (ret < 0)
@@ -250,38 +255,56 @@ int apply_custom_filter(struct iio_device *dev, unsigned dec_tx,
 
     len += snprintf(buf + len, FIR_BUF_SIZE - len, "\n");
 
-    ret = iio_device_attr_write_raw(dev, "filter_fir_config", buf, len);
+    attr = iio_device_find_attr(dev, "filter_fir_config");
+    if (!attr)
+        return -ENOENT;
+
+    ret = iio_attr_write_raw(attr, buf, len);
     free (buf);
 
     if (ret < 0)
         return ret;
 
     if (rate <= (25000000 / 12))  {
-
         int dacrate, txrate, max;
         char readbuf[100];
-        ret = iio_device_attr_read(dev, "tx_path_rates", readbuf, sizeof(readbuf));
+
+        attr = iio_device_find_attr(dev, "tx_path_rates");
+        if (!attr)
+            return -ENOENT;
+
+        ret = iio_attr_read_raw(attr, readbuf, sizeof(readbuf));
         if (ret < 0)
             return ret;
+
         ret = sscanf(readbuf, "BBPLL:%*d DAC:%d T2:%*d T1:%*d TF:%*d TXSAMP:%d",
                      &dacrate, &txrate);
         if (ret != 2)
             return -EFAULT;
+
         if (txrate == 0)
             return -EINVAL;
+
+        attr = iio_channel_find_attr(chanTX, "sampling_frequency");
+        if (!attr)
+            return -ENOENT;
+
         max = (dacrate / txrate) * 16;
         if (max < taps)
-            iio_channel_attr_write_longlong(chanTX, "sampling_frequency", 3000000);
-
+            iio_attr_write_longlong(attr, 3000000);
 
         ret = ad9361_set_trx_fir_enable(dev, true);
         if (ret < 0)
             return ret;
-        ret = iio_channel_attr_write_longlong(chanTX, "sampling_frequency", rate);
+        ret = iio_attr_write_longlong(attr, rate);
         if (ret < 0)
             return ret;
     } else {
-        ret = iio_channel_attr_write_longlong(chanTX, "sampling_frequency", rate);
+        attr = iio_channel_find_attr(chanTX, "sampling_frequency");
+        if (!attr)
+            return -ENOENT;
+
+        ret = iio_attr_write_longlong(attr, rate);
         if (ret < 0)
             return ret;
         ret = ad9361_set_trx_fir_enable(dev, true);
@@ -292,10 +315,20 @@ int apply_custom_filter(struct iio_device *dev, unsigned dec_tx,
     chanRX = iio_device_find_channel(dev, "voltage0", false);
     if (chanRX == NULL)
         return -ENODEV;
-    ret = iio_channel_attr_write_longlong(chanTX, "rf_bandwidth", wnom_tx);
+
+    attr = iio_channel_find_attr(chanTX, "rf_bandwidth");
+    if (!attr)
+        return -ENOENT;
+
+    ret = iio_attr_write_longlong(attr, wnom_tx);
     if (ret < 0)
         return ret;
-    ret = iio_channel_attr_write_longlong(chanRX, "rf_bandwidth", wnom_rx);
+
+    attr = iio_channel_find_attr(chanRX, "rf_bandwidth");
+    if (!attr)
+        return -ENOENT;
+
+    ret = iio_attr_write_longlong(attr, wnom_rx);
     if (ret < 0)
         return ret;
 

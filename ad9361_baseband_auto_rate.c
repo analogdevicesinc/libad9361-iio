@@ -15,7 +15,7 @@
 #include "ad9361.h"
 
 #include <errno.h>
-#include <iio.h>
+#include <iio/iio.h>
 #include <stdio.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -53,24 +53,34 @@ static int16_t fir_64_2[] = {
 
 int ad9361_set_trx_fir_enable(struct iio_device *dev, int enable)
 {
-	int ret = iio_device_attr_write_bool(dev,
-					 "in_out_voltage_filter_fir_en", !!enable);
-	if (ret < 0)
-		ret = iio_channel_attr_write_bool(iio_device_find_channel(dev, "out", false),
-					    "voltage_filter_fir_en", !!enable);
+	int ret;
+
+	const struct iio_attr *attr = iio_device_find_attr(dev, "in_out_voltage_filter_fir_en");
+	if (!attr) {
+		attr = iio_channel_find_attr(iio_device_find_channel(dev, "out", false),
+									 "voltage_filter_fir_en");
+		if (!attr)
+			return -ENOENT;
+	}
+
+	ret = iio_attr_write_bool(attr, !!enable);
 	return ret;
 }
 
 int ad9361_get_trx_fir_enable(struct iio_device *dev, int *enable)
 {
+	int ret;
 	bool value;
 
-	int ret = iio_device_attr_read_bool(dev, "in_out_voltage_filter_fir_en", &value);
+	const struct iio_attr *attr = iio_device_find_attr(dev, "in_out_voltage_filter_fir_en");
+	if (!attr) {
+		attr = iio_channel_find_attr(iio_device_find_channel(dev, "out", false),
+									 "voltage_filter_fir_en");
+		if (!attr)
+			return -ENOENT;
+	}
 
-	if (ret < 0)
-		ret = iio_channel_attr_read_bool(iio_device_find_channel(dev, "out", false),
-						 "voltage_filter_fir_en", &value);
-
+	ret = iio_attr_read_bool(attr, &value);
 	if (!ret)
 		*enable	= value;
 
@@ -80,6 +90,7 @@ int ad9361_get_trx_fir_enable(struct iio_device *dev, int *enable)
 int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 {
 	struct iio_channel *chan;
+	const struct iio_attr *attr;
 	long long current_rate;
 	int dec, taps, ret, i, enable, len = 0;
 	int16_t *fir;
@@ -107,7 +118,11 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 	if (chan == NULL)
 		return -ENODEV;
 
-	ret = iio_channel_attr_read_longlong(chan, "sampling_frequency", &current_rate);
+	attr = iio_channel_find_attr(chan, "sampling_frequency");
+	if (!attr)
+		return -ENOENT;
+
+	ret = iio_attr_read_longlong(attr, &current_rate);
 	if (ret < 0)
 		return ret;
 
@@ -117,7 +132,7 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 
 	if (enable) {
 		if (current_rate <= (25000000 / 12))
-			iio_channel_attr_write_longlong(chan, "sampling_frequency", 3000000);
+			iio_attr_write_longlong(attr, 3000000);
 
 		ret = ad9361_set_trx_fir_enable(dev, false);
 		if (ret < 0)
@@ -136,7 +151,11 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 
 	len += snprintf(buf + len, FIR_BUF_SIZE - len, "\n");
 
-	ret = iio_device_attr_write_raw(dev, "filter_fir_config", buf, len);
+	attr = iio_device_find_attr(dev, "filter_fir_config");
+	if (!attr)
+		return -ENOENT;
+
+	ret = iio_attr_write_raw(attr, buf, len);
 	free (buf);
 
 	if (ret < 0)
@@ -146,7 +165,11 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 		int dacrate, txrate, max;
 		char readbuf[100];
 
-		ret = iio_device_attr_read(dev, "tx_path_rates", readbuf, sizeof(readbuf));
+		attr = iio_device_find_attr(dev, "tx_path_rates");
+		if (!attr)
+			return -ENOENT;
+
+		ret = iio_attr_read_raw(attr, readbuf, sizeof(readbuf));
 		if (ret < 0)
 			return ret;
 		ret = sscanf(readbuf, "BBPLL:%*d DAC:%d T2:%*d T1:%*d TF:%*d TXSAMP:%d", &dacrate, &txrate);
@@ -156,18 +179,27 @@ int ad9361_set_bb_rate(struct iio_device *dev, unsigned long rate)
 		if (txrate == 0)
 			return -EINVAL;
 
+		attr = iio_channel_find_attr(chan, "sampling_frequency");
+		if (!attr)
+			return -ENOENT;
+
 		max = (dacrate / txrate) * 16;
 		if (max < taps)
-			iio_channel_attr_write_longlong(chan, "sampling_frequency", 3000000);
+			iio_attr_write_longlong(attr, 3000000);
 
 		ret = ad9361_set_trx_fir_enable(dev, true);
 		if (ret < 0)
 			return ret;
-		ret = iio_channel_attr_write_longlong(chan, "sampling_frequency", rate);
+
+		ret = iio_attr_write_longlong(attr, rate);
 		if (ret < 0)
 			return ret;
 	} else {
-		ret = iio_channel_attr_write_longlong(chan, "sampling_frequency", rate);
+		attr = iio_channel_find_attr(chan, "sampling_frequency");
+		if (!attr)
+			return -ENOENT;
+
+		ret = iio_attr_write_longlong(attr, rate);
 		if (ret < 0)
 			return ret;
 		ret = ad9361_set_trx_fir_enable(dev, true);

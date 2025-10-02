@@ -15,7 +15,7 @@
 #include "ad9361.h"
 
 #include <errno.h>
-#include <iio.h>
+#include <iio/iio.h>
 #include <stdio.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -45,6 +45,7 @@ int ad9361_multichip_sync(struct iio_device *master, struct iio_device **slaves,
 	char ensm_mode[MAX_AD9361_SYNC_DEVS][20];
 	unsigned int i, step;
 	bool mcs_is_debug_attr = !iio_device_find_attr(master, "multichip_sync");
+	const struct iio_attr *attr_pri, *attr_sec;
 
 	if (num_slaves >= MAX_AD9361_SYNC_DEVS || num_slaves < 1)
 		return -EINVAL;
@@ -54,18 +55,26 @@ int ad9361_multichip_sync(struct iio_device *master, struct iio_device **slaves,
 		long long tx_sample_master_freq, tx_sample_slave_freq;
 
 		tx_sample_master = iio_device_find_channel(master, "voltage0", true);
-		iio_channel_attr_read_longlong(tx_sample_master, "sampling_frequency", &tx_sample_master_freq);
+		attr_pri = iio_channel_find_attr(tx_sample_master, "sampling_frequency");
+		if (!attr_pri)
+			return -ENOENT;
+
+		iio_attr_read_longlong(attr_pri, &tx_sample_master_freq);
 
 		for (i = 0; i < num_slaves; i++) {
 			tx_sample_slave = iio_device_find_channel(slaves[i], "voltage0", true);
 			if (tx_sample_slave == NULL)
 				return -ENODEV;
 
-			iio_channel_attr_read_longlong(tx_sample_slave, "sampling_frequency", &tx_sample_slave_freq);
+			attr_sec = iio_channel_find_attr(tx_sample_slave, "sampling_frequency");
+			if (!attr_sec)
+				return -ENOENT;
+
+			iio_attr_read_longlong(attr_sec, &tx_sample_slave_freq);
 
 			if (tx_sample_master_freq != tx_sample_slave_freq) {
 				fprintf(stderr, "tx_sample_master_freq != tx_sample_slave_freq\nUpdating...\n");
-				iio_channel_attr_write_longlong(tx_sample_slave, "sampling_frequency", tx_sample_master_freq);
+				iio_attr_write_longlong(attr_sec, tx_sample_master_freq);
 			}
 		}
 	}
@@ -82,35 +91,62 @@ int ad9361_multichip_sync(struct iio_device *master, struct iio_device **slaves,
 	}
 
 	/* Move the parts int ALERT for MCS */
-	iio_device_attr_read(master, "ensm_mode", ensm_mode[0], sizeof(ensm_mode));
-	iio_device_attr_write(master, "ensm_mode", "alert");
+	attr_pri = iio_device_find_attr(master, "ensm_mode");
+	if (!attr_pri)
+		return -ENOENT;
+
+	iio_attr_read_raw(attr_pri, ensm_mode[0], sizeof(ensm_mode));
+	iio_attr_write_string(attr_pri, "alert");
 
 	for (i = 0; i < num_slaves; i++) {
-		iio_device_attr_read(slaves[i], "ensm_mode", ensm_mode[i + 1], sizeof(ensm_mode));
-		iio_device_attr_write(slaves[i], "ensm_mode", "alert");
+		attr_sec = iio_device_find_attr(slaves[i], "ensm_mode");
+		if (!attr_sec)
+			return -ENOENT;
+
+		iio_attr_read_raw(attr_sec, ensm_mode[i + 1], sizeof(ensm_mode));
+		iio_attr_write_string(attr_sec, "alert");
 	}
+
+	if (mcs_is_debug_attr)
+		attr_pri = iio_device_find_debug_attr(master, "multichip_sync");
+	else
+		attr_pri = iio_device_find_attr(master, "multichip_sync");
+
+	if (!attr_pri)
+		return -ENOENT;
 
 	for (step = 0; step <= 5; step++) {
 		for (i = 0; i < num_slaves; i++) {
 			if (mcs_is_debug_attr)
-				iio_device_debug_attr_write_longlong(slaves[i], "multichip_sync", step);
+				attr_sec = iio_device_find_debug_attr(slaves[i], "multichip_sync");
 			else
-				iio_device_attr_write_longlong(slaves[i], "multichip_sync", step);
+				attr_sec = iio_device_find_attr(slaves[i], "multichip_sync");
+
+			if (!attr_sec)
+				return -ENOENT;
+
+			iio_attr_write_longlong(attr_sec, step);
 		}
 
 		/* The master controls the SYNC GPIO */
-		if (mcs_is_debug_attr)
-			iio_device_debug_attr_write_longlong(master, "multichip_sync", step);
-		else
-			iio_device_attr_write_longlong(master, "multichip_sync", step);
+		iio_attr_write_longlong(attr_pri, step);
 
 		ad9361_sleep_ms();
 	}
 
-	iio_device_attr_write(master, "ensm_mode", ensm_mode[0]);
+	attr_pri = iio_device_find_attr(master, "ensm_mode");
+	if (!attr_pri)
+		return -ENOENT;
 
-	for (i = 0; i < num_slaves; i++)
-		iio_device_attr_write(slaves[i], "ensm_mode", ensm_mode[i + 1]);
+	iio_attr_write_string(attr_pri, ensm_mode[0]);
+
+	for (i = 0; i < num_slaves; i++) {
+		attr_sec = iio_device_find_attr(slaves[i], "ensm_mode");
+		if (!attr_sec)
+			return -ENOENT;
+
+		iio_attr_write_string(attr_sec, ensm_mode[i + 1]);
+	}
 
 	return 0;
 }
