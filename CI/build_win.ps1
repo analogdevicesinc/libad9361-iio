@@ -15,7 +15,7 @@ cp .\libad9361-iio.iss.cmakein .\build
 cd build
 
 cmake -G "$COMPILER" -A "$ARCH" `
-        -DLIBIIO_LIBRARIES:FILEPATH=$pwd\libiio.lib `
+        -DLIBIIO_LIBRARIES:FILEPATH=$pwd\libiio1.lib `
         -DLIBIIO_INCLUDEDIR:PATH=$pwd `
         -DCMAKE_CONFIGURATION_TYPES=Release `
 	..
