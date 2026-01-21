@@ -1,0 +1,21 @@
+#!/usr/bin/make -f
+
+DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+
+%:
+	dh $@ --with python3
+
+override_dh_auto_configure:
+	dh_auto_configure -- -DINSTALL_LIB_DIR=/usr/lib/$(DEB_HOST_MULTIARCH) -DPYTHON_BINDINGS=ON
+
+override_dh_compress:
+	dh_compress -X.c -X.C
+
+override_dh_strip:
+	dh_strip --no-automatic-dbgsym
+
+override_dh_shlibdeps:
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info
+
+override_dh_python3:
+	dh_python3 --no-guessing-deps

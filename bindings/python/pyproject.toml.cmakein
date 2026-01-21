@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: LGPL-2.1-or-later
+#
+# Copyright (C) 2021 Analog Devices, Inc.
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pylibad9361"
+version = "${VERSION}"
+dynamic = ["readme"]
+description = "Device specific library for AD936X transceivers"
+license = { text = "LGPL-2.1-or-later" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.6"
+maintainers = [{ name = "Analog Devices, Inc" }]
+dependencies = ["pylibiio>=0.23.1"]
+
+[tool.setuptools.dynamic]
+readme = { file = "README.md", content-type = "text/markdown" }
+
+[tool.setuptools]
+py-modules = ["ad9361"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["test*", "doc*"]
+
+[project.urls]
+homepage = "https://github.com/analogdevicesinc/libad9361-iio"
+repository = "https://github.com/analogdevicesinc/libad9361-iio"
