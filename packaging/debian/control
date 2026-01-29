@@ -11,7 +11,7 @@ Package: libad9361
 Architecture: @ARCHITECTURE@
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends}, ${shlibs:Depends}, libiio0
+Depends: ${misc:Depends}, ${shlibs:Depends}, libiio
 Replaces: ad9361
 Conflicts: ad9361
 Description: Library of functions specific to the Analog Devices AD9361

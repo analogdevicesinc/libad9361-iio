@@ -41,15 +41,15 @@ if [ "$USE_DEBUILD" = "true" ]; then
 	sed -i "s/@DATE@/$(date -R)/" packaging/debian/changelog
 	sed -i "s/@ARCHITECTURE@/$ARCHITECTURE/" packaging/debian/control
 
-	# Copy debian directory to root
-	cp -r packaging/debian .
-	# Ensure .install files are not executable (WSL filesystem issue)
-	chmod -x debian/*.install
-
 	# Create orig tarball
 	pushd ..
 	tar czf ${SOURCE_DIR}_${VERSION}.orig.tar.gz $CURRENT_DIR
 	popd
+
+	# Copy debian directory to root
+	cp -r packaging/debian .
+	# Ensure .install files are not executable (WSL filesystem issue)
+	chmod -x debian/*.install
 
 	# Build debian package
 	debuild
