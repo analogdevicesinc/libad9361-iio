@@ -10,12 +10,12 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
 
-cmake_minimum_required(VERSION 2.8.12)
-project(ad9361 C)
+cmake_minimum_required(VERSION 3.5)
+project(ad9361 LANGUAGES C VERSION 0.2)
 
-set(LIBAD9361_VERSION_MAJOR 0)
-set(LIBAD9361_VERSION_MINOR 2)
-set(VERSION ${LIBAD9361_VERSION_MAJOR}.${LIBAD9361_VERSION_MINOR})
+set(LIBAD9361_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(LIBAD9361_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(VERSION ${PROJECT_VERSION})
 
 include(GNUInstallDirs)
 
@@ -77,6 +77,13 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD|DragonFly|OpenBSD|NetBSD")
 endif()
 add_definitions(-D_POSIX_C_SOURCE=200809L -D__XSI_VISIBLE=500 -DLIBAD9361_EXPORTS=1)
 
+# Get multiarch library path for Debian/Ubuntu systems
+execute_process(COMMAND dpkg-architecture -qDEB_HOST_MULTIARCH
+	OUTPUT_VARIABLE DEB_HOST_MULTIARCH
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+	ERROR_QUIET)
+
+# Find libiio library with multiarch path hint
 find_library(LIBIIO_LIBRARIES iio)
 find_path(LIBIIO_INCLUDEDIR iio.h)
 
@@ -124,6 +131,7 @@ if(NOT SKIP_INSTALL_ALL)
 	install(FILES ${LIBAD9361_PC} DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 endif()
 
+if (FALSE)
 set(CMAKE_INSTALL_DOCDIR "" CACHE PATH "documentation root (DATAROOTDIR/doc/${PROJECT_NAME}${LIBAD9361_VERSION_MAJOR}-doc)")
 
 set(CMAKE_INSTALL_DOCDIR "${CMAKE_INSTALL_DATAROOTDIR}/doc/${PROJECT_NAME}${LIBAD9361_VERSION_MAJOR}-doc")
@@ -149,6 +157,7 @@ if(DOXYGEN_FOUND)
 	endif()
 else()
 	message(STATUS "Doxygen not found, API documentation won't be generated")
+endif()
 endif()
 
 option(PYTHON_BINDINGS "Install Python bindings" OFF)
