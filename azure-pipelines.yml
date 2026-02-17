@@ -202,11 +202,8 @@ jobs:
   - script: |
       set -e 
       sudo apt-get update
-      sudo apt-get install -y gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
-      sudo apt-get install -y g++-arm-linux-gnueabihf
-      sudo apt-get install -y g++-aarch64-linux-gnu
-      sudo apt-get install -y qemu-system-ppc64
-      sudo apt-get install qemu binfmt-support qemu-user-static
+      sudo apt-get install qemu-user-static
+      sudo sysctl kernel.randomize_va_space=0
       sudo docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
     displayName: "Setup"
   - script: |
@@ -229,21 +226,6 @@ jobs:
     clean: all
   strategy:
     matrix:
-      macOS_11:
-        poolName: 'Azure Pipelines'
-        vmImage: 'macOS-11'
-        agentName: 'Azure Pipelines 4'
-        artifactName: 'macOS-11'
-      macOS_12:
-        poolName: 'Azure Pipelines'
-        vmImage: 'macOS-12'
-        agentName: 'Azure Pipelines 3'
-        artifactName: 'macOS-12'
-      macOS_13_x64:
-        poolName: 'Azure Pipelines'
-        vmImage: 'macOS-13'
-        agentName: 'Azure Pipelines 2'
-        artifactName: 'macOS-13-x64'
       macOS_13_arm64:
         poolName: 'Default'
         vmImage:
@@ -292,11 +274,6 @@ jobs:
           COMPILER: 'Visual Studio 17 2022'
           ARCH: 'x64'
           artifactName: 'Windows-VS-2022-x64'
-      VS2019_Win64:
-        imageName: 'windows-2019'
-        COMPILER: 'Visual Studio 16 2019'
-        ARCH: 'x64'
-        artifactName: 'Windows-VS-2019-x64'
   pool:
     vmImage: $[ variables['imageName'] ]
   steps:
