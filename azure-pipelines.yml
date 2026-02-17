@@ -191,11 +191,8 @@ jobs:
   - script: |
       set -e 
       sudo apt-get update
-      sudo apt-get install -y gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
-      sudo apt-get install -y g++-arm-linux-gnueabihf
-      sudo apt-get install -y g++-aarch64-linux-gnu
-      sudo apt-get install -y qemu-system-ppc64
-      sudo apt-get install qemu binfmt-support qemu-user-static
+      sudo apt-get install qemu-user-static
+      sudo sysctl kernel.randomize_va_space=0
       sudo docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
     displayName: "Setup"
   - script: |
@@ -218,6 +215,7 @@ jobs:
     clean: all
   strategy:
     matrix:
+<<<<<<< HEAD
       macOS_15_x64:
         poolName: 'Azure Pipelines'
         vmImage: 'macOS-15'
@@ -228,6 +226,13 @@ jobs:
         vmImage: 'macOS-14'
         agentName: 'Azure Pipelines 3'
         artifactName: 'macOS-14-x64'
+=======
+      macOS_13_arm64:
+        poolName: 'Default'
+        vmImage:
+        agentName: 'miniMAC_arm64'
+        artifactName: 'macOS-13-arm64'
+>>>>>>> 44b2b72 (Update azure pipeline)
   pool:
     name: $(poolName)
     vmImage: $(vmImage)
