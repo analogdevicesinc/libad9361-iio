@@ -11,11 +11,11 @@
 # Lesser General Public License for more details.
 
 cmake_minimum_required(VERSION 3.10.0)
-project(ad9361 C)
+project(ad9361 LANGUAGES C VERSION 0.4)
 
-set(LIBAD9361_VERSION_MAJOR 0)
-set(LIBAD9361_VERSION_MINOR 4)
-set(VERSION ${LIBAD9361_VERSION_MAJOR}.${LIBAD9361_VERSION_MINOR})
+set(LIBAD9361_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(LIBAD9361_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(VERSION ${PROJECT_VERSION})
 
 include(GNUInstallDirs)
 
@@ -77,6 +77,13 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD|DragonFly|OpenBSD|NetBSD")
 endif()
 add_definitions(-D_POSIX_C_SOURCE=200809L -D__XSI_VISIBLE=500 -DLIBAD9361_EXPORTS=1)
 
+# Get multiarch library path for Debian/Ubuntu systems
+execute_process(COMMAND dpkg-architecture -qDEB_HOST_MULTIARCH
+	OUTPUT_VARIABLE DEB_HOST_MULTIARCH
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+	ERROR_QUIET)
+
+# Find libiio library with multiarch path hint
 find_library(LIBIIO_LIBRARIES iio)
 find_path(LIBIIO_INCLUDEDIR iio.h)
 
