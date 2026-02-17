@@ -19,6 +19,7 @@ if (Python3_FOUND)
 	set(SETUP_PY ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
 
 	configure_file(${SETUP_PY_IN} ${SETUP_PY})
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pyproject.toml.cmakein ${CMAKE_CURRENT_BINARY_DIR}/pyproject.toml)
 
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ad9361.py  ${CMAKE_CURRENT_BINARY_DIR}/ad9361.py COPYONLY)
 	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tasks.py  ${CMAKE_CURRENT_BINARY_DIR}/tasks.py COPYONLY)
@@ -26,7 +27,10 @@ if (Python3_FOUND)
 	add_custom_target(libad9361-py-py ALL DEPENDS ${SETUP_PY} COMMAND ${Python3_EXECUTABLE} ${SETUP_PY} --quiet build)
 
 	if(NOT SKIP_INSTALL_ALL)
-		install(CODE "execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMMAND ${Python3_EXECUTABLE} ${SETUP_PY} install --root=\$ENV{DESTDIR}/ --prefix=${CMAKE_INSTALL_PREFIX})")
+		# Use --target to explicitly set install location (Python 3.10+ changed --prefix behavior)
+		# For Debian packages: installs to $DESTDIR/usr/lib/python3/dist-packages
+		# For manual installs: installs to /usr/local/lib/python3/dist-packages
+		install(CODE "execute_process(WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} COMMAND ${Python3_EXECUTABLE} -m pip install --target=\$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages --no-deps --no-build-isolation .)")
 	endif()
 else()
 	message(FATAL_ERROR "Python search failed : Can not build Python bindings")
