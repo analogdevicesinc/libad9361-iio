@@ -191,11 +191,8 @@ jobs:
   - script: |
       set -e 
       sudo apt-get update
-      sudo apt-get install -y gcc-arm-linux-gnueabihf libc6-dev-armhf-cross
-      sudo apt-get install -y g++-arm-linux-gnueabihf
-      sudo apt-get install -y g++-aarch64-linux-gnu
-      sudo apt-get install -y qemu-system-ppc64
-      sudo apt-get install qemu binfmt-support qemu-user-static
+      sudo apt-get install qemu-user-static
+      sudo sysctl kernel.randomize_va_space=0
       sudo docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
     displayName: "Setup"
   - script: |
@@ -206,56 +203,6 @@ jobs:
     inputs:
       sourceFolder: '$(Agent.BuildDirectory)/s/build/'
       contents: '$(Agent.BuildDirectory)/s/build/?(*.deb|*.rpm)'
-      targetFolder: '$(Build.ArtifactStagingDirectory)'
-  - task: PublishPipelineArtifact@1
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-    inputs:
-      targetPath: '$(Build.ArtifactStagingDirectory)'
-      artifactName: '$(artifactName)'
-
-- job: macOSBuilds
-  workspace:
-    clean: all
-  strategy:
-    matrix:
-      macOS_15_x64:
-        poolName: 'Azure Pipelines'
-        vmImage: 'macOS-15'
-        agentName: 'Azure Pipelines 11'
-        artifactName: 'macOS-15-x64'
-      macOS_14_x64:
-        poolName: 'Azure Pipelines'
-        vmImage: 'macOS-14'
-        agentName: 'Azure Pipelines 3'
-        artifactName: 'macOS-14-x64'
-  pool:
-    name: $(poolName)
-    vmImage: $(vmImage)
-    demands:
-      - agent.name -equals $(agentName)
-  variables:
-    PACKAGE_TO_INSTALL: 'build/*.pkg'
-  steps:
-  - checkout: self
-    fetchDepth: 1
-    clean: true
-  - task: DownloadPipelineArtifact@2
-    inputs:
-      source: 'specific'
-      project: '$(System.TeamProjectId)'
-      pipeline: $(libiioPipelineId)
-      artifact: '$(artifactName)'
-      runVersion: 'latestFromBranch'
-      runBranch: $(downloadBranch)
-      path: '$(Agent.BuildDirectory)/s/build/'
-  - script: ./CI/travis/before_install_darwin
-    displayName: "Install Dependencies"
-  - script: ./CI/travis/make_darwin
-    displayName: "Build"
-  - task: CopyFiles@2
-    inputs:
-      sourceFolder: '$(Agent.BuildDirectory)/s/build/'
-      contents: '$(Agent.BuildDirectory)/s/build/?(*.pkg)'
       targetFolder: '$(Build.ArtifactStagingDirectory)'
   - task: PublishPipelineArtifact@1
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
