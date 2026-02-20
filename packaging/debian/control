@@ -12,8 +12,8 @@ Architecture: @ARCHITECTURE@
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Replaces: ad9361
-Conflicts: ad9361
+Replaces: libad9361-0 (= 0.3)
+Provides: libad9361-0 (= 0.3)
 Description: Library of functions specific to the Analog Devices AD9361
  This library contains a few functions useful to configure and use the
  Analog Devices AD9361 Agile Transceiver.
@@ -22,8 +22,6 @@ Package: libad9361-dev
 Architecture: @ARCHITECTURE@
 Section: libdevel
 Depends: libad9361 (= ${binary:Version}), ${misc:Depends}
-Replaces: ad9361-dev
-Conflicts: ad9361-dev
 Description: Library of functions specific to the Analog Devices AD9361
  This library contains a few functions useful to configure and use the
  Analog Devices AD9361 Agile Transceiver.
@@ -34,6 +32,8 @@ Package: python3-libad9361
 Architecture: all
 Section: python
 Depends: ${misc:Depends}, ${python3:Depends}, libad9361
+Replaces: python3-ad9361 (= 0.3)
+Provides: python3-ad9361 (= 0.3)
 Description: Python bindings for libad9361
  This library contains a few functions useful to configure and use the
  Analog Devices AD9361 Agile Transceiver.
