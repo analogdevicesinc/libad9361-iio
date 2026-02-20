@@ -7,12 +7,13 @@ source_code=$(basename "$PWD")
 
 # Use sudo only if not running as root
 if [ "$(id -u)" -eq 0 ]; then
-    apt-get update
-    apt-get install -y build-essential cmake libiio-dev python3 python3-pip python3-setuptools dh-python devscripts debhelper
+    SUDO=""
 else
-    sudo apt-get update
-    sudo apt-get install -y build-essential cmake libiio-dev python3 python3-pip python3-setuptools dh-python devscripts debhelper
+    SUDO="sudo"
 fi
+
+$SUDO apt-get update
+$SUDO apt-get install -y build-essential cmake libiio-dev python3 python3-pip python3-setuptools dh-python devscripts debhelper
 
 # Replace placeholders inside the debian template files
 sed -i "s/@VERSION@/$version-1/" packaging/debian/changelog
