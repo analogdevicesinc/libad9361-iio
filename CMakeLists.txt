@@ -11,7 +11,7 @@
 # Lesser General Public License for more details.
 
 cmake_minimum_required(VERSION 3.5)
-project(ad9361 LANGUAGES C VERSION 0.2)
+project(ad9361 LANGUAGES C VERSION 0.3)
 
 set(LIBAD9361_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set(LIBAD9361_VERSION_MINOR ${PROJECT_VERSION_MINOR})
