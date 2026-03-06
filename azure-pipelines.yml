@@ -39,12 +39,6 @@ jobs:
       vmImage: 'ubuntu-latest'
   strategy:
     matrix:
-      ubuntu_20_04_x86_64:
-        image: 'tfcollins/libiio_ubuntu_20_04-ci:latest'
-        artifactName: 'Linux-Ubuntu-20.04'
-        build_script: ci-linux.sh
-        OS_TYPE: default
-        PACKAGE_TO_INSTALL: '/ci/build/*.deb'
       ubuntu_22_04_x86_64:
         image: 'tfcollins/libiio_ubuntu_22_04-ci:latest'
         artifactName: 'Linux-Ubuntu-22.04'
@@ -69,12 +63,6 @@ jobs:
         build_script: ci-linux.sh
         OS_TYPE: default
         PACKAGE_TO_INSTALL: '/ci/build/*.deb'
-      fedora28:
-        image: 'tfcollins/libiio_fedora_28-ci:latest'
-        artifactName: 'Linux-Fedora-28'
-        build_script: ci-linux.sh
-        OS_TYPE: centos
-        PACKAGE_TO_INSTALL: '/ci/build/*.rpm'
       fedora34:
         image: 'tfcollins/libiio_fedora_34-ci:latest'
         artifactName: 'Linux-Fedora-34'
@@ -240,16 +228,6 @@ jobs:
         vmImage: 'macOS-14'
         agentName: 'Azure Pipelines 3'
         artifactName: 'macOS-14-x64'
-      macOS_13_x64:
-        poolName: 'Azure Pipelines'
-        vmImage: 'macOS-13'
-        agentName: 'Azure Pipelines 2'
-        artifactName: 'macOS-13-x64'
-      macOS_13_arm64:
-        poolName: 'Default'
-        vmImage:
-        agentName: 'miniMAC_arm64'
-        artifactName: 'macOS-13-arm64'
   pool:
     name: $(poolName)
     vmImage: $(vmImage)
@@ -293,11 +271,6 @@ jobs:
           COMPILER: 'Visual Studio 17 2022'
           ARCH: 'x64'
           artifactName: 'Windows-VS-2022-x64'
-      VS2019_Win64:
-        imageName: 'windows-2019'
-        COMPILER: 'Visual Studio 16 2019'
-        ARCH: 'x64'
-        artifactName: 'Windows-VS-2019-x64'
   pool:
     vmImage: $[ variables['imageName'] ]
   steps:
