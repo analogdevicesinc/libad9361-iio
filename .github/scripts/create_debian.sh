@@ -1,8 +1,6 @@
 #!/bin/bash
 
 version=$1
-architecture=$(dpkg --print-architecture)
-
 source_code=$(basename "$PWD")
 
 # Use sudo only if not running as root
@@ -18,7 +16,6 @@ $SUDO apt-get install -y build-essential cmake libiio-dev python3 python3-pip py
 # Replace placeholders inside the debian template files
 sed -i "s/@VERSION@/$version-1/" packaging/debian/changelog
 sed -i "s/@DATE@/$(date -R)/" packaging/debian/changelog
-sed -i "s/@ARCHITECTURE@/$architecture/" packaging/debian/control
 
 cp -r packaging/debian .
 

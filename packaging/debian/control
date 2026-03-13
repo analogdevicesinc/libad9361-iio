@@ -8,7 +8,7 @@ Homepage: https://github.com/analogdevicesinc/libad9361-iio
 Rules-Requires-Root: no
 
 Package: libad9361
-Architecture: @ARCHITECTURE@
+Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends}, ${shlibs:Depends}
@@ -19,7 +19,7 @@ Description: Library of functions specific to the Analog Devices AD9361
  Analog Devices AD9361 Agile Transceiver.
 
 Package: libad9361-dev
-Architecture: @ARCHITECTURE@
+Architecture: any
 Section: libdevel
 Depends: libad9361 (= ${binary:Version}), ${misc:Depends}
 Description: Library of functions specific to the Analog Devices AD9361
