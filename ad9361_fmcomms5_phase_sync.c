@@ -335,12 +335,11 @@ int streaming_interfaces(bool enable)
         iio_channel_enable(rxa_chan_imag, dev_rx_mask);
         iio_channel_enable(rxb_chan_real, dev_rx_mask);
         iio_channel_enable(rxb_chan_imag, dev_rx_mask);
-        rxbuf = iio_device_create_buffer(dev_rx, 0, dev_rx_mask);
-        if (iio_err(rxbuf)) {
-            rxbuf = NULL;
+        rxbuf = iio_device_get_buffer(dev_rx, 0);
+        if (!rxbuf) {
             streaming_interfaces(false);
         }
-        dev_rx_stream = iio_buffer_create_stream(rxbuf, 4, SAMPLES);
+        dev_rx_stream = iio_buffer_create_stream(rxbuf, 4, SAMPLES, dev_rx_mask);
         if (iio_err(dev_rx_stream)) {
             dev_rx_stream = NULL;
             streaming_interfaces(false);
@@ -348,9 +347,6 @@ int streaming_interfaces(bool enable)
     } else {
         if (dev_rx_stream) {
             iio_stream_destroy(dev_rx_stream);
-        }
-        if (rxbuf) {
-            iio_buffer_destroy(rxbuf);
         }
         if (rxa_chan_real) {
             iio_channel_disable(rxa_chan_real, dev_rx_mask);
