@@ -31,6 +31,14 @@ pr:
     - libad9361-iio-v0
     - 20*
 
+schedules:
+- cron: "0 0 1 * *"
+  displayName: Monthly full build (libad9361-iio-v0)
+  branches:
+    include:
+    - libad9361-iio-v0
+  always: true
+
 jobs:
 - job: LinuxBuilds
   pool:
