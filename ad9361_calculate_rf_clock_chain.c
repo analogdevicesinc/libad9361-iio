@@ -31,10 +31,10 @@
 #define MAX_TX_HB2 245760000UL
 #define MAX_TX_HB3 320000000UL
 
-const unsigned long RX_MAX_PATH_RATES[] = {MAX_ADC_CLK, MAX_RX_HB3, MAX_RX_HB2, MAX_RX_HB1, MAX_FIR};
-const unsigned long TX_MAX_PATH_RATES[] = {MAX_DAC_CLK, MAX_TX_HB3, MAX_TX_HB2, MAX_TX_HB1, MAX_FIR};
-const unsigned long RX_MIN_PATH_RATES[] = {MIN_ADC_CLK, 0, 0, 0, 0};
-const unsigned long TX_MIN_PATH_RATES[] = {MIN_DAC_CLK, 0, 0, 0, 0};
+static const unsigned long RX_MAX_PATH_RATES[] = {MAX_ADC_CLK, MAX_RX_HB3, MAX_RX_HB2, MAX_RX_HB1, MAX_FIR};
+static const unsigned long TX_MAX_PATH_RATES[] = {MAX_DAC_CLK, MAX_TX_HB3, MAX_TX_HB2, MAX_TX_HB1, MAX_FIR};
+static const unsigned long RX_MIN_PATH_RATES[] = {MIN_ADC_CLK, 0, 0, 0, 0};
+static const unsigned long TX_MIN_PATH_RATES[] = {MIN_DAC_CLK, 0, 0, 0, 0};
 
 #define check(val,min,max) ( (val)<=(max) ? (val)>=(min) : false )
 
