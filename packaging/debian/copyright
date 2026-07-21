@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: libad9361
-Upstream-Contact: Engineerzone <https://ez.analog.com/sw-interface-tools>
+Upstream-Contact: EngineerZone <https://ez.analog.com/sw-interface-tools/>
 Source: https://github.com/analogdevicesinc/libad9361-iio/
 
 Files: *
