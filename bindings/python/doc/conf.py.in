@@ -32,8 +32,15 @@ release = '@LIBAD9361_VERSION@'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.githubpages", 'sphinx.ext.viewcode', 'sphinx.ext.autodoc']
-#]
+extensions = ["sphinx.ext.githubpages", 'sphinx.ext.viewcode', 'sphinx.ext.autodoc',
+              'sphinx.ext.intersphinx']
+
+# iio.Context / iio.Device are documented in the libiio project's own Sphinx
+# docs, not this one; intersphinx resolves the type hints in ad9361.py against
+# that inventory instead of failing to find them locally.
+intersphinx_mapping = {
+    'libiio': ('https://analogdevicesinc.github.io/libiio/main/', None),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
