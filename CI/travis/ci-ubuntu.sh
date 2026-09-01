@@ -6,6 +6,9 @@ DEBIAN_FRONTEND=noninteractive apt install -y make graphviz libaio-dev \
 	libavahi-client-dev libavahi-common-dev libusb-1.0-0-dev \
 	rpm tar bzip2 gzip libserialport-dev python3-pip
 dpkg -i /ci/build/*.deb
+
+rm -f /usr/lib/python*/EXTERNALLY-MANAGED
+
 python3 -m pip install pylibiio --no-binary :all:
 python3 -m pip install sphinx
 python3 -m pip install sphinx-rtd-theme furo
@@ -18,6 +21,7 @@ cmake -DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON -D
 make && make package && make test
 make install
 ldconfig
+export LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH:-}
 cd ../bindings/python
 pip3 install -r requirements_dev.txt
 python3 -m pytest -vs --skip-scan

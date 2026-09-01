@@ -1,3 +1,13 @@
+#ifndef ARTIFACTS_DIR
+  #define ARTIFACTS_DIR "."
+#endif
+#ifndef SOURCE_DIR
+  #define SOURCE_DIR "."
+#endif
+#ifndef VCREDIST_DIR
+  #define VCREDIST_DIR "."
+#endif
+
 [Setup]
 AppId={{96BC5CC7-C522-4883-BCCD-0F5B6CF1131D}
 AppName="libad9361"
@@ -8,7 +18,7 @@ AppSupportURL="http://www.analog.com"
 AppUpdatesURL="http://www.analog.com"
 AppCopyright="Copyright 2015-@BUILD_YEAR@ ADI and other contributors"
 CreateAppDir=no
-LicenseFile="D:\a\1\s\COPYING.txt"
+LicenseFile="@CMAKE_CURRENT_SOURCE_DIR@\COPYING.txt"
 OutputBaseFilename=libad9361-setup
 OutputDir="C:\"
 Compression=lzma
@@ -39,14 +49,14 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [Files]
-Source: "D:\a\1\a\Windows-VS-2019-x64\libad9361.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode
-Source: "D:\a\1\a\Windows-VS-2019-x64\*.exe"; DestDir: "{sys}"; Check: Is64BitInstallMode
-Source: "D:\a\1\a\Windows-VS-2019-x64\libad9361.lib"; DestDir: "{commonpf32}\Microsoft Visual Studio 12.0\VC\lib\amd64"; Check: Is64BitInstallMode
-Source: "D:\a\1\a\Windows-VS-2019-x64\ad9361.h"; DestDir: "{commonpf32}\Microsoft Visual Studio 12.0\VC\include"
-Source: "D:\a\1\s\bindings\matlab\ad9361-wrapper.h"; DestDir: "{commonpf32}\Microsoft Visual Studio 12.0\VC\include"
-Source: "D:\a\1\a\Windows-VS-2019-x64\libiio.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
-Source: "D:\a\1\a\Windows-VS-2019-x64\libxml2.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
-Source: "D:\a\1\a\Windows-VS-2019-x64\libusb-1.0.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
-Source: "D:\a\1\a\Windows-VS-2019-x64\libserialport-0.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
-Source: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Redist\MSVC\14.29.30133\x64\Microsoft.VC142.CRT\msvcp140.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
-Source: "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Redist\MSVC\14.29.30133\x64\Microsoft.VC142.CRT\vcruntime140.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "{#ARTIFACTS_DIR}\libad9361.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode
+Source: "{#ARTIFACTS_DIR}\*.exe"; DestDir: "{sys}"; Check: Is64BitInstallMode
+Source: "{#ARTIFACTS_DIR}\libad9361.lib"; DestDir: "{commonpf32}\Microsoft Visual Studio 12.0\VC\lib\amd64"; Check: Is64BitInstallMode
+Source: "{#ARTIFACTS_DIR}\ad9361.h"; DestDir: "{commonpf32}\Microsoft Visual Studio 12.0\VC\include"
+Source: "@CMAKE_CURRENT_SOURCE_DIR@\bindings\matlab\ad9361-wrapper.h"; DestDir: "{commonpf32}\Microsoft Visual Studio 12.0\VC\include"
+Source: "{#ARTIFACTS_DIR}\libiio.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "{#ARTIFACTS_DIR}\libxml2.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "{#ARTIFACTS_DIR}\libusb-1.0.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "{#ARTIFACTS_DIR}\libserialport-0.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "{#VCREDIST_DIR}\msvcp140.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
+Source: "{#VCREDIST_DIR}\vcruntime140.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist

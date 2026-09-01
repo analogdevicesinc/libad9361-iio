@@ -1,0 +1,76 @@
+name: macOS Builds
+
+on:
+  workflow_call:
+    inputs:
+      build-type:
+        required: true
+        type: string
+      package_version:
+        required: false
+        type: string
+
+jobs:
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            artifact-name: macOS-15-arm64
+          - os: macos-15-large
+            artifact-name: macOS-15-x64
+          - os: macos-26
+            artifact-name: macOS-26-arm64
+          - os: macos-26-large
+            artifact-name: macOS-26-x64
+          - os: xcode-27
+            artifact-name: macOS-27-arm64
+    name: ${{ matrix.artifact-name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      ARTIFACTNAME: ${{ matrix.artifact-name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.9'
+      - run: pip install requests
+
+      - name: Get libiio from Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          set -e
+          wget -q https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/refs/heads/main/utils/cloudsmith_utils/cloudsmith_helper.py \
+            -O /tmp/cloudsmith_helper.py
+          mkdir -p build && cd build
+          python3 /tmp/cloudsmith_helper.py \
+            --method get_artifacts_from_location \
+            --repo external \
+            --package_version "libiio-v0~latest" \
+            --package_name "${{matrix.artifact-name}}.pkg" 
+      - name: Install dependencies
+        run: |
+          set -e
+          TAR=$(find ${{ github.workspace }}/build -name "*.tar" | head -1)
+          tar xf "$TAR" -C ${{ github.workspace }}/build
+          PKG=$(find ${{ github.workspace }}/build -name "*.pkg" | head -1)
+          PACKAGE_TO_INSTALL="$PKG" ./CI/travis/before_install_darwin
+          ./CI/travis/before_install_darwin
+      - name: Build
+        run: ./CI/travis/make_darwin
+      - name: Collect PKG artifacts
+        run: |
+          mkdir -p artifact-staging
+          find build -name "*.pkg" -exec cp {} artifact-staging/ \;
+      - name: Upload Artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: artifact-staging/

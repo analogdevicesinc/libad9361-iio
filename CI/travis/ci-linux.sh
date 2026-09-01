@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+set -e
 
 handle_centos() {
 	local package=$1
@@ -9,6 +9,14 @@ handle_centos() {
 	yum localinstall -y $package
 	export CMAKE_OPTIONS="-DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON .."
 	export LD_LIBRARY_PATH=/usr/local/lib64/
+}
+
+handle_fedora() {
+	local package=$1
+	dnf install -y ./$package
+	export LD_LIBRARY_PATH=/usr/local/lib64/
+	export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig
+	export CMAKE_OPTIONS="-DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON .."
 }
 
 handle_default() {
@@ -25,6 +33,8 @@ handle_opensuse() {
 }
 
 handle_"$1" "$2"
+
+rm -f /usr/lib/python*/EXTERNALLY-MANAGED
 
 python3 -m pip install pylibiio --no-binary :all:
 # Build project
