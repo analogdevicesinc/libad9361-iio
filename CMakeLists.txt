@@ -83,7 +83,6 @@ find_path(LIBIIO_INCLUDEDIR iio.h)
 set(LIBAD9361_HEADERS ad9361.h)
 
 file(GLOB_RECURSE FD_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/filterdesigner/*.c)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${LIBIIO_INCLUDEDIR})
 add_library(ad9361 ad9361_multichip_sync.c
             ad9361_baseband_auto_rate.c
             ad9361_design_taps.c
@@ -91,6 +90,7 @@ add_library(ad9361 ad9361_multichip_sync.c
             ad9361_fmcomms5_phase_sync.c
             ${FD_SRC_FILES}
             ${LIBAD9361_HEADERS})
+target_include_directories(ad9361 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ${LIBIIO_INCLUDEDIR})
 
 option(BUILD_TESTS "Build tests" ON)
 if (BUILD_TESTS)
