@@ -1,0 +1,152 @@
+name: Linux Builds libad9361-iio accross multiple distributions
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      build-type:
+        required: true
+        type: string
+      libiio-version:
+        required: true
+        type: string
+jobs:
+  linux:
+    name: ${{ matrix.artifact-name }}                   
+    runs-on: ubuntu-latest
+    env:
+      PYTHON: ${{ github.workspace }}/.venv/bin/python3
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ubuntu:22.04
+            artifact-name: Linux-Ubuntu-22.04
+            build_script: ci-linux.sh
+            os_type: default
+            package_type: deb
+          - image: ubuntu:24.04
+            artifact-name: Linux-Ubuntu-24.04
+            build_script: ci-linux.sh
+            os_type: default
+            package_type: deb
+          - image: ubuntu:26.04
+            artifact-name: Linux-Ubuntu-26.04
+            build_script: ci-linux.sh
+            os_type: default
+            package_type: deb
+          - image: debian:bookworm
+            artifact-name: Linux-Debian-12
+            build_script: ci-linux.sh
+            os_type: default
+            package_type: deb
+          - image: debian:trixie
+            artifact-name: Linux-Debian-13
+            build_script: ci-linux.sh
+            os_type: default
+            package_type: deb
+          - image: fedora:42
+            artifact-name:  Linux-Fedora-42
+            build_script: ci-linux.sh
+            os_type: fedora
+            package_type: rpm
+
+          - image: fedora:44
+            artifact-name:  Linux-Fedora-44
+            build_script: ci-linux.sh
+            os_type: fedora
+            package_type: rpm
+          - image: opensuse/leap:15.6
+            artifact-name: Linux-openSUSE-15.6
+            build_script: ci-linux.sh
+            os_type: opensuse
+            package_type: rpm
+
+          - image: opensuse/leap:16.0
+            artifact-name: Linux-openSUSE-16.0
+            build_script: ci-linux.sh
+            os_type: opensuse
+            package_type: rpm
+    defaults:
+      run:
+        shell: /bin/bash {0}
+    container:
+      image: ${{ matrix.image }}
+      env:
+        PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    steps:
+      - name: Install dependencies
+        run: |
+          set -e
+
+          # Ubuntu / Debian
+          if command -v apt-get &>/dev/null; then
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update
+            apt-get install -y build-essential git cmake libxml2-dev bison flex \
+              libcdk5-dev libaio-dev libusb-1.0-0-dev \
+              libserialport-dev libavahi-client-dev doxygen graphviz man2html \
+              python3 python3-pip python3-setuptools curl wget sudo tar
+            pip3 install sphinx --break-system-packages 2>/dev/null || pip3 install sphinx
+
+          # Fedora
+          elif command -v dnf &>/dev/null; then
+            dnf install -y cmake gcc gcc-c++ git flex bison libxml2-devel \
+              libaio-devel libusb1-devel avahi-devel \
+              libserialport-devel rpm-build doxygen graphviz \
+              python3-pip python3-setuptools curl wget sudo tar
+            pip3 install sphinx --break-system-packages 2>/dev/null || pip3 install sphinx
+
+          # openSUSE
+          elif command -v zypper &>/dev/null; then           
+            zypper --gpg-auto-import-keys ref
+            zypper in -y --allow-downgrade gcc-c++ make cmake git libxml2-devel bison flex cdk-devel \
+              libaio-devel libusb-1_0-devel \
+              libserialport-devel libavahi-devel avahi rpm-build doxygen graphviz \
+              python3 python3-pip python3-setuptools sudo wget curl tar
+            pip3 install sphinx --break-system-packages 2>/dev/null || pip3 install sphinx
+          fi
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          fetch-depth: 1
+      - name: Install uv 
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+      - name: Install py311, create venv and install dependencies 
+        run: |
+          set -e 
+          cd $GITHUB_WORKSPACE
+          uv python install 3.11
+          uv venv --python 3.11 --seed
+          uv pip install requests twine build
+
+      - name: Get libiio from Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          set -e
+          wget https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/refs/heads/main/utils/cloudsmith_utils/cloudsmith_helper.py \
+            -O /tmp/cloudsmith_helper.py
+          mkdir build && cd build
+          $PYTHON /tmp/cloudsmith_helper.py \
+            --method get_artifacts_from_location \
+            --repo external \
+            --package_version "${{inputs.libiio-version}}" \
+            --package_name "${{ matrix.artifact-name }}.${{matrix.package_type}}"
+
+      - name: Building and Testing the package
+        run: |
+          set -e
+          source $GITHUB_WORKSPACE/.venv/bin/activate
+          chmod +x ./CI/travis/${{ matrix.build_script }}
+          LIBIIO_PKG=$(ls build/libiio-*.${{ matrix.package_type }} 2>/dev/null | head -1)
+          ./CI/travis/${{ matrix.build_script }} "${{ matrix.os_type }}" "$LIBIIO_PKG"
+      - name: Upload build artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: |
+            build/*9361*.${{matrix.package_type}}
+        

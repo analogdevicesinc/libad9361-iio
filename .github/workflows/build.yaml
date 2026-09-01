@@ -5,8 +5,9 @@ permissions:
 
 env:
   APP_NAME: libad9361
-
+  ARTIFACT_NAME: libad9166-libiio-upstream
 on:
+  workflow_call:
   workflow_dispatch:
   push:
     branches:
@@ -85,7 +86,7 @@ jobs:
     - name: Upload debian artifacts to github
       uses: actions/upload-artifact@v7
       with:
-        name: ${{env.APP_NAME}}-${{matrix.distro}}-${{matrix.architecture}}
+        name: ${{env.ARTIFACT_NAME}}-${{matrix.distro}}-${{matrix.architecture}}
         path: |
           artifacts/*.deb
           artifacts/*.dsc
@@ -120,7 +121,7 @@ jobs:
     - name: Upload debian artifacts to github
       uses: actions/upload-artifact@v7
       with:
-        name: ${{env.APP_NAME}}-ubuntu
+        name: ${{env.ARTIFACT_NAME}}}-ubuntu
         path: |
           ${{env.APP_NAME}}/artifacts/*.deb
           ${{env.APP_NAME}}/artifacts/*.dsc
