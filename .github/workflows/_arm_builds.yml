@@ -1,0 +1,82 @@
+name: ARM Builds
+
+on:
+  workflow_call:
+    inputs:
+      build-type:
+        required: true
+        type: string
+
+jobs: 
+  arm-builds:
+    name: ARM Builds (${{ matrix.artifact_name }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - artifact_name: Ubuntu-ppc64le
+            image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
+            arch: ppc64le
+            build_script: ci-ubuntu.sh
+
+          - artifact_name: Ubuntu-x390x
+            image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
+            arch: s390x
+            build_script: ci-ubuntu.sh
+
+          - artifact_name: Ubuntu-arm32v7
+            image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
+            arch: arm
+            build_script: ci-ubuntu.sh
+
+          - artifact_name: Ubuntu-arm64v8
+            image: tfcollins/libiio_ubuntu_18_04-ci-arm-ppc:latest
+            arch: aarch64
+            build_script: ci-ubuntu.sh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Download Artifacts
+        uses: ./.github/actions/download-cloudsmith-artifact
+        with:
+          artifact-name: ${{ matrix.artifact_name }}
+          download-branch: ${{ needs.setup.outputs.download_branch }}
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Build
+        run: |
+          set -e
+
+          sudo docker run \
+            --platform linux/${{ matrix.arch }} \
+            --rm \
+            -t \
+            --privileged \
+            -e ARTIFACTNAME="${{ matrix.artifact_name }}" \
+            -v "${GITHUB_WORKSPACE}:/ci" \
+            -v "/usr/bin/qemu-${{ matrix.arch }}-static:/usr/bin/qemu-${{ matrix.arch }}-static" \
+            "${{ matrix.image }}" \
+            /bin/bash -c "
+              cd /ci &&
+              chmod +x ./CI/travis/${{ matrix.build_script }} &&
+              ./CI/travis/${{ matrix.build_script }}
+            "
+
+      - name: Upload Artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: |
+            build/**/*.deb
+            build/**/*.rpm

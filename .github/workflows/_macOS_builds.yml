@@ -1,0 +1,53 @@
+name: macOS Builds
+
+on:
+  workflow_call:
+    inputs:
+      build-type:
+        required: true
+        type: string
+
+jobs:
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            artifact-name: macOS-15-arm64
+          - os: macos-15-large
+            artifact-name: macOS-15-x64
+          - os: macos-26
+            artifact-name: macOS-26-arm64
+          - os: macos-26-large
+            artifact-name: macOS-26-x64
+          - os: xcode-27
+            artifact-name: macOS-27-arm64
+    name: ${{ matrix.artifact-name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    env:
+      ARTIFACTNAME: ${{ matrix.artifact-name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: ./CI/travis/before_install_darwin
+      - name: Build
+        run: ./CI/travis/make_darwin
+      - name: Collect PKG artifacts
+        run: |
+          mkdir -p artifact-staging
+          find build -name "*.pkg" -exec cp {} artifact-staging/ \;
+      - name: Upload Artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: artifact-staging/

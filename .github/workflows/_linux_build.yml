@@ -1,0 +1,180 @@
+name: Linux Builds
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      build-type:
+        required: true
+        type: string
+jobs:
+  linux:
+    name: ${{ matrix.artifact-name }}                   
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ubuntu:22.04
+            artifact-name: Linux-Ubuntu-22.04
+            build_script: ci-linux.sh
+            os_type: default
+            package_type: deb
+          - image: ubuntu:24.04
+            artifact-name: Linux-Ubuntu-24.04
+            build_script: ci-linux.sh
+            os_type: default
+            package_type: deb
+          - image: ubuntu:26.04
+            artifact-name: Linux-Ubuntu-26.04
+            build_script: ci-linux.sh
+            os_type: default
+            package_type: deb
+          - image: debian:bookworm
+            artifact-name: Linux-Debian-12
+            build_script: ci-linux.sh
+            os_type: default
+            package_type: deb
+          - image: debian:trixie
+            artifact-name: Linux-Debian-13
+            build_script: ci-linux.sh
+            os_type: default
+            package_type: deb
+                      
+          - image: fedora:42
+            artifact-name:  Linux-Fedora-42
+            build_script: ci-linux.sh
+            os_type: centos
+            package_type: rpm
+        
+          - image: fedora:44
+            artifact-name:  Linux-Fedora-44
+            build_script: ci-linux.sh
+            os_type: centos
+            package_type: rpm
+          - image: opensuse/leap:15.6
+            artifact-name: Linux-openSUSE-15.6
+            build_script: ci-linux.sh
+            OS_TYPE: opensuse
+            PACKAGE_TO_INSTALL: rpm
+
+          - image: opensuse/leap:16.0
+            artifact-name: Linux-openSUSE-16.0
+            build_script: ci-linux.sh
+            OS_TYPE: opensuse
+            PACKAGE_TO_INSTALL: rpm
+
+    container:
+      image: ${{ matrix.image }}
+    steps:
+      - name: Install dependencies
+        run: |
+          set -e
+
+          # Ubuntu / Debian
+          if command -v apt-get &>/dev/null; then
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update
+            apt-get install -y build-essential git cmake libxml2-dev bison flex \
+              libcdk5-dev libaio-dev libusb-1.0-0-dev \
+              libserialport-dev libavahi-client-dev doxygen graphviz man2html \
+              python3 python3-pip python3-setuptools wget  sudo
+            pip3 install sphinx --break-system-packages 2>/dev/null || pip3 install sphinx
+
+          # Fedora
+          elif command -v dnf &>/dev/null; then
+            dnf install -y cmake gcc gcc-c++ git flex bison libxml2-devel \
+              libaio-devel libusb1-devel avahi-devel \
+              libserialport-devel rpm-build doxygen graphviz \
+              python3-pip python3-setuptools wget sudo
+            pip3 install sphinx
+
+          # openSUSE
+          elif command -v zypper &>/dev/null; then
+            zypper --gpg-auto-import-keys ref
+            zypper in -y --allow-downgrade gcc-c++ make cmake git libxml2-devel bison flex cdk-devel \
+              libaio-devel libusb-1_0-devel \
+              libserialport-devel libavahi-devel avahi rpm-build doxygen graphviz \
+              python3-pip python3-setuptools  wget sudo
+            pip3 install sphinx --break-system-packages 2>/dev/null || pip3 install sphinx
+          fi
+      - name: Checkout
+        uses: actions/checkout@v7 #TO DO remove the tag and put sha
+        with:
+          fetch-depth: 1
+      - name: Install uv 
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+      - name: Installa py310, create venv and install dependencies 
+        run: |
+          set -e 
+          cd $GITHUB_WORKSPACE
+          uv python install 3.10
+          uv venv --python 3.10
+          uv pip install requests
+
+      - name: Get libiio from Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          PYTHON: ${{github.workspace}}/.venv/bin/python3
+        run: |
+          set -e
+          wget -q https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/refs/heads/main/utils/cloudsmith_utils/cloudsmith_helper.py \
+            -O /tmp/cloudsmith_helper.py
+          mkdir -p build && cd build
+          $PYTHON /tmp/cloudsmith_helper.py \
+            --method get_artifacts_from_location \
+            --repo external \
+            --package_version "libiio-v0~latest" \
+            --package_name "libiio-0.26.g-${{ matrix.artifact-name }}.${{matrix.package_type}}"
+
+      - name: Building and Testing the package 
+        run: |
+          set -e 
+          export PATH="$GITHUB_WORKSPACE/.venv/bin:$PATH"
+          chmod +x ./CI/travis/${{ matrix.build_script }}
+          ./CI/travis/${{ matrix.build_script }} "${{ matrix.os_type }}" "build/libiio-0.26.g-${{ matrix.artifact-name }}.${{ matrix.package_type }}"
+      - name: Upload build artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: |
+            build/*.${{matrix.package_type}}
+      - name: Build Python wheel pylibad
+        if: matrix.artifact-name == 'Linux-Ubuntu-26.04'
+        run: |
+          cd build/bindings/python
+          $PYTHON setup.py bdist_wheel
+
+      - name: Deploy Python package to PyPI
+        if: matrix.artifact-name == 'Linux-Ubuntu-26.04' && startsWith(github.ref, 'refs/tags/v')
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          cd build/bindings/python
+          $PYTHON -m twine upload dist/*.whl
+
+      - name: Update to dev version
+        if: matrix.artifact-name == 'Linux-Ubuntu-26.04'&& github.ref == 'refs/heads/main'
+        run: |
+          cd build/bindings/python
+          rm -f ./dist/*.whl
+          uv pip install --upgrade requests invoke
+          invoke bumpversion-test
+          $PYTHON -m build
+
+      - name: Deploy Python test package to Test PyPI
+        if: matrix.artifact-name == 'Linux-Ubuntu-26.04' && github.ref == 'refs/heads/main'
+        env:
+          TWINE_USERNAME: ${{ secrets.TESTPYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TESTPYPI_PASSWORD }}
+        run: |
+          cd build/bindings/python
+          $PYTHON -m twine upload \
+            --repository-url https://test.pypi.org/legacy/ \
+            --skip-existing \
+            dist/*.whl
+ 
+        

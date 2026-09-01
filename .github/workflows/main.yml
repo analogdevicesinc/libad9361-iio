@@ -1,0 +1,82 @@
+name: Build for libad9361-iio
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - next_stable
+      - libad9361-iio-v0
+      - staging/*
+      - 20*
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - main
+      - next_stable
+      - libad9361-iio-v0
+      - staging/*
+      - 20*
+  schedule:
+  - cron: '0 0 1 * *'
+  
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      is_main: ${{ steps.vars.outputs.is_main }}
+      download_branch: ${{ steps.vars.outputs.download_branch }}
+    steps:
+      - id: vars
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            IS_MAIN=true
+          else
+            IS_MAIN=false
+          fi
+
+          if [[ "${GITHUB_REF_NAME}" == "libad9361-iio-v0" ]]; then
+            DOWNLOAD_BRANCH="refs/heads/libiio-v0"
+          elif [[ "${GITHUB_REF_NAME}" == "next_stable" ]]; then
+            DOWNLOAD_BRANCH="refs/heads/next_stable"
+          elif [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            TARGET_BRANCH="${{ github.base_ref }}"
+            TARGET_BRANCH="${TARGET_BRANCH/libad9361-iio-v0/libiio-v0}"
+            DOWNLOAD_BRANCH="refs/heads/${TARGET_BRANCH}"
+          else
+            DOWNLOAD_BRANCH="refs/heads/main"
+          fi
+
+          echo "is_main=$IS_MAIN" >> "$GITHUB_OUTPUT"
+          echo "download_branch=$DOWNLOAD_BRANCH" >> "$GITHUB_OUTPUT"
+    
+
+  ############################################
+  # BUILDS
+  ############################################
+  linux:
+    needs: setup
+    uses: ./.github/workflows/_linux_build.yml
+    with:
+      build-type: ${{needs.config.outputs.build-type}}
+  # arm:
+  #   needs: setup
+  #   uses: ./.github/workflows/_arm_builds.yml
+  #   with:
+  #     build-type: ${{needs.config.outputs.build-type}}
+  # macos:
+  #   needs: setup
+  #   uses: ./.github/workflows/_macOS_builds.yml
+  #   with:
+  #     build-type: ${{needs.config.outputs.build-type}}
+  # windows:
+  #   needs: setup
+  #   uses: ./.github/workflows/_windows_builds.yml
+  #   with:
+  #     build-type: ${{needs.config.outputs.build-type}}

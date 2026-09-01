@@ -14,7 +14,7 @@ handle_centos() {
 handle_default() {
 	local package=$1
 	DEBIAN_FRONTEND=noninteractive apt-get install -y rpm
-	sudo dpkg -i $package
+	dpkg -i $package
 	export CMAKE_OPTIONS="-DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON .."
 }
 
@@ -31,11 +31,11 @@ python3 -m pip install pylibiio --no-binary :all:
 mkdir -p build
 cd build
 cmake $CMAKE_OPTIONS
-sudo make && sudo make package && make test
-sudo make install
+make && make package && make test
+make install
 ldconfig
 cd ..
 cd bindings/python
-pip install -r requirements_dev.txt
-python3 -m pip install pytest
+uv pip install -r requirements_dev.txt
+uv pip install 'pytest==7.2.0'
 python3 -m pytest -vs --skip-scan

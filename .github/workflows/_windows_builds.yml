@@ -1,0 +1,129 @@
+
+name: Windows Builds
+
+on:
+  workflow_call:
+    inputs:
+      build-type:
+        required: true
+        type: string
+
+jobs:
+  msvc:
+    name: ${{ matrix.artifact-name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: Visual Studio 17 2022
+            vmImage: windows-2022
+            artifact-name: Windows-VS-2022-x64
+    runs-on: ${{ matrix.vmImage }}
+    timeout-minutes: 15
+    env:
+      COMPILER: ${{ matrix.compiler }}
+      USE_CSHARP: 'ON'
+      BUILD_ARTIFACTSTAGINGDIRECTORY: ${{ github.workspace }}/staging
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies 
+        run: |
+        
+
+      - name: Get libiio from Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/refs/heads/main/utils/cloudsmith_utils/cloudsmith_helper.py" `
+            -OutFile "$env:TEMP\cloudsmith_helper.py"
+          if (!(Test-Path build)) { mkdir build }
+          cd build
+          python "$env:TEMP\cloudsmith_helper.py" `
+            --method get_artifacts_from_location `
+            --repo external `
+            --package_version "libiio-v0~latest" `
+            --package_name "libiio-0.26.g-${{ matrix.artifact-name }}.zip"
+
+      - name: Build
+        shell: pwsh
+        run: .\CI\build_win.ps1
+
+      - name: Create staging directory
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path "$env:BUILD_ARTIFACTSTAGINGDIRECTORY"
+
+      - name: Copy libraries
+        shell: pwsh
+        run: |
+          Copy-Item -Path "build\Release\*" -Destination "$env:BUILD_ARTIFACTSTAGINGDIRECTORY" -Force
+
+      - name: Copy ad9361.h header
+        shell: pwsh
+        run: |
+          Copy-Item -Path "ad9361.h" -Destination "$env:BUILD_ARTIFACTSTAGINGDIRECTORY"
+
+      - name: Copy .exe files
+        shell: pwsh
+        run: |
+          Copy-Item -Path "build\*.exe" -Destination "$env:BUILD_ARTIFACTSTAGINGDIRECTORY" -ErrorAction SilentlyContinue
+
+      - name: Copy libiio.dll
+        shell: pwsh
+        run: |
+          Copy-Item -Path "build\libiio.dll" -Destination "$env:BUILD_ARTIFACTSTAGINGDIRECTORY"
+
+      - name: Copy dependencies
+        shell: pwsh
+        run: .\CI\publish_deps.ps1
+
+      - name: Upload build artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: ${{ github.workspace }}\staging
+
+  generate-setup-exe:
+    name: Generate Setup Exe
+    needs: msvc
+    if: github.event_name != 'pull_request'
+    runs-on: windows-2022
+    env:
+      BUILD_ARTIFACTSTAGINGDIRECTORY: ${{ github.workspace }}\staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Download Windows build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: Windows-VS-2022-x64
+          path: ${{ github.workspace }}\staging\Windows-VS-2022-x64
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y
+
+      - name: Generate libad9361-setup.exe
+        shell: pwsh
+        run: .\CI\generate_exe.ps1
+
+      - name: Upload setup exe
+        uses: actions/upload-artifact@v7
+        with:
+          name: Libad9361-Setup-Exe
+          path: ${{ github.workspace }}\staging
