@@ -60,11 +60,11 @@ jobs:
   ############################################
   # BUILDS
   ############################################
-  linux:
-    needs: setup
-    uses: ./.github/workflows/_linux_build.yml
-    with:
-      build-type: ${{needs.config.outputs.build-type}}
+  # linux:
+  #   needs: setup
+  #   uses: ./.github/workflows/_linux_build.yml
+  #   with:
+  #     build-type: ${{needs.config.outputs.build-type}}
   # arm:
   #   needs: setup
   #   uses: ./.github/workflows/_arm_builds.yml
@@ -75,8 +75,8 @@ jobs:
   #   uses: ./.github/workflows/_macOS_builds.yml
   #   with:
   #     build-type: ${{needs.config.outputs.build-type}}
-  # windows:
-  #   needs: setup
-  #   uses: ./.github/workflows/_windows_builds.yml
-  #   with:
-  #     build-type: ${{needs.config.outputs.build-type}}
+  windows:
+    needs: setup
+    uses: ./.github/workflows/_windows_builds.yml
+    with:
+      build-type: ${{needs.config.outputs.build-type}}
