@@ -50,7 +50,7 @@ jobs:
             --method get_artifacts_from_location \
             --repo external \
             --package_version "libiio-v0~latest" \
-            --package_name "libiio-0.26.g76e8e77-${{ matrix.artifact-name }}.tar" 
+            --package_name "libiio-0.26.g76e8e77.pkg" 
       - name: Install dependencies
         run: |
           set -e
