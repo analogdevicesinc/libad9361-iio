@@ -4,7 +4,7 @@ $ARCH=$Env:ARCH
 
 $src_dir=$pwd
 
-choco install sphinx
+# choco install sphinx
 
 if (!(Test-Path build)) {
 	mkdir build
@@ -13,7 +13,8 @@ if (!(Test-Path build)) {
 cp .\libad9361-iio.iss.cmakein .\build
 
 cd build
-
+$zip = Get-ChildItem -Filter "*.zip" | Select-Object -First 1
+if ($zip) { Expand-Archive -Path $zip.FullName -DestinationPath . -Force }
 cmake -G "$COMPILER" -A "$ARCH" `
         -DLIBIIO_LIBRARIES:FILEPATH=$pwd\libiio.lib `
         -DLIBIIO_INCLUDEDIR:PATH=$pwd `
