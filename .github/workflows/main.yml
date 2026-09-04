@@ -70,13 +70,13 @@ jobs:
   #   uses: ./.github/workflows/_arm_builds.yml
   #   with:
   #     build-type: ${{needs.config.outputs.build-type}}
-  # macos:
-  #   needs: setup
-  #   uses: ./.github/workflows/_macOS_builds.yml
-  #   with:
-  #     build-type: ${{needs.config.outputs.build-type}}
-  windows:
+  macos:
     needs: setup
-    uses: ./.github/workflows/_windows_builds.yml
+    uses: ./.github/workflows/_macOS_builds.yml
     with:
       build-type: ${{needs.config.outputs.build-type}}
+  # windows:
+  #   needs: setup
+  #   uses: ./.github/workflows/_windows_builds.yml
+  #   with:
+  #     build-type: ${{needs.config.outputs.build-type}}

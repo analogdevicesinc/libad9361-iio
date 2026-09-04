@@ -35,10 +35,30 @@ jobs:
 
       - uses: actions/setup-python@v7
         with:
-          python-version: '3.x'
+          python-version: '3.9'
+      - run: pip install requests
 
+      - name: Get libiio from Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          set -e
+          wget -q https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/refs/heads/main/utils/cloudsmith_utils/cloudsmith_helper.py \
+            -O /tmp/cloudsmith_helper.py
+          mkdir -p build && cd build
+          python3 /tmp/cloudsmith_helper.py \
+            --method get_artifacts_from_location \
+            --repo external \
+            --package_version "libiio-v0~latest" \
+            --package_name "libiio-0.26.g76e8e77-${{ matrix.artifact-name }}.tar" 
       - name: Install dependencies
-        run: ./CI/travis/before_install_darwin
+        run: |
+          set -e
+          TAR=$(find ${{ github.workspace }}/build -name "*.tar" | head -1)
+          tar xf "$TAR" -C ${{ github.workspace }}/build
+          PKG=$(find ${{ github.workspace }}/build -name "*.pkg" | head -1)
+          PACKAGE_TO_INSTALL="$PKG" ./CI/travis/before_install_darwin
+          ./CI/travis/before_install_darwin
       - name: Build
         run: ./CI/travis/make_darwin
       - name: Collect PKG artifacts
