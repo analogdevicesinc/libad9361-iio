@@ -137,8 +137,16 @@ jobs:
       - name: Building and Testing the package
         run: |
           set -e
+          source $GITHUB_WORKSPACE/.venv/bin/activate
           chmod +x ./CI/travis/${{ matrix.build_script }}
-          ./CI/travis/${{ matrix.build_script }} "${{ matrix.os_type }}" "build/libiio-0.26.g-${{ matrix.artifact-name }}.${{ matrix.package_type }}"
+          LIBIIO_PKG=$(ls build/libiio-*.${{ matrix.package_type }} 2>/dev/null | head -1)
+          if [ -z "$LIBIIO_PKG" ]; then
+            echo "Error: No libiio package found in build/"
+            ls -la build/
+            exit 1
+          fi
+          echo "Using libiio package: $LIBIIO_PKG"
+          ./CI/travis/${{ matrix.build_script }} "${{ matrix.os_type }}" "$LIBIIO_PKG"
       - name: Upload build artifacts
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v7

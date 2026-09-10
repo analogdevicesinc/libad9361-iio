@@ -1,7 +1,8 @@
-name: Build 
+name: Build libad9361 across multiple os's and arhitectures 
 
 permissions:
   contents: write
+  action: write
 
 on:
   workflow_dispatch:
@@ -26,11 +27,25 @@ on:
   
 
 jobs:
+  scheduled-dispatch:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh workflow run main.yml --ref libad9361-iio-v0
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+
   setup:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     outputs:
       is_main: ${{ steps.vars.outputs.is_main }}
+      is_v0: ${{ steps.vars.outputs.is_v0 }}
+      is_release: ${{ steps.vars.outputs.is_release }}
       download_branch: ${{ steps.vars.outputs.download_branch }}
+      build_type: ${{ steps.vars.outputs.build_type }}
+      cloudsmith_version: ${{ steps.vars.outputs.cloudsmith_version }}
     steps:
       - id: vars
         shell: bash
@@ -53,8 +68,28 @@ jobs:
             DOWNLOAD_BRANCH="refs/heads/main"
           fi
 
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            IS_RELEASE=true
+            BUILD_TYPE="Release"
+            CLOUDSMITH_VERSION="${GITHUB_REF#refs/tags/}"
+          else
+            IS_RELEASE=false
+            BUILD_TYPE="RelWithDebInfo"
+          fi
+
+          if [[ "${GITHUB_REF}" == "refs/heads/libad9361-iio-v0" ]]; then
+            IS_V0=true
+            CLOUDSMITH_VERSION="libad9361-iio-v0~latest"
+          else
+            IS_V0=false
+          fi
+
           echo "is_main=$IS_MAIN" >> "$GITHUB_OUTPUT"
+          echo "is_v0=$IS_V0" >> "$GITHUB_OUTPUT"
+          echo "is_release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
           echo "download_branch=$DOWNLOAD_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "build_type=$BUILD_TYPE" >> "$GITHUB_OUTPUT"
+          echo "cloudsmith_version=$CLOUDSMITH_VERSION" >> "$GITHUB_OUTPUT"
     
 
   ############################################
@@ -64,28 +99,177 @@ jobs:
     needs: setup
     uses: ./.github/workflows/_linux_build.yml
     with:
-      build-type: RelWithDebInfo
+      build-type: ${{ needs.setup.outputs.build_type }}
       package_version: ${{ needs.setup.outputs.download_branch }}
     secrets: inherit
   arm:
     needs: setup
     uses: ./.github/workflows/_arm_builds.yml
     with:
-      build-type: RelWithDebInfo
+      build-type: ${{ needs.setup.outputs.build_type }}
       package_version: ${{ needs.setup.outputs.download_branch }}
     secrets: inherit
   macos:
     needs: setup
     uses: ./.github/workflows/_macOS_builds.yml
     with:
-      build-type: RelWithDebInfo
+      build-type: ${{ needs.setup.outputs.build_type }}
       package_version: ${{ needs.setup.outputs.download_branch }}
     secrets: inherit
   windows:
     needs: setup
     uses: ./.github/workflows/_windows_builds.yml
     with:
-      build-type: RelWithDebInfo
+      build-type: ${{ needs.setup.outputs.build_type }}
       package_version: ${{ needs.setup.outputs.download_branch }}
     secrets: inherit
   
+ #############################################
+  # Check Artifacts
+  #############################################
+  check-artifacts:
+    # if: needs.setup.outputs.is_v0 == 'true' || needs.setup.outputs.is_release == 'true'
+    needs: [setup, linux, windows, macos, arm]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts/
+
+      - name: Check artifacts
+        run: |
+          set -e
+          MISSING=0
+          for dir in artifacts/*/; do
+            name=$(basename "$dir")
+            count=$(find "$dir" -type f | wc -l)
+            if [ "$count" -eq 0 ]; then
+              echo "EMPTY: $name"
+              MISSING=$((MISSING + 1))
+            else
+              echo "OK: $name ($count file(s))"
+            fi
+          done
+          echo ""
+          find artifacts -type f | sort | tee artifact_manifest.txt
+          echo ""
+          echo "Total: $(wc -l < artifact_manifest.txt) files"
+          if [ "$MISSING" -gt 0 ]; then
+            echo "ERROR: $MISSING artifact(s) empty"
+            exit 1
+          fi
+
+      - name: Upload manifest
+        uses: actions/upload-artifact@v7
+        with:
+          name: Artifact-manifest
+          path: artifact_manifest.txt
+          
+  #############################################
+  # Push to Cloudsmith
+  #############################################
+  push-cloudsmith:
+    if: needs.setup.outputs.is_v0 == 'true' || needs.setup.outputs.is_release == 'true'
+    needs: [setup, check-artifacts]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: ${{ github.workspace }}/artifacts
+
+      - name: Install Cloudsmith CLI
+        run: pip install cloudsmith-cli
+
+      - name: Upload to Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          set -e
+
+          # Retry wrapper for network calls
+          cloudsmith_push() {
+            local i
+            for i in 1 2 3; do
+              cloudsmith push raw "$@" && return 0
+              echo "Attempt ${i}/3 failed, retrying in 5s..."
+              sleep 5
+            done
+            return 1
+          }
+
+          VERSION="${{ needs.setup.outputs.cloudsmith_version }}"
+          ARTIFACTS="${{ github.workspace }}/artifacts"
+
+          for dir in "${ARTIFACTS}"/*/; do
+            tag=$(basename "${dir}")
+            [[ "${tag}" == "Artifact manifest" ]] && continue
+
+            # Windows: zip the whole directory and push as one archive
+            if [[ "${tag}" == Windows-* ]]; then
+              zip -r -j "${ARTIFACTS}/${tag}.zip" "${dir}"
+              cloudsmith_push --republish \
+                --tags "${tag}" \
+                --version "${VERSION}" \
+                adi/external "${ARTIFACTS}/${tag}.zip"
+              rm "${ARTIFACTS}/${tag}.zip"
+              continue
+            fi
+
+            # Linux / macOS: push each file individually with a stable name
+            for file in "${dir}"*; do
+              [[ -f "${file}" ]] || continue
+              filename=$(basename "${file}")
+
+              # Strip git hash (.g<hex>) so the name is stable across commits
+              stable=$(echo "${filename}" | sed -E 's/\.g[0-9a-f]{7,12}//')
+              ext="${stable##*.}"
+              stable="${stable%.${ext}}"
+
+              # macOS .pkg files don't include arch in the name; add tag
+              if [[ "${filename}" != *"${tag}"* ]]; then
+                stable="${stable}-${tag}"
+              fi
+
+              cloudsmith_push --republish \
+                --name "${stable}.${ext}" \
+                --tags "${tag}" \
+                --version "${VERSION}" \
+                adi/external "${file}"
+            done
+          done
+  
+  #############################################
+  # Push to GitHub Release
+  #############################################
+  # push-github-release:
+  #   if: needs.setup.outputs.is_release == 'true'
+  #   needs: [setup, check-artifacts]
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   steps:
+  #     - uses: actions/checkout@v7
+  #       with:
+  #         fetch-depth: 1
+
+  #     - name: Download all artifacts
+  #       uses: actions/download-artifact@v8
+  #       with:
+  #         path: ${{ github.workspace }}/artifacts
+
+  #     - name: Prepare assets for release
+  #       run: ./CI/prepare_assets.sh release
+  #       env:
+  #         BUILD_SOURCESDIRECTORY: ${{ github.workspace }}
+  #         BUILD_ARTIFACTSTAGINGDIRECTORY: ${{ github.workspace }}/artifacts
+
+  #     - name: Create GitHub Release
+  #       uses: softprops/action-gh-release@v2
+  #       with:
+  #         draft: true
+  #         name: "libad9361 release ${{ github.ref_name }}"
+  #         files: ${{ github.workspace }}/artifacts/*
+  #         generate_release_notes: true

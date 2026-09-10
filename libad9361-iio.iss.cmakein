@@ -1,9 +1,6 @@
 #ifndef ARTIFACTS_DIR
   #define ARTIFACTS_DIR "."
 #endif
-#ifndef SOURCE_DIR
-  #define SOURCE_DIR "."
-#endif
 #ifndef VCREDIST_DIR
   #define VCREDIST_DIR "."
 #endif
@@ -51,9 +48,9 @@ Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 [Files]
 Source: "{#ARTIFACTS_DIR}\libad9361.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode
 Source: "{#ARTIFACTS_DIR}\*.exe"; DestDir: "{sys}"; Check: Is64BitInstallMode
-Source: "{#ARTIFACTS_DIR}\libad9361.lib"; DestDir: "{commonpf32}\Microsoft Visual Studio 12.0\VC\lib\amd64"; Check: Is64BitInstallMode
-Source: "{#ARTIFACTS_DIR}\ad9361.h"; DestDir: "{commonpf32}\Microsoft Visual Studio 12.0\VC\include"
-Source: "@CMAKE_CURRENT_SOURCE_DIR@\bindings\matlab\ad9361-wrapper.h"; DestDir: "{commonpf32}\Microsoft Visual Studio 12.0\VC\include"
+Source: "{#ARTIFACTS_DIR}\libad9361.lib"; DestDir: "{autopf}\Analog Devices\libad9361\lib"; Check: Is64BitInstallMode
+Source: "{#ARTIFACTS_DIR}\ad9361.h"; DestDir: "{autopf}\Analog Devices\libad9361\include"
+Source: "@CMAKE_CURRENT_SOURCE_DIR@\bindings\matlab\ad9361-wrapper.h"; DestDir: "{autopf}\Analog Devices\libad9361\include"
 Source: "{#ARTIFACTS_DIR}\libiio.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
 Source: "{#ARTIFACTS_DIR}\libxml2.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
 Source: "{#ARTIFACTS_DIR}\libusb-1.0.dll"; DestDir: "{sys}"; Check: Is64BitInstallMode; Flags: onlyifdoesntexist
