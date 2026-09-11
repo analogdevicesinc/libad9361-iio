@@ -1,8 +1,8 @@
-name: Build libad9361 across multiple os's and arhitectures 
+name: Build libad9361 across multiple os and arhitectures 
 
 permissions:
   contents: write
-  action: write
+  actions: write
 
 on:
   workflow_dispatch:
