@@ -49,7 +49,7 @@ jobs:
     env:
       ARTIFACTNAME: ${{ matrix.artifact-name }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           fetch-depth: 1
 
@@ -98,7 +98,7 @@ jobs:
 
       - name: Upload artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: ${{ matrix.artifact-name }}
           path: |
@@ -128,13 +128,12 @@ jobs:
     env:
       ARTIFACTNAME: ${{ matrix.artifact-name }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           fetch-depth: 1
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-
+        uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a
       - name: Install uv
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
 
@@ -180,7 +179,7 @@ jobs:
 
       - name: Upload artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: ${{ matrix.artifact-name }}
           path: |

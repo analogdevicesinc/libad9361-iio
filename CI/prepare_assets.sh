@@ -39,10 +39,10 @@ release_artifacts() {
 	cd ../
 	rm -r Windows
 
-	cd "${BUILD_ARTIFACTSTAGINGDIRECTORY}/libad9361-Setup-Exe"
+	cd "${BUILD_ARTIFACTSTAGINGDIRECTORY}/Libad9361-Setup-Exe"
 	find . -name '*.exe' -exec mv {} ../ ";"
 	cd ../
-	rm -r "libad9361-Setup-Exe"
+	rm -r "Libad9361-Setup-Exe"
 
 	local arm_dist='Ubuntu-22.04-arm32v7 Ubuntu-22.04-arm64v8 Ubuntu-22.04-ppc64le Ubuntu-22.04-s390x Ubuntu-26.04-arm32v7 Ubuntu-26.04-arm64v8 Ubuntu-26.04-ppc64le Ubuntu-26.04-s390x Debian-12-arm64 Debian-12-armhf Debian-13-arm64 Debian-13-armhf'
 	cd "${BUILD_ARTIFACTSTAGINGDIRECTORY}"

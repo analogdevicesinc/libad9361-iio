@@ -20,21 +20,23 @@ jobs:
         include:
           - compiler: Visual Studio 17 2022
             vmImage: windows-2022
+            arch: x64
             artifact-name: Windows-VS-2022-x64
             
     runs-on: ${{ matrix.vmImage }}
     timeout-minutes: 15
     env:
       COMPILER: ${{ matrix.compiler }}
+      ARCH: ${{ matrix.arch }}
       USE_CSHARP: 'ON'
       BUILD_ARTIFACTSTAGINGDIRECTORY: ${{ github.workspace }}\\staging
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           fetch-depth: 1
       - name: Setup Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.9'
       - run: pip install requests sphinx
@@ -87,7 +89,7 @@ jobs:
 
       - name: Upload build artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: ${{ matrix.artifact-name }}
           path: ${{ github.workspace }}\staging
@@ -102,12 +104,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           fetch-depth: 1
 
       - name: Download Windows build artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3
         with:
           name: Windows-VS-2022-x64
           path: ${{ github.workspace }}\staging\Windows-VS-2022-x64
@@ -121,7 +123,7 @@ jobs:
         run: .\CI\generate_exe.ps1
 
       - name: Upload setup exe
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: Libad9361-Setup-Exe
           path: ${{ github.workspace }}\staging
