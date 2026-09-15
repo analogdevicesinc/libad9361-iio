@@ -9,7 +9,7 @@ dpkg -i /ci/build/*.deb
 
 rm -f /usr/lib/python*/EXTERNALLY-MANAGED
 
-python3 -m pip install pylibiio --no-binary :all:
+# python3 -m pip install pylibiio --no-binary :all:
 python3 -m pip install sphinx
 python3 -m pip install sphinx-rtd-theme furo
 

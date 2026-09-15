@@ -38,7 +38,7 @@ jobs:
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: '3.9'
+          python-version: '3.11'
       - run: pip install requests
 
       - name: Get libiio from Cloudsmith
@@ -67,7 +67,7 @@ jobs:
       - name: Collect PKG artifacts
         run: |
           mkdir -p artifact-staging
-          find build -name "*.pkg" -exec cp {} artifact-staging/ \;
+          find build -name "*9361*.pkg" -exec cp {} artifact-staging/ \;
       - name: Upload Artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f

@@ -14,6 +14,8 @@ jobs:
   linux:
     name: ${{ matrix.artifact-name }}                   
     runs-on: ubuntu-latest
+    env:
+      PYTHON: ${{ github.workspace }}/.venv/bin/python3
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -111,18 +113,17 @@ jobs:
           fetch-depth: 1
       - name: Install uv 
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
-      - name: Install py39, create venv and install dependencies 
+      - name: Install py311, create venv and install dependencies 
         run: |
           set -e 
           cd $GITHUB_WORKSPACE
-          uv python install 3.9
-          uv venv --python 3.9 --seed
+          uv python install 3.11
+          uv venv --python 3.11 --seed
           uv pip install requests twine build
 
       - name: Get libiio from Cloudsmith
         env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-          PYTHON: ${{github.workspace}}/.venv/bin/python3
+          CLOUDSMITH_API_KEY: ${{ secrets.TEST_REPO_CLOUDSMITH_TOKEN }}
         run: |
           set -e
           wget https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/refs/heads/main/utils/cloudsmith_utils/cloudsmith_helper.py \
@@ -147,13 +148,13 @@ jobs:
         with:
           name: ${{ matrix.artifact-name }}
           path: |
-            build/*.${{matrix.package_type}}
+            build/*9361*.${{matrix.package_type}}
       - name: Build Python wheel pylibad
         if: matrix.artifact-name == 'Linux-Ubuntu-26.04'
         run: |
           source $GITHUB_WORKSPACE/.venv/bin/activate
           cd build/bindings/python
-          python setup.py bdist_wheel
+          $PYTHON setup.py bdist_wheel
 
       - name: Deploy Python package to PyPI
         if: matrix.artifact-name == 'Linux-Ubuntu-26.04' && startsWith(github.ref, 'refs/tags/v')
@@ -163,7 +164,7 @@ jobs:
         run: |
           source $GITHUB_WORKSPACE/.venv/bin/activate
           cd build/bindings/python
-          python -m twine upload dist/*.whl
+          $PYTHON -m twine upload dist/*.whl
 
       - name: Update to dev version
         if: matrix.artifact-name == 'Linux-Ubuntu-26.04'&& github.ref == 'refs/heads/main'
@@ -173,7 +174,7 @@ jobs:
           rm -f ./dist/*.whl
           uv pip install --upgrade requests invoke
           invoke bumpversion-test
-          python -m build
+          $PYTHON -m build
 
       - name: Deploy Python test package to Test PyPI
         if: matrix.artifact-name == 'Linux-Ubuntu-26.04' && github.ref == 'refs/heads/main'
@@ -183,7 +184,7 @@ jobs:
         run: |
           source $GITHUB_WORKSPACE/.venv/bin/activate
           cd build/bindings/python
-          python -m twine upload \
+          $PYTHON -m twine upload \
             --repository-url https://test.pypi.org/legacy/ \
             --skip-existing \
             dist/*.whl

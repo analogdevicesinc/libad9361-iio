@@ -5,9 +5,9 @@ release_artifacts() {
 	cd "${BUILD_ARTIFACTSTAGINGDIRECTORY}"
 	for i in $linux_dist; do
 		cd "Linux-${i}"
-		find . -name '*.rpm' -exec mv {} ../ ";"
-		find . -name '*.deb' -exec mv {} ../ ";"
-		find . -name '*.tar.gz' -exec mv {} ../ ";"
+		find . -name '*9361*.rpm' -exec mv {} ../ ";"
+		find . -name '*9361*.deb' -exec mv {} ../ ";"
+		find . -name '*9361*.tar.gz' -exec mv {} ../ ";"
 		cd ../
 		rm -r "Linux-${i}"
 	done
@@ -21,8 +21,8 @@ release_artifacts() {
 			base="${pkg%.pkg}"
 			mv "$pkg" "${base}-${i}.pkg"
 		done
-		find . -name '*.pkg' -exec mv {} ../ ";"
-		find . -name '*.tar.gz' -exec mv {} ../ ";"
+		find . -name '*9361*.pkg' -exec mv {} ../ ";"
+		find . -name '*9361*.tar.gz' -exec mv {} ../ ";"
 		cd ../
 		rm -r "${i}"
 	done
@@ -48,8 +48,8 @@ release_artifacts() {
 	cd "${BUILD_ARTIFACTSTAGINGDIRECTORY}"
 	for i in $arm_dist; do
 		cd "${i}"
-		find . -name '*.deb' -exec mv {} ../ ";"
-		find . -name '*.tar.gz' -exec mv {} ../ ";"
+		find . -name '*9361*.deb' -exec mv {} ../ ";"
+		find . -name '*9361*.tar.gz' -exec mv {} ../ ";"
 		cd ../
 		rm -r "${i}"
 	done

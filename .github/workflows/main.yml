@@ -31,7 +31,7 @@ jobs:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
-      - run: gh workflow run main.yml --ref libad9361-iio-v0  main
+      - run: gh workflow run main.yml --ref libad9361-iio-v0
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -40,57 +40,31 @@ jobs:
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     outputs:
-      is_main: ${{ steps.vars.outputs.is_main }}
-      is_v0: ${{ steps.vars.outputs.is_v0 }}
-      is_release: ${{ steps.vars.outputs.is_release }}
-      download_branch: ${{ steps.vars.outputs.download_branch }}
-      build_type: ${{ steps.vars.outputs.build_type }}
-      cloudsmith_version: ${{ steps.vars.outputs.cloudsmith_version }}
+      build-type: ${{ steps.set.outputs.build-type }}
+      is-v0: ${{ steps.set.outputs.is-v0 }}
+      is-release: ${{ steps.set.outputs.is-release }}
+      cloudsmith-version: ${{ steps.set.outputs.cloudsmith-version }}
     steps:
-      - id: vars
+      - id: set
         shell: bash
         run: |
-          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
-            IS_MAIN=true
-          else
-            IS_MAIN=false
-          fi
-
-          if [[ "${GITHUB_REF_NAME}" == "libad9361-iio-v0" ]]; then
-            DOWNLOAD_BRANCH="refs/heads/libiio-v0"
-          elif [[ "${GITHUB_REF_NAME}" == "next_stable" ]]; then
-            DOWNLOAD_BRANCH="refs/heads/next_stable"
-          elif [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
-            TARGET_BRANCH="${{ github.base_ref }}"
-            TARGET_BRANCH="${TARGET_BRANCH/libad9361-iio-v0/libiio-v0}"
-            DOWNLOAD_BRANCH="refs/heads/${TARGET_BRANCH}"
-          else
-            DOWNLOAD_BRANCH="refs/heads/main"
-          fi
-
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            IS_RELEASE=true
-            BUILD_TYPE="Release"
-            CLOUDSMITH_VERSION="${GITHUB_REF#refs/tags/}"
+            echo "build-type=Release" >> "${GITHUB_OUTPUT}"
+            echo "is-release=true" >> "${GITHUB_OUTPUT}"
+            echo "cloudsmith-version=${GITHUB_REF#refs/tags/}" >> "${GITHUB_OUTPUT}"
           else
-            IS_RELEASE=false
-            BUILD_TYPE="RelWithDebInfo"
+            echo "build-type=RelWithDebInfo" >> "${GITHUB_OUTPUT}"
+            echo "is-release=false" >> "${GITHUB_OUTPUT}"
           fi
-
           if [[ "${GITHUB_REF}" == "refs/heads/libad9361-iio-v0" ]]; then
-            IS_V0=true
-            CLOUDSMITH_VERSION="libad9361-iio-v0~latest"
+            echo "is-v0=true" >> "${GITHUB_OUTPUT}"
+            echo "cloudsmith-version=libad9361-iio-v0~latest" >> "${GITHUB_OUTPUT}"
+          elif [[ "${GITHUB_REF}" == refs/heads/staging/* ]]; then
+            echo "is-v0=false" >> "${GITHUB_OUTPUT}"
+            echo "cloudsmith-version=test9361-v0" >> "${GITHUB_OUTPUT}"
           else
-            IS_V0=false
+            echo "is-v0=false" >> "${GITHUB_OUTPUT}"
           fi
-
-          echo "is_main=$IS_MAIN" >> "$GITHUB_OUTPUT"
-          echo "is_v0=$IS_V0" >> "$GITHUB_OUTPUT"
-          echo "is_release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
-          echo "download_branch=$DOWNLOAD_BRANCH" >> "$GITHUB_OUTPUT"
-          echo "build_type=$BUILD_TYPE" >> "$GITHUB_OUTPUT"
-          echo "cloudsmith_version=$CLOUDSMITH_VERSION" >> "$GITHUB_OUTPUT"
-    
 
   ############################################
   # BUILDS
@@ -123,13 +97,17 @@ jobs:
       build-type: ${{ needs.setup.outputs.build_type }}
       package_version: ${{ needs.setup.outputs.download_branch }}
     secrets: inherit
-  
+  build_with_libiio0:
+    needs: setup
+    uses: ./.github/workflows/build.yaml
+    secrets: inherit
+
  #############################################
   # Check Artifacts
   #############################################
   check-artifacts:
-    # if: needs.setup.outputs.is_v0 == 'true' || needs.setup.outputs.is_release == 'true'
-    needs: [setup, linux, windows, macos, arm]
+    if: github.event_name != 'pull_request'
+    needs: [setup, linux, windows, macos, arm, build_with_libiio0]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -171,7 +149,7 @@ jobs:
   # Push to Cloudsmith
   #############################################
   push-cloudsmith:
-    if: needs.setup.outputs.is_v0 == 'true' || needs.setup.outputs.is_release == 'true'
+    # if: needs.setup.outputs.is_v0 == 'true' || needs.setup.outputs.is_release == 'true'
     needs: [setup, check-artifacts]
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -186,22 +164,11 @@ jobs:
 
       - name: Upload to Cloudsmith
         env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          CLOUDSMITH_API_KEY: ${{ secrets.TEST_REPO_CLOUDSMITH_TOKEN }}
         run: |
           set -e
-
-          # Retry wrapper for network calls
-          cloudsmith_push() {
-            local i
-            for i in 1 2 3; do
-              cloudsmith push raw "$@" && return 0
-              echo "Attempt ${i}/3 failed, retrying in 5s..."
-              sleep 5
-            done
-            return 1
-          }
-
-          VERSION="${{ needs.setup.outputs.cloudsmith_version }}"
+          
+          VERSION="${{ needs.setup.outputs.cloudsmith-version }}"
           ARTIFACTS="${{ github.workspace }}/artifacts"
 
           for dir in "${ARTIFACTS}"/*/; do
@@ -214,7 +181,7 @@ jobs:
               cloudsmith_push --republish \
                 --tags "${tag}" \
                 --version "${VERSION}" \
-                adi/external "${ARTIFACTS}/${tag}.zip"
+                adi/test-alin-repo "${ARTIFACTS}/${tag}.zip"
               rm "${ARTIFACTS}/${tag}.zip"
               continue
             fi
@@ -237,38 +204,38 @@ jobs:
                 --name "${stable}.${ext}" \
                 --tags "${tag}" \
                 --version "${VERSION}" \
-                adi/external "${file}"
+                adi/test-alin-repo "${file}"
             done
           done
   
   #############################################
   # Push to GitHub Release
   #############################################
-  push-github-release:
-    if: needs.setup.outputs.is_release == 'true'
-    needs: [setup, check-artifacts]
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-        with:
-          fetch-depth: 1
+  # push-github-release:
+  #   if: needs.setup.outputs.is_release == 'true'
+  #   needs: [setup, check-artifacts]
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 10
+  #   steps:
+  #     - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+  #       with:
+  #         fetch-depth: 1
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3
-        with:
-          path: ${{ github.workspace }}/artifacts
+  #     - name: Download all artifacts
+  #       uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3
+  #       with:
+  #         path: ${{ github.workspace }}/artifacts
 
-      - name: Prepare assets for release
-        run: ./CI/prepare_assets.sh release
-        env:
-          BUILD_SOURCESDIRECTORY: ${{ github.workspace }}
-          BUILD_ARTIFACTSTAGINGDIRECTORY: ${{ github.workspace }}/artifacts
+  #     - name: Prepare assets for release
+  #       run: ./CI/prepare_assets.sh release
+  #       env:
+  #         BUILD_SOURCESDIRECTORY: ${{ github.workspace }}
+  #         BUILD_ARTIFACTSTAGINGDIRECTORY: ${{ github.workspace }}/artifacts
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@a6c7483a42ee9d5daced968f6c217562cd680f7f
-        with:
-          draft: true
-          name: "libad9361 release ${{ github.ref_name }}"
-          files: ${{ github.workspace }}/artifacts/*
-          generate_release_notes: true
+  #     - name: Create GitHub Release
+  #       uses: softprops/action-gh-release@a6c7483a42ee9d5daced968f6c217562cd680f7f
+  #       with:
+  #         draft: true
+  #         name: "libad9361 release ${{ github.ref_name }}"
+  #         files: ${{ github.workspace }}/artifacts/*
+  #         generate_release_notes: true

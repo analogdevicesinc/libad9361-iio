@@ -59,13 +59,13 @@ jobs:
       - name: Setup Python venv and install dependencies
         run: |
           set -e
-          uv python install 3.10
-          uv venv --python 3.10 /tmp/cloudsmith-venv
+          uv python install 3.11
+          uv venv --python 3.11 /tmp/cloudsmith-venv
           uv pip install --python /tmp/cloudsmith-venv/bin/python3 requests 
 
       - name: Get libiio from Cloudsmith
         env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          CLOUDSMITH_API_KEY: ${{ secrets.TEST_REPO_CLOUDSMITH_TOKEN }}
           PYTHON: /tmp/cloudsmith-venv/bin/python3
         run: |
           set -e
@@ -102,8 +102,8 @@ jobs:
         with:
           name: ${{ matrix.artifact-name }}
           path: |
-            build/*.deb
-            build/*.tar.gz
+            build/*9361*.deb
+            build/*9361*.tar.gz
 
   cross-arch:
     name: ${{ matrix.artifact-name }}
@@ -140,8 +140,8 @@ jobs:
       - name: Setup Python venv and install dependencies
         run: |
           set -e
-          uv python install 3.10
-          uv venv --python 3.10 /tmp/cloudsmith-venv
+          uv python install 3.11
+          uv venv --python 3.11 /tmp/cloudsmith-venv
           uv pip install --python /tmp/cloudsmith-venv/bin/python3 requests
 
       - name: Get libiio from Cloudsmith
@@ -183,5 +183,5 @@ jobs:
         with:
           name: ${{ matrix.artifact-name }}
           path: |
-            build/*.deb
-            build/*.tar.gz
+            build/*9361*.deb
+            build/*9361*.tar.gz
