@@ -178,7 +178,7 @@ jobs:
             # Windows: zip the whole directory and push as one archive
             if [[ "${tag}" == Windows-* ]]; then
               zip -r -j "${ARTIFACTS}/${tag}.zip" "${dir}"
-              cloudsmith_push --republish \
+              cloudsmith push raw --republish \
                 --tags "${tag}" \
                 --version "${VERSION}" \
                 adi/test-alin-repo "${ARTIFACTS}/${tag}.zip"
@@ -200,7 +200,7 @@ jobs:
                 stable="${stable}-${tag}"
               fi
 
-              cloudsmith_push --republish \
+              cloudsmith push raw --republish \
                 --name "${stable}.${ext}" \
                 --tags "${tag}" \
                 --version "${VERSION}" \
