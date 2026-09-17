@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.87)
+cmake_minimum_required(VERSION 3.5)
 project(libad9361-py NONE)
 
 if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
