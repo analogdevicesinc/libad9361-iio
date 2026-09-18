@@ -107,7 +107,12 @@ set_target_properties(ad9361 PROPERTIES
 	C_STANDARD_REQUIRED ON
 	C_EXTENSIONS OFF
 )
-target_link_libraries(ad9361 LINK_PRIVATE ${LIBIIO_LIBRARIES})
+find_library(MATH_LIBRARY m)
+if(MATH_LIBRARY)
+    target_link_libraries(ad9361 LINK_PRIVATE ${LIBIIO_LIBRARIES} ${MATH_LIBRARY})
+else()
+    target_link_libraries(ad9361 LINK_PRIVATE ${LIBIIO_LIBRARIES})
+endif()
 
 if (MSVC)
 	set_target_properties(ad9361 PROPERTIES OUTPUT_NAME libad9361)
