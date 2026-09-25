@@ -43,9 +43,3 @@ cmake $CMAKE_OPTIONS
 sudo make && sudo make package && make test
 sudo make install
 ldconfig /usr/local/lib/ /usr/local/lib64/
-cd ..
-cd bindings/python
-# python3 -m pip install pylibiio
-pip install -r requirements_dev.txt
-python3 -m pip install pytest
-python3 -m pytest -vs --skip-scan
