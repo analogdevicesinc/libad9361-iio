@@ -1,0 +1,308 @@
+name: Build libad9361 across multiple os and arhitectures 
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - next_stable
+      - libad9361-iio-v0
+      - staging/*
+      - 20*
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - main
+      - next_stable
+      - libad9361-iio-v0
+      - 20*
+  schedule:
+  - cron: '0 0 1 * *'
+  
+
+jobs:
+  scheduled-dispatch:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - run: gh workflow run main.yml --ref libad9361-iio-v0
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+
+  setup:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    outputs:
+      build-type: ${{ steps.set.outputs.build-type }}
+      libiio-version: ${{steps.set.outputs.libiio-version }}
+      is-v0: ${{ steps.set.outputs.is-v0 }}
+      is-release: ${{ steps.set.outputs.is-release }}
+      cloudsmith-version: ${{ steps.set.outputs.cloudsmith-version }}
+    steps:
+      - id: set
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "build-type=Release" >> "${GITHUB_OUTPUT}"
+            echo "is-release=true" >> "${GITHUB_OUTPUT}"
+            echo "cloudsmith-version=${GITHUB_REF#refs/tags/}" >> "${GITHUB_OUTPUT}"
+            echo "libiio-version=libiio-v0~latest" >> "${GITHUB_OUTPUT}"
+          else
+            echo "build-type=RelWithDebInfo" >> "${GITHUB_OUTPUT}"
+            echo "is-release=false" >> "${GITHUB_OUTPUT}"
+            echo "libiio-version=libiio-v0~latest" >> "${GITHUB_OUTPUT}"
+          fi
+          if [[ "${GITHUB_REF}" == "refs/heads/libad9361-iio-v0" ]]; then
+            echo "is-v0=true" >> "${GITHUB_OUTPUT}"
+            echo "cloudsmith-version=libad9361-iio-v0~latest" >> "${GITHUB_OUTPUT}"
+            echo "libiio-version=libiio-v0~latest" >> "${GITHUB_OUTPUT}" 
+          elif [[ "${GITHUB_REF}" == refs/heads/staging/* ]]; then
+            echo "is-v0=false" >> "${GITHUB_OUTPUT}"
+            echo "cloudsmith-version=test9361-v0" >> "${GITHUB_OUTPUT}"
+            echo "libiio-version=libiio-v0~latest" >> "${GITHUB_OUTPUT}"
+          else
+            echo "is-v0=false" >> "${GITHUB_OUTPUT}"
+            echo "libiio-version=libiio-v0~latest" >> "${GITHUB_OUTPUT}"
+          fi
+
+  ############################################
+  # BUILDS
+  ############################################
+  linux:
+    needs: setup
+    uses: ./.github/workflows/_linux-builds.yml
+    with:
+      build-type: ${{ needs.setup.outputs.build-type }}
+      libiio-version: ${{ needs.setup.outputs.libiio-version }}
+    secrets: inherit
+  arm:
+    needs: setup
+    uses: ./.github/workflows/_arm-builds.yml
+    with:
+      build-type: ${{ needs.setup.outputs.build-type }}
+      libiio-version: ${{ needs.setup.outputs.libiio-version }}
+    secrets: inherit
+  macos:
+    needs: setup
+    uses: ./.github/workflows/_macos-builds.yml
+    with:
+      build-type: ${{ needs.setup.outputs.build-type }}
+      libiio-version: ${{ needs.setup.outputs.libiio-version }}
+    secrets: inherit
+  windows:
+    needs: setup
+    uses: ./.github/workflows/_windows-builds.yml
+    with:
+      build-type: ${{ needs.setup.outputs.build-type }}
+      libiio-version: ${{ needs.setup.outputs.libiio-version }}
+    secrets: inherit
+
+  #############################################
+  # Python sdist/wheel
+  #############################################
+  build-pypi:
+    if: needs.setup.outputs.is-v0 == 'true' || needs.setup.outputs.is-release == 'true'
+    needs: [setup]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+      - name: Get libiio from Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          set -e
+          python3 -m pip install requests
+          wget https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/refs/heads/main/utils/cloudsmith_utils/cloudsmith_helper.py \
+            -O /tmp/cloudsmith_helper.py
+          UBUNTU_VER=$(lsb_release -rs)
+          mkdir -p /tmp/libiio && cd /tmp/libiio
+          python3 /tmp/cloudsmith_helper.py \
+            --method get_artifacts_from_location \
+            --repo external \
+            --package_version "${{ needs.setup.outputs.libiio-version }}" \
+            --package_name "Linux-Ubuntu-${UBUNTU_VER}.deb"
+          sudo dpkg -i libiio-*.deb || sudo apt-get install -f -y
+          sudo ldconfig
+
+      - uses: analogdevicesinc/shared-actions/pypi-build@main
+        with:
+          cmake-options: '-DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON'
+          apt-packages: 'cmake libxml2-dev libusb-1.0-0-dev'
+          run-tests: 'true'
+          pytest-args: '-vs --skip-scan'
+          artifact-name: libad9361-dist
+
+ #############################################
+  # Check Artifacts
+  #############################################
+  check-artifacts:
+    if: |
+      always() &&
+      !cancelled() &&
+      !contains(needs.*.result, 'failure') &&
+      (needs.setup.outputs.is-v0 == 'true' || needs.setup.outputs.is-release == 'true')
+    needs: [setup, linux, windows, macos, arm, build-pypi]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: artifacts/
+
+      - name: Check artifacts
+        run: |
+          set -e
+          MISSING=0
+          for dir in artifacts/*/; do
+            name=$(basename "$dir")
+            count=$(find "$dir" -type f | wc -l)
+            if [ "$count" -eq 0 ]; then
+              echo "EMPTY: $name"
+              MISSING=$((MISSING + 1))
+            else
+              echo "OK: $name ($count file(s))"
+            fi
+          done
+          echo ""
+          find artifacts -type f | sort | tee artifact_manifest.txt
+          echo ""
+          echo "Total: $(wc -l < artifact_manifest.txt) files"
+          if [ "$MISSING" -gt 0 ]; then
+            echo "ERROR: $MISSING artifact(s) empty"
+            exit 1
+          fi
+
+      - name: Upload manifest
+        uses: actions/upload-artifact@v7
+        with:
+          name: Artifact-manifest
+          path: artifact_manifest.txt
+          
+  #############################################
+  # Push to Cloudsmith
+  #############################################
+  push-cloudsmith:
+    if: needs.setup.outputs.is-v0 == 'true' || needs.setup.outputs.is-release == 'true'
+    needs: [setup, check-artifacts]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: ${{ github.workspace }}/artifacts
+
+      - name: Install Cloudsmith CLI
+        run: pip install cloudsmith-cli
+
+      - name: Upload to Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          set -e
+          
+          VERSION="${{ needs.setup.outputs.cloudsmith-version }}"
+          ARTIFACTS="${{ github.workspace }}/artifacts"
+
+          for dir in "${ARTIFACTS}"/*/; do
+            tag=$(basename "${dir}")
+            [[ "${tag}" == "Artifact manifest" ]] && continue
+
+            # Windows: zip the whole directory and push as one archive
+            if [[ "${tag}" == Windows-* ]]; then
+              zip -r -j "${ARTIFACTS}/${tag}.zip" "${dir}"
+              cloudsmith push raw --republish \
+                --tags "${tag}" \
+                --version "${VERSION}" \
+                adi/external "${ARTIFACTS}/${tag}.zip"
+              rm "${ARTIFACTS}/${tag}.zip"
+              continue
+            fi
+
+           
+            for file in "${dir}"*; do
+              [[ -f "${file}" ]] || continue
+              filename=$(basename "${file}")
+
+              stable=$(echo "${filename}" | sed 's/\.g[0-9a-f]\+//')
+              ext="${stable##*.}"
+              stable="${stable%.${ext}}"
+
+              # macOS .pkg
+              if [[ "${filename}" != *"${tag}"* ]]; then
+                stable="${stable}-${tag}"
+              fi
+
+              cloudsmith push raw --republish \
+                --name "${stable}.${ext}" \
+                --tags "${tag}" \
+                --version "${VERSION}" \
+                adi/external "${file}"
+            done
+          done
+  
+  #############################################
+  # Push to GitHub Release
+  #############################################
+  push-github-release:
+    if: needs.setup.outputs.is-release == 'true'
+    needs: [setup, check-artifacts]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: ${{ github.workspace }}/artifacts
+
+      - name: Prepare assets for release
+        run: ./CI/prepare_assets.sh release
+        env:
+          BUILD_SOURCESDIRECTORY: ${{ github.workspace }}
+          BUILD_ARTIFACTSTAGINGDIRECTORY: ${{ github.workspace }}/artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: "libad9361 release ${{ github.ref_name }}"
+          files: ${{ github.workspace }}/artifacts/*
+          generate_release_notes: true
+
+  #############################################
+  # Publish to PyPI (manual approval)
+  #############################################
+  push-pypi:
+    if: needs.setup.outputs.is-release == 'true'
+    needs: [setup, build-pypi, push-github-release]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: libad9361-dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

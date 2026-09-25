@@ -1,0 +1,254 @@
+name: ARM Builds
+
+on:
+  workflow_call:
+    inputs:
+      build-type:
+        required: true
+        type: string
+      libiio-version:
+        required: true
+        type: string
+
+jobs:
+  arm-native:
+    name: ${{ matrix.artifact-name }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ubuntu:22.04
+            platform-flag: ''
+            artifact-name: Ubuntu-22.04-arm64v8
+          - image: arm32v7/ubuntu:22.04
+            platform-flag: '--platform linux/arm/v7'
+            artifact-name: Ubuntu-22.04-arm32v7
+
+          - image: ubuntu:26.04
+            platform-flag: ''
+            artifact-name: Ubuntu-26.04-arm64v8
+          - image: arm32v7/ubuntu:26.04
+            platform-flag: '--platform linux/arm/v7'
+            artifact-name: Ubuntu-26.04-arm32v7
+
+          - image: debian:bookworm
+            platform-flag: ''
+            artifact-name: Debian-12-arm64
+          - image: arm32v7/debian:bookworm
+            platform-flag: '--platform linux/arm/v7'
+            artifact-name: Debian-12-armhf
+
+          - image: debian:trixie
+            platform-flag: ''
+            artifact-name: Debian-13-arm64
+          - image: arm32v7/debian:trixie
+            platform-flag: '--platform linux/arm/v7'
+            artifact-name: Debian-13-armhf
+    env:
+      ARTIFACTNAME: ${{ matrix.artifact-name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+
+      - name: Setup Python venv and install dependencies
+        run: |
+          set -e
+          uv python install 3.11
+          uv venv --python 3.11 /tmp/cloudsmith-venv
+          uv pip install --python /tmp/cloudsmith-venv/bin/python3 requests 
+
+      - name: Get libiio from Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          PYTHON: /tmp/cloudsmith-venv/bin/python3
+        run: |
+          set -e
+          wget -q https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/refs/heads/main/utils/cloudsmith_utils/cloudsmith_helper.py \
+            -O /tmp/cloudsmith_helper.py
+          mkdir -p build && cd build
+          $PYTHON /tmp/cloudsmith_helper.py \
+            --method get_artifacts_from_location \
+            --repo external \
+            --package_version "${{inputs.libiio-version}}" \
+            --package_name "${{ matrix.artifact-name }}.deb"
+
+      - name: Build
+        run: |
+          set -e
+          docker run \
+            ${{ matrix.platform-flag }} \
+            --rm -t --privileged \
+            -e ARTIFACTNAME=${{ matrix.artifact-name }} \
+            -v "${{ github.workspace }}":"/ci" \
+            "${{ matrix.image }}" \
+            /bin/bash -c "
+              set -e
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update
+              apt-get install -y build-essential cmake git libxml2-dev python3-setuptools
+              cd /ci
+              bash ./CI/travis/ci-ubuntu.sh
+            "
+
+      - name: Upload artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: |
+            build/*9361*.deb
+            build/*9361*.tar.gz
+
+  arm-native-upstream:
+    name: upstream-${{ matrix.distro }}-${{ matrix.architecture }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    env:
+      APP_NAME: libad9361
+      ARTIFACT_NAME: libad9361-libiio-upstream
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - docker_image: arm64v8/debian:trixie
+            distro: debian13
+            architecture: arm64
+            platform_flag: ''
+          - docker_image: arm32v7/debian:trixie
+            distro: debian13
+            architecture: armhf
+            platform_flag: '--platform linux/arm/v7'
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          path: ${{ env.APP_NAME }}
+
+      - name: Identify version
+        id: set_version
+        run: |
+          # Extract version from CMakeLists.txt project() line
+          cmake_version=$(grep -oP 'project\s*\([^)]*VERSION\s+\K[0-9]+\.[0-9]+(\.[0-9]+)?' "${{ env.APP_NAME }}/CMakeLists.txt")
+          if [[ -z "$cmake_version" ]]; then
+            echo "Failed to extract version from CMakeLists.txt, using default"
+            cmake_version="0.0.1+${{ github.sha }}"
+          fi
+          echo "Version to use: $cmake_version"
+          echo "version=$cmake_version" >> "$GITHUB_OUTPUT"
+
+      - name: Start persistent container
+        run: |
+          docker run -d \
+            ${{ matrix.platform_flag }} \
+            --name ${{ matrix.distro }}-${{ matrix.architecture }} \
+            -v "$GITHUB_WORKSPACE/${{ env.APP_NAME }}:/workspace/${{ env.APP_NAME }}" \
+            -w /workspace/${{ env.APP_NAME }} \
+            ${{ matrix.docker_image }} tail -f /dev/null
+
+      - name: Create debian package
+        run: |
+          docker exec ${{ matrix.distro }}-${{ matrix.architecture }} sh -c ".github/scripts/create_debian.sh ${{ steps.set_version.outputs.version }}"
+
+      - name: Copy debian artifacts from container to host
+        run: |
+          docker cp ${{ matrix.distro }}-${{ matrix.architecture }}:/workspace/. ./artifacts/
+          ls -la ./artifacts/
+
+      - name: Upload debian artifacts to github
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-${{ matrix.distro }}-${{ matrix.architecture }}
+          path: |
+            artifacts/*.deb
+            artifacts/*.dsc
+            artifacts/*.debian.tar.xz
+            artifacts/*.orig.tar.gz
+          if-no-files-found: error
+
+  cross-arch:
+    name: ${{ matrix.artifact-name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ubuntu:22.04
+            arch: ppc64le
+            artifact-name: Ubuntu-22.04-ppc64le
+          - image: ubuntu:22.04
+            arch: s390x
+            artifact-name: Ubuntu-22.04-s390x
+          - image: ubuntu:26.04
+            arch: ppc64le
+            artifact-name: Ubuntu-26.04-ppc64le
+          - image: ubuntu:26.04
+            arch: s390x
+            artifact-name: Ubuntu-26.04-s390x
+    env:
+      ARTIFACTNAME: ${{ matrix.artifact-name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+
+      - name: Setup Python venv and install dependencies
+        run: |
+          set -e
+          uv python install 3.11
+          uv venv --python 3.11 /tmp/cloudsmith-venv
+          uv pip install --python /tmp/cloudsmith-venv/bin/python3 requests
+
+      - name: Get libiio from Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          PYTHON: /tmp/cloudsmith-venv/bin/python3
+        run: |
+          set -e
+          wget -q https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/refs/heads/main/utils/cloudsmith_utils/cloudsmith_helper.py \
+            -O /tmp/cloudsmith_helper.py
+          mkdir -p build && cd build
+          $PYTHON /tmp/cloudsmith_helper.py \
+            --method get_artifacts_from_location \
+            --repo external \
+            --package_version "${{inputs.libiio-version}}" \
+            --package_name "${{ matrix.artifact-name }}.deb"
+
+      - name: Build
+        run: |
+          set -e
+          sudo docker run \
+            --platform "linux/${{ matrix.arch }}" \
+            --rm -t --privileged \
+            -e ARTIFACTNAME=${{ matrix.artifact-name }} \
+            -v "${{ github.workspace }}":"/ci" \
+            "${{ matrix.image }}" \
+            /bin/bash -c "
+              set -e
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update
+              apt-get install -y build-essential cmake git libxml2-dev python3-setuptools
+              cd /ci
+              bash ./CI/travis/ci-ubuntu.sh
+            "
+
+      - name: Upload artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: |
+            build/*9361*.deb
+            build/*9361*.tar.gz
