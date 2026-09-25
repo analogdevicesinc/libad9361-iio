@@ -1,3 +1,8 @@
+# libiio is a PRIVATE include of the ad9361 target, so linking ad9361 does
+# not propagate its headers. The hardware tests include <iio.h> directly,
+# so the include directory must be added here explicitly.
+include_directories(${LIBIIO_INCLUDEDIR})
+
 add_executable(FilterDesignerTest filter_designer_test.c)
 target_link_libraries(FilterDesignerTest LINK_PRIVATE ${LIBIIO_LIBRARIES} ad9361)
 add_test(NAME FilterDesignerTest

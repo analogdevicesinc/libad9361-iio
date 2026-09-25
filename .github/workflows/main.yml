@@ -1,4 +1,4 @@
-name: Build libad9361 across multiple os and arhitectures 
+name: Build libad9361 across multiple OS and architectures
 
 permissions:
   contents: read
