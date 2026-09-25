@@ -1,0 +1,50 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: libad9361
+Upstream-Contact: EngineerZone <https://ez.analog.com/sw-interface-tools/>
+Source: https://github.com/analogdevicesinc/libad9361-iio/
+
+Files: *
+Copyright: 2015-2017, 2021, Analog Devices, Inc.
+License: LGPL-2.1
+
+Files: CMakeLists.txt
+ ad9361.h
+ ad9361_baseband_auto_rate.c
+ ad9361_design_taps.c
+ ad9361_fmcomms5_phase_sync.c
+ ad9361_multichip_sync.c
+ filterdesigner/internal_design_filter_cg.c
+ filterdesigner/internal_design_filter_cg.h
+ filterdesigner/internal_design_filter_cg_emxutil.c
+ filterdesigner/internal_design_filter_cg_emxutil.h
+ filterdesigner/internal_design_filter_cg_types.h
+ filterdesigner/rtGetInf.c
+ filterdesigner/rtGetInf.h
+ filterdesigner/rtGetNaN.c
+ filterdesigner/rtGetNaN.h
+ filterdesigner/rt_defines.h
+ filterdesigner/rt_nonfinite.c
+ filterdesigner/rt_nonfinite.h
+ filterdesigner/rtwtypes.h
+Copyright: 2015-2017, Analog Devices, Inc.
+License: LGPL-2.1+
+
+Files: bindings/python/ad9361.py
+ bindings/python/setup.py.cmakein
+Copyright: 2021, Analog Devices, Inc.
+License: LGPL-2.1+
+
+License: LGPL-2.1
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU Lesser General Public License as published by the
+ Free Software Foundation; version 2.1 of the License.
+ On Debian systems, the complete text of version 2.1 of the GNU Lesser
+ General Public License can be found in '/usr/share/common-licenses/LGPL-2.1'.
+
+License: LGPL-2.1+
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU Lesser General Public License as published by the
+ Free Software Foundation; version 2.1 of the License, or (at
+ your option) any later version.
+ On Debian systems, the complete text of version 2.1 of the GNU Lesser
+ General Public License can be found in '/usr/share/common-licenses/LGPL-2.1'.
