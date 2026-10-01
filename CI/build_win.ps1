@@ -1,7 +1,9 @@
 
 $COMPILER=$Env:COMPILER
 $ARCH=$Env:ARCH
+$BUILD_TYPE=if ($Env:CMAKE_BUILD_TYPE) { $Env:CMAKE_BUILD_TYPE } else { "Release" }
 
+# Build type comes from CMAKE_BUILD_TYPE (passed by CI); defaults to Release.
 $src_dir=$pwd
 
 choco install sphinx
@@ -18,10 +20,9 @@ cmake -G "$COMPILER" -A "$ARCH" `
         -DLIBIIO_LIBRARIES:FILEPATH=$pwd\libiio.lib `
         -DLIBIIO_INCLUDEDIR:PATH=$pwd `
         -DCMAKE_C_FLAGS="/I$pwd" `
-        -DCMAKE_CONFIGURATION_TYPES=Release `
 	..
 
-cmake --build . --config Release
+cmake --build . --config $BUILD_TYPE
 
 if ( $LASTEXITCODE -ne 0 ) {
 		throw "[*] cmake build failure"

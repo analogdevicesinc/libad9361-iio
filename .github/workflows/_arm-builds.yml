@@ -87,6 +87,7 @@ jobs:
             ${{ matrix.platform-flag }} \
             --rm -t --privileged \
             -e ARTIFACTNAME=${{ matrix.artifact-name }} \
+            -e CMAKE_BUILD_TYPE=${{ inputs.build-type }} \
             -v "${{ github.workspace }}":"/ci" \
             "${{ matrix.image }}" \
             /bin/bash -c "
@@ -235,6 +236,7 @@ jobs:
             --platform "linux/${{ matrix.arch }}" \
             --rm -t --privileged \
             -e ARTIFACTNAME=${{ matrix.artifact-name }} \
+            -e CMAKE_BUILD_TYPE=${{ inputs.build-type }} \
             -v "${{ github.workspace }}":"/ci" \
             "${{ matrix.image }}" \
             /bin/bash -c "
