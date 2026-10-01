@@ -1,0 +1,124 @@
+name: Windows Builds
+
+on:
+  workflow_call:
+    inputs:
+      download_branch:
+        required: true
+        type: string
+      checkout_ref:
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  windows-builds:
+    runs-on: ${{ matrix.imageName }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: VS2022
+            imageName: 'windows-2022'
+            COMPILER: 'Visual Studio 17 2022'
+            ARCH: 'x64'
+            artifactName: 'Windows-VS-2022-x64'
+    env:
+      COMPILER: ${{ matrix.COMPILER }}
+      ARCH: ${{ matrix.ARCH }}
+      BUILD_ARTIFACTSTAGINGDIRECTORY: ${{ github.workspace }}/artifact_staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.checkout_ref }}
+          fetch-depth: 1
+
+      - name: Use Python 3.9
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.9'
+
+      - name: Prepare staging directory
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path "$env:BUILD_ARTIFACTSTAGINGDIRECTORY" | Out-Null
+
+      - name: Download libiio build artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repo: analogdevicesinc/libiio
+          workflow: build.yml
+          workflow_conclusion: success
+          branch: ${{ inputs.download_branch }}
+          name: ${{ matrix.artifactName }}
+          path: ${{ github.workspace }}/build/
+          if_no_artifact_found: fail
+
+      - name: Build
+        shell: pwsh
+        run: .\CI\build_win.ps1
+
+      - name: Copy libraries
+        shell: pwsh
+        run: Copy-Item -Path "${{ github.workspace }}\build\Release\*" -Destination "$env:BUILD_ARTIFACTSTAGINGDIRECTORY" -Recurse -Force
+
+      - name: Copy ad9361.h header
+        shell: pwsh
+        run: Copy-Item -Path "${{ github.workspace }}\ad9361.h" -Destination "$env:BUILD_ARTIFACTSTAGINGDIRECTORY" -Force -ErrorAction SilentlyContinue
+
+      - name: Copy .exe files
+        shell: pwsh
+        run: Copy-Item -Path "${{ github.workspace }}\build\*.exe" -Destination "$env:BUILD_ARTIFACTSTAGINGDIRECTORY" -Force -ErrorAction SilentlyContinue
+
+      - name: Copy libiio.dll
+        shell: pwsh
+        run: Copy-Item -Path "${{ github.workspace }}\build\libiio.dll" -Destination "$env:BUILD_ARTIFACTSTAGINGDIRECTORY" -Force -ErrorAction SilentlyContinue
+
+      - name: Copy dependencies
+        shell: pwsh
+        run: .\CI\publish_deps.ps1
+
+      - name: Publish build artifact
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifactName }}
+          path: ${{ github.workspace }}/artifact_staging
+          if-no-files-found: error
+
+  generate-setup-exe:
+    needs: windows-builds
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: windows-2019
+    env:
+      BUILD_ARTIFACTSTAGINGDIRECTORY: ${{ github.workspace }}/artifact_staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.checkout_ref }}
+          fetch-depth: 1
+
+      - name: Prepare staging directory
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path "$env:BUILD_ARTIFACTSTAGINGDIRECTORY" | Out-Null
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: ${{ github.workspace }}/artifact_staging
+
+      - name: Generate libad9361-setup.exe
+        shell: pwsh
+        run: .\CI\generate_exe.ps1
+
+      - name: Publish setup exe artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Libad9361-Setup-Exe
+          path: ${{ github.workspace }}/artifact_staging
+          if-no-files-found: error
