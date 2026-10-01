@@ -6,6 +6,9 @@ on:
       libiio-version:
         required: true
         type: string
+    secrets:
+      CLOUDSMITH_API_KEY:
+        required: true
 
 jobs:
   macos:
