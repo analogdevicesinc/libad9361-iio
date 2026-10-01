@@ -68,7 +68,7 @@ jobs:
           PYTHON: /tmp/cloudsmith-venv/bin/python3
         run: |
           set -e
-          wget -q https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/refs/heads/main/utils/cloudsmith_utils/cloudsmith_helper.py \
+          wget -q https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/8d7a96779dd034005279ed1c7d052514df695d8c/utils/cloudsmith_utils/cloudsmith_helper.py \
             -O /tmp/cloudsmith_helper.py
           mkdir -p build && cd build
           $PYTHON /tmp/cloudsmith_helper.py \
@@ -215,7 +215,7 @@ jobs:
           PYTHON: /tmp/cloudsmith-venv/bin/python3
         run: |
           set -e
-          wget -q https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/refs/heads/main/utils/cloudsmith_utils/cloudsmith_helper.py \
+          wget -q https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/8d7a96779dd034005279ed1c7d052514df695d8c/utils/cloudsmith_utils/cloudsmith_helper.py \
             -O /tmp/cloudsmith_helper.py
           mkdir -p build && cd build
           $PYTHON /tmp/cloudsmith_helper.py \

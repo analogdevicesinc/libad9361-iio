@@ -104,7 +104,7 @@ jobs:
         run: |
           set -e
           python3 -m pip install requests
-          wget https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/refs/heads/main/utils/cloudsmith_utils/cloudsmith_helper.py \
+          wget https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/8d7a96779dd034005279ed1c7d052514df695d8c/utils/cloudsmith_utils/cloudsmith_helper.py \
             -O /tmp/cloudsmith_helper.py
           UBUNTU_VER=$(lsb_release -rs)
           mkdir -p /tmp/libiio && cd /tmp/libiio
