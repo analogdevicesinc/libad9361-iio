@@ -56,28 +56,32 @@ jobs:
     uses: ./.github/workflows/_linux-builds.yml
     with:
       libiio-version: ${{ needs.setup.outputs.libiio-version }}
-    secrets: inherit
+    secrets:
+      CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
 
   arm:
     needs: setup
     uses: ./.github/workflows/_arm-builds.yml
     with:
       libiio-version: ${{ needs.setup.outputs.libiio-version }}
-    secrets: inherit
+    secrets:
+      CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
 
   macos:
     needs: setup
     uses: ./.github/workflows/_macos-builds.yml
     with:
       libiio-version: ${{ needs.setup.outputs.libiio-version }}
-    secrets: inherit
+    secrets:
+      CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
 
   windows:
     needs: setup
     uses: ./.github/workflows/_windows-builds.yml
     with:
       libiio-version: ${{ needs.setup.outputs.libiio-version }}
-    secrets: inherit
+    secrets:
+      CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
 
   #############################################
   # Python sdist/wheel
