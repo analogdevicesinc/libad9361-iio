@@ -69,7 +69,7 @@ jobs:
             package-type: rpm
     defaults:
       run:
-        shell: /bin/bash {0}
+        shell: /bin/bash -e {0}
     container:
       image: ${{ matrix.image }}
       env:
