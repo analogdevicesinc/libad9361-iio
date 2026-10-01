@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PYTHON: ${{ github.workspace }}/.venv/bin/python3
+      CMAKE_BUILD_TYPE: ${{ inputs.build-type }}
     timeout-minutes: 15
     strategy:
       fail-fast: false

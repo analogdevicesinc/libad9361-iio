@@ -3,6 +3,9 @@ name: Windows Builds
 on:
   workflow_call:
     inputs:
+      build-type:
+        required: true
+        type: string
       libiio-version:
         required: true
         type: string
@@ -25,6 +28,7 @@ jobs:
       COMPILER: ${{ matrix.compiler }}
       ARCH: ${{ matrix.arch }}
       USE_CSHARP: 'ON'
+      CMAKE_BUILD_TYPE: ${{ inputs.build-type }}
       BUILD_ARTIFACTSTAGINGDIRECTORY: ${{ github.workspace }}\staging
     steps:
       - name: Checkout
@@ -66,7 +70,7 @@ jobs:
       - name: Copy libraries
         shell: pwsh
         run: |
-          Copy-Item -Path "build\Release\*" -Destination "$env:BUILD_ARTIFACTSTAGINGDIRECTORY" -Force
+          Copy-Item -Path "build\${{ inputs.build-type }}\*" -Destination "$env:BUILD_ARTIFACTSTAGINGDIRECTORY" -Force
 
       - name: Copy ad9361.h header
         shell: pwsh
