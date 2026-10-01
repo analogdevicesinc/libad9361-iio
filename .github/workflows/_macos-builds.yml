@@ -3,61 +3,73 @@ name: macOS Builds
 on:
   workflow_call:
     inputs:
-      download_branch:
+      build-type:
         required: true
         type: string
-      checkout_ref:
-        required: false
+      libiio-version:
+        required: true
         type: string
-        default: ''
-
-permissions:
-  contents: read
 
 jobs:
-  macos-builds:
-    runs-on: ${{ matrix.vmImage }}
+  macos:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: macOS_15_x64
-            vmImage: macos-15
-            artifactName: 'macOS-15-x64'
-          - name: macOS_14_x64
-            vmImage: macos-14
-            artifactName: 'macOS-14-x64'
+          - os: macos-15
+            artifact-name: macOS-15-arm64
+          - os: macos-15-large
+            artifact-name: macOS-15-x64
+          - os: macos-26
+            artifact-name: macOS-26-arm64
+          - os: macos-26-large
+            artifact-name: macOS-26-x64
+          - os: xcode-27
+            artifact-name: macOS-27-arm64
+    name: ${{ matrix.artifact-name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     env:
-      PACKAGE_TO_INSTALL: 'build/*.pkg'
+      ARTIFACTNAME: ${{ matrix.artifact-name }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
-          ref: ${{ inputs.checkout_ref }}
           fetch-depth: 1
 
-      - name: Download libiio build artifact
-        uses: dawidd6/action-download-artifact@v6
+      - uses: actions/setup-python@v7
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repo: analogdevicesinc/libiio
-          workflow: build.yml
-          workflow_conclusion: success
-          branch: ${{ inputs.download_branch }}
-          name: ${{ matrix.artifactName }}
-          path: ${{ github.workspace }}/build/
-          if_no_artifact_found: fail
+          python-version: '3.11'
+      - run: pip install requests
 
-      - name: Install Dependencies
-        run: ./CI/travis/before_install_darwin
-
+      - name: Get libiio from Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          set -e
+          wget -q https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/refs/heads/main/utils/cloudsmith_utils/cloudsmith_helper.py \
+            -O /tmp/cloudsmith_helper.py
+          mkdir -p build && cd build
+          python3 /tmp/cloudsmith_helper.py \
+            --method get_artifacts_from_location \
+            --repo external \
+            --package_version "${{inputs.libiio-version}}" \
+            --package_name "${{matrix.artifact-name}}.pkg" 
+      - name: Install dependencies
+        run: |
+          set -e
+          TAR=$(find ${{ github.workspace }}/build -name "*.tar" | head -1)
+          tar xf "$TAR" -C ${{ github.workspace }}/build
+          PKG=$(find ${{ github.workspace }}/build -name "*.pkg" | head -1)
+          PACKAGE_TO_INSTALL="$PKG" ./CI/travis/before_install_darwin
       - name: Build
         run: ./CI/travis/make_darwin
-
-      - name: Publish build artifact
-        if: ${{ github.event_name != 'pull_request' }}
+      - name: Collect PKG artifacts
+        run: |
+          mkdir -p artifact-staging
+          find build -name "*9361*.pkg" -exec cp {} artifact-staging/ \;
+      - name: Upload Artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifactName }}
-          path: ${{ github.workspace }}/build/*.pkg
-          if-no-files-found: ignore
+          name: ${{ matrix.artifact-name }}
+          path: artifact-staging/
