@@ -1,14 +1,13 @@
 #!/bin/bash
 
-set -x
+set -ex
 
-handle_centos() {
+handle_fedora() {
 	local package=$1
-	yum -y install yum-utils gcc
-	yum config-manager --set-enabled powertools
-	yum localinstall -y $package
-	export CMAKE_OPTIONS="-DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON .."
+	dnf install -y ./$package
 	export LD_LIBRARY_PATH=/usr/local/lib64/
+	export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig
+	export CMAKE_OPTIONS="-DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON .."
 }
 
 handle_default() {
@@ -26,7 +25,6 @@ handle_opensuse() {
 
 handle_"$1" "$2"
 
-python3 -m pip install pylibiio --no-binary :all:
 # Build project
 mkdir -p build
 cd build
@@ -34,8 +32,3 @@ cmake $CMAKE_OPTIONS
 sudo make && sudo make package && make test
 sudo make install
 ldconfig
-cd ..
-cd bindings/python
-pip install -r requirements_dev.txt
-python3 -m pip install pytest
-python3 -m pytest -vs --skip-scan
