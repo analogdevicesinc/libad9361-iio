@@ -3,9 +3,6 @@ name: macOS Builds
 on:
   workflow_call:
     inputs:
-      build-type:
-        required: true
-        type: string
       libiio-version:
         required: true
         type: string

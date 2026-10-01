@@ -29,7 +29,6 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      build-type: ${{ steps.set.outputs.build-type }}
       libiio-version: ${{ steps.set.outputs.libiio-version }}
       is-v0: ${{ steps.set.outputs.is-v0 }}
       is-release: ${{ steps.set.outputs.is-release }}
@@ -40,11 +39,9 @@ jobs:
         run: |
           echo "libiio-version=libiio-v0~latest" >> "${GITHUB_OUTPUT}"
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            echo "build-type=Release" >> "${GITHUB_OUTPUT}"
             echo "is-release=true" >> "${GITHUB_OUTPUT}"
             echo "cloudsmith-version=libad9361-iio-${GITHUB_REF#refs/tags/}" >> "${GITHUB_OUTPUT}"
           else
-            echo "build-type=RelWithDebInfo" >> "${GITHUB_OUTPUT}"
             echo "is-release=false" >> "${GITHUB_OUTPUT}"
           fi
           if [[ "${GITHUB_REF}" == "refs/heads/libad9361-iio-v0" ]]; then
@@ -58,7 +55,6 @@ jobs:
     needs: setup
     uses: ./.github/workflows/_linux-builds.yml
     with:
-      build-type: ${{ needs.setup.outputs.build-type }}
       libiio-version: ${{ needs.setup.outputs.libiio-version }}
     secrets: inherit
 
@@ -66,7 +62,6 @@ jobs:
     needs: setup
     uses: ./.github/workflows/_arm-builds.yml
     with:
-      build-type: ${{ needs.setup.outputs.build-type }}
       libiio-version: ${{ needs.setup.outputs.libiio-version }}
     secrets: inherit
 
@@ -74,7 +69,6 @@ jobs:
     needs: setup
     uses: ./.github/workflows/_macos-builds.yml
     with:
-      build-type: ${{ needs.setup.outputs.build-type }}
       libiio-version: ${{ needs.setup.outputs.libiio-version }}
     secrets: inherit
 
@@ -82,7 +76,6 @@ jobs:
     needs: setup
     uses: ./.github/workflows/_windows-builds.yml
     with:
-      build-type: ${{ needs.setup.outputs.build-type }}
       libiio-version: ${{ needs.setup.outputs.libiio-version }}
     secrets: inherit
 
