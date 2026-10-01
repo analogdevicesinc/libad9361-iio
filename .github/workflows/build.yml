@@ -12,6 +12,8 @@ on:
       - libad9361-iio-v0
       - 'staging/*'
       - '20*'
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - main
