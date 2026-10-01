@@ -74,7 +74,8 @@ jobs:
     with:
       build-type: ${{ needs.setup.outputs.build-type }}
       libiio-version: ${{ needs.setup.outputs.libiio-version }}
-    secrets: inherit
+    secrets:
+      CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
 
   arm:
     needs: setup
@@ -82,7 +83,8 @@ jobs:
     with:
       build-type: ${{ needs.setup.outputs.build-type }}
       libiio-version: ${{ needs.setup.outputs.libiio-version }}
-    secrets: inherit
+    secrets:
+      CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
 
   macos:
     needs: setup
@@ -90,7 +92,8 @@ jobs:
     with:
       build-type: ${{ needs.setup.outputs.build-type }}
       libiio-version: ${{ needs.setup.outputs.libiio-version }}
-    secrets: inherit
+    secrets:
+      CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
 
   windows:
     needs: setup
@@ -98,7 +101,8 @@ jobs:
     with:
       build-type: ${{ needs.setup.outputs.build-type }}
       libiio-version: ${{ needs.setup.outputs.libiio-version }}
-    secrets: inherit
+    secrets:
+      CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
 
   #############################################
   # Python sdist/wheel
