@@ -42,7 +42,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/refs/heads/main/utils/cloudsmith_utils/cloudsmith_helper.py" `
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/8d7a96779dd034005279ed1c7d052514df695d8c/utils/cloudsmith_utils/cloudsmith_helper.py" `
             -OutFile "$env:TEMP\cloudsmith_helper.py"
           if (!(Test-Path build)) { mkdir build }
           cd build
