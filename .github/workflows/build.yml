@@ -7,17 +7,33 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
       - next_stable
       - libad9361-iio-v0
       - 'staging/*'
       - '20*'
+    tags:
+      - 'v*'
+    paths-ignore:
+      - '**/*.md'
+      - 'doc/**'
+      - '.gitignore'
+      - 'LICENSE*'
+      - 'COPYING*'
+      - 'CODE_OF_CONDUCT*'
+      - 'CONTRIBUTING*'
   pull_request:
     branches:
-      - main
       - next_stable
       - libad9361-iio-v0
       - '20*'
+    paths-ignore:
+      - '**/*.md'
+      - 'doc/**'
+      - '.gitignore'
+      - 'LICENSE*'
+      - 'COPYING*'
+      - 'CODE_OF_CONDUCT*'
+      - 'CONTRIBUTING*'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
