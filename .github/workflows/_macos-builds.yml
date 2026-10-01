@@ -1,0 +1,63 @@
+name: macOS Builds
+
+on:
+  workflow_call:
+    inputs:
+      download_branch:
+        required: true
+        type: string
+      checkout_ref:
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  macos-builds:
+    runs-on: ${{ matrix.vmImage }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS_15_x64
+            vmImage: macos-15
+            artifactName: 'macOS-15-x64'
+          - name: macOS_14_x64
+            vmImage: macos-14
+            artifactName: 'macOS-14-x64'
+    env:
+      PACKAGE_TO_INSTALL: 'build/*.pkg'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.checkout_ref }}
+          fetch-depth: 1
+
+      - name: Download libiio build artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repo: analogdevicesinc/libiio
+          workflow: build.yml
+          workflow_conclusion: success
+          branch: ${{ inputs.download_branch }}
+          name: ${{ matrix.artifactName }}
+          path: ${{ github.workspace }}/build/
+          if_no_artifact_found: fail
+
+      - name: Install Dependencies
+        run: ./CI/travis/before_install_darwin
+
+      - name: Build
+        run: ./CI/travis/make_darwin
+
+      - name: Publish build artifact
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifactName }}
+          path: ${{ github.workspace }}/build/*.pkg
+          if-no-files-found: ignore
