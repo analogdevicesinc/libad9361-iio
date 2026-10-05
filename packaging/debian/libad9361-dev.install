@@ -1,0 +1,3 @@
+usr/include
+usr/lib/*/libad9361.so
+usr/lib/*/pkgconfig

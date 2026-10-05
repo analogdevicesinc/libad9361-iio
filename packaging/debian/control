@@ -1,0 +1,41 @@
+Source: libad9361
+Section: libs
+Priority: optional
+Maintainer: EngineerZone <https://ez.analog.com/sw-interface-tools/>
+Build-Depends: debhelper (>= 10), cmake (>= 2.8), libiio-dev, python3, python3-setuptools, dh-python
+Standards-Version: 4.5.1
+Homepage: https://github.com/analogdevicesinc/libad9361-iio
+Rules-Requires-Root: no
+
+Package: libad9361
+Architecture: any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Replaces: libad9361-0 (= 0.3)
+Provides: libad9361-0 (= 0.3)
+Description: Library of functions specific to the Analog Devices AD9361
+ This library contains a few functions useful to configure and use the
+ Analog Devices AD9361 Agile Transceiver.
+
+Package: libad9361-dev
+Architecture: any
+Section: libdevel
+Depends: libad9361 (= ${binary:Version}), ${misc:Depends}
+Description: Library of functions specific to the Analog Devices AD9361
+ This library contains a few functions useful to configure and use the
+ Analog Devices AD9361 Agile Transceiver.
+ .
+ This package contains the development files.
+
+Package: python3-libad9361
+Architecture: all
+Section: python
+Depends: ${misc:Depends}, ${python3:Depends}, libad9361
+Replaces: python3-ad9361 (= 0.3)
+Provides: python3-ad9361 (= 0.3)
+Description: Python bindings for libad9361
+ This library contains a few functions useful to configure and use the
+ Analog Devices AD9361 Agile Transceiver.
+ .
+ This package contains the Python 3 bindings.
