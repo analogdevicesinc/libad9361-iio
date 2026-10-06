@@ -9,6 +9,7 @@ dpkg -i /ci/build/*.deb
 
 rm -f /usr/lib/python*/EXTERNALLY-MANAGED
 
+python3 -m pip install setuptools wheel
 python3 -m pip install pylibiio --no-binary :all:
 python3 -m pip install sphinx
 python3 -m pip install sphinx-rtd-theme furo
@@ -17,7 +18,8 @@ echo "$PWD"
 
 mkdir -p build
 cd build
-cmake -DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON -DWITH_DOC=OFF ..
+cmake -DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON -DWITH_DOC=OFF \
+	-DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" ..
 make && make package && make test
 make install
 ldconfig

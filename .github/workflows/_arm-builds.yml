@@ -3,6 +3,9 @@ name: ARM Builds
 on:
   workflow_call:
     inputs:
+      build-type:
+        required: true
+        type: string
       libiio-version:
         required: true
         type: string
@@ -40,10 +43,10 @@ jobs:
             platform-flag: '--platform linux/arm/v7'
             artifact-name: Debian-12-armhf
 
-          - image: debian:trixie
+          - image: docker.cloudsmith.io/adi/containers/kuiper_basic_64:latest
             platform-flag: ''
             artifact-name: Debian-13-arm64
-          - image: arm32v7/debian:trixie
+          - image: docker.cloudsmith.io/adi/containers/kuiper_basic_32:latest
             platform-flag: '--platform linux/arm/v7'
             artifact-name: Debian-13-armhf
     env:
@@ -84,6 +87,7 @@ jobs:
             ${{ matrix.platform-flag }} \
             --rm -t --privileged \
             -e ARTIFACTNAME=${{ matrix.artifact-name }} \
+            -e CMAKE_BUILD_TYPE=${{ inputs.build-type }} \
             -v "${{ github.workspace }}":"/ci" \
             "${{ matrix.image }}" \
             /bin/bash -c "
@@ -113,11 +117,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - docker_image: arm64v8/debian:trixie
+          - docker_image: docker.cloudsmith.io/adi/containers/kuiper_basic_64:latest
             distro: debian13
             architecture: arm64
             platform-flag: ''
-          - docker_image: arm32v7/debian:trixie
+          - docker_image: docker.cloudsmith.io/adi/containers/kuiper_basic_32:latest
             distro: debian13
             architecture: armhf
             platform-flag: '--platform linux/arm/v7'
@@ -231,6 +235,7 @@ jobs:
             --platform "linux/${{ matrix.arch }}" \
             --rm -t --privileged \
             -e ARTIFACTNAME=${{ matrix.artifact-name }} \
+            -e CMAKE_BUILD_TYPE=${{ inputs.build-type }} \
             -v "${{ github.workspace }}":"/ci" \
             "${{ matrix.image }}" \
             /bin/bash -c "

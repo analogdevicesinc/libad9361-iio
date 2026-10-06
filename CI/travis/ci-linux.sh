@@ -37,7 +37,7 @@ handle_"$1" "$2"
 # Build project
 mkdir -p build
 cd build
-cmake $CMAKE_OPTIONS
+cmake -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" $CMAKE_OPTIONS
 sudo make && sudo make package && make test
 sudo make install
 ldconfig

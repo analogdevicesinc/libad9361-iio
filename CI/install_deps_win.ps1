@@ -4,3 +4,4 @@
 #choco install InnoSetup
 
 set PATH=%PATH%;"C:\Program Files (x86)\Inno Setup 6"
+
