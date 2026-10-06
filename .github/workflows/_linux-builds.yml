@@ -111,11 +111,11 @@ jobs:
             pip3 install sphinx --break-system-packages 2>/dev/null || pip3 install sphinx
           fi
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
       - name: Install uv
-        uses: astral-sh/setup-uv@v10.2.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
       - name: Install py11, create venv and install dependencies
         run: |
           set -e
@@ -153,7 +153,7 @@ jobs:
           ./CI/travis/${{ matrix.build-script }} "${{ matrix.os-type }}" "$LIBIIO_PKG"
       - name: Upload build artifacts
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ matrix.artifact-name }}
           path: |
@@ -170,7 +170,7 @@ jobs:
         working-directory: ${{ env.APP_NAME }}
     steps:
       - name: Checkout code repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
           path: ${{ env.APP_NAME }}
@@ -198,7 +198,7 @@ jobs:
           ls -la artifacts/
 
       - name: Upload debian artifacts to github
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ${{ env.ARTIFACT_NAME }}-ubuntu
           path: |
