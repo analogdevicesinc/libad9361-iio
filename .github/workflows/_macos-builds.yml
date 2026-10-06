@@ -3,6 +3,9 @@ name: macOS Builds
 on:
   workflow_call:
     inputs:
+      build-type:
+        required: true
+        type: string
       libiio-version:
         required: true
         type: string
@@ -31,6 +34,7 @@ jobs:
     timeout-minutes: 15
     env:
       ARTIFACTNAME: ${{ matrix.artifact-name }}
+      CMAKE_BUILD_TYPE: ${{ inputs.build-type }}
     steps:
       - uses: actions/checkout@v7
         with:

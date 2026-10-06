@@ -3,6 +3,9 @@ name: Linux builds
 on:
   workflow_call:
     inputs:
+      build-type:
+        required: true
+        type: string
       libiio-version:
         required: true
         type: string
@@ -15,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PYTHON: ${{ github.workspace }}/.venv/bin/python3
+      CMAKE_BUILD_TYPE: ${{ inputs.build-type }}
     timeout-minutes: 15
     strategy:
       fail-fast: false
