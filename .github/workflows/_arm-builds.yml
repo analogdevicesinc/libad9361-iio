@@ -155,7 +155,7 @@ jobs:
 
       - name: Create debian package
         run: |
-          docker exec ${{ matrix.distro }}-${{ matrix.architecture }} sh -c ".github/scripts/create_debian.sh ${{ steps.set_version.outputs.version }}"
+          docker exec ${{ matrix.distro }}-${{ matrix.architecture }} sh -c "apt-get remove -y doxygen 2>/dev/null || true; .github/scripts/create_debian.sh ${{ steps.set_version.outputs.version }}"
 
       - name: Copy debian artifacts from container to host
         run: |
