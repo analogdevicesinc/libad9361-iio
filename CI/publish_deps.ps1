@@ -16,11 +16,7 @@ if ($COMPILER -eq "Visual Studio 16 2019") {
 }
 
 cd $src_dir
-mkdir dependencies
-cd dependencies
-wget http://swdownloads.analog.com/cse/build/libiio-win-deps-libusb1.0.24.zip -OutFile "libiio-win-deps.zip"
-7z x -y "libiio-win-deps.zip"
 
-cp .\libs\64\libxml2.dll $env:BUILD_ARTIFACTSTAGINGDIRECTORY
-cp .\libs\64\libserialport-0.dll $env:BUILD_ARTIFACTSTAGINGDIRECTORY
-cp .\libs\64\libusb-1.0.dll $env:BUILD_ARTIFACTSTAGINGDIRECTORY
+cp .\build\libxml2.dll $env:BUILD_ARTIFACTSTAGINGDIRECTORY
+cp .\build\libserialport-0.dll $env:BUILD_ARTIFACTSTAGINGDIRECTORY
+cp .\build\libusb-1.0.dll $env:BUILD_ARTIFACTSTAGINGDIRECTORY

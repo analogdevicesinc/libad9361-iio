@@ -1,0 +1,209 @@
+name: Linux builds
+
+on:
+  workflow_call:
+    inputs:
+      build-type:
+        required: true
+        type: string
+      libiio-version:
+        required: true
+        type: string
+    secrets:
+      CLOUDSMITH_API_KEY:
+        required: true
+jobs:
+  linux:
+    name: ${{ matrix.artifact-name }}                   
+    runs-on: ubuntu-latest
+    env:
+      PYTHON: ${{ github.workspace }}/.venv/bin/python3
+      CMAKE_BUILD_TYPE: ${{ inputs.build-type }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: ubuntu:22.04
+            artifact-name: Linux-Ubuntu-22.04
+            build-script: ci-linux.sh
+            os-type: default
+            package-type: deb
+          - image: ubuntu:24.04
+            artifact-name: Linux-Ubuntu-24.04
+            build-script: ci-linux.sh
+            os-type: default
+            package-type: deb
+          - image: ubuntu:26.04
+            artifact-name: Linux-Ubuntu-26.04
+            build-script: ci-linux.sh
+            os-type: default
+            package-type: deb
+          - image: debian:bookworm
+            artifact-name: Linux-Debian-12
+            build-script: ci-linux.sh
+            os-type: default
+            package-type: deb
+          - image: debian:trixie
+            artifact-name: Linux-Debian-13
+            build-script: ci-linux.sh
+            os-type: default
+            package-type: deb
+          - image: fedora:42
+            artifact-name:  Linux-Fedora-42
+            build-script: ci-linux.sh
+            os-type: fedora
+            package-type: rpm
+
+          - image: fedora:44
+            artifact-name:  Linux-Fedora-44
+            build-script: ci-linux.sh
+            os-type: fedora
+            package-type: rpm
+          - image: opensuse/leap:15.6
+            artifact-name: Linux-openSUSE-15.6
+            build-script: ci-linux.sh
+            os-type: opensuse
+            package-type: rpm
+
+          - image: opensuse/leap:16.0
+            artifact-name: Linux-openSUSE-16.0
+            build-script: ci-linux.sh
+            os-type: opensuse
+            package-type: rpm
+    defaults:
+      run:
+        shell: /bin/bash -e {0}
+    container:
+      image: ${{ matrix.image }}
+      env:
+        PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    steps:
+      - name: Install dependencies
+        run: |
+          set -e
+
+          # Ubuntu / Debian
+          if command -v apt-get &>/dev/null; then
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update
+            apt-get install -y build-essential git cmake libxml2-dev bison flex \
+              libcdk5-dev libaio-dev libusb-1.0-0-dev \
+              libserialport-dev libavahi-client-dev doxygen graphviz man2html \
+              python3 python3-pip python3-setuptools curl wget sudo tar
+            pip3 install sphinx --break-system-packages 2>/dev/null || pip3 install sphinx
+
+          # Fedora
+          elif command -v dnf &>/dev/null; then
+            dnf install -y cmake gcc gcc-c++ git flex bison libxml2-devel \
+              libaio-devel libusb1-devel avahi-devel \
+              libserialport-devel rpm-build doxygen graphviz \
+              python3-pip python3-setuptools curl wget sudo tar
+            pip3 install sphinx --break-system-packages 2>/dev/null || pip3 install sphinx
+
+          # openSUSE
+          elif command -v zypper &>/dev/null; then           
+            zypper --gpg-auto-import-keys ref
+            zypper in -y --allow-downgrade gcc-c++ make cmake git libxml2-devel bison flex cdk-devel \
+              libaio-devel libusb-1_0-devel \
+              libserialport-devel libavahi-devel avahi rpm-build doxygen graphviz \
+              python3 python3-pip python3-setuptools sudo wget curl tar
+            pip3 install sphinx --break-system-packages 2>/dev/null || pip3 install sphinx
+          fi
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+      - name: Install py11, create venv and install dependencies
+        run: |
+          set -e
+          cd $GITHUB_WORKSPACE
+          uv python install 3.11
+          uv venv --python 3.11 --seed
+          uv pip install requests
+
+      - name: Get libiio from Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          set -e
+          wget https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/8d7a96779dd034005279ed1c7d052514df695d8c/utils/cloudsmith_utils/cloudsmith_helper.py \
+            -O /tmp/cloudsmith_helper.py
+          mkdir -p build && cd build
+          $PYTHON /tmp/cloudsmith_helper.py \
+            --method get_artifacts_from_location \
+            --repo external \
+            --package_version "${{ inputs.libiio-version }}" \
+            --package_name "${{ matrix.artifact-name }}.${{ matrix.package-type }}"
+
+      - name: Build
+        run: |
+          set -e
+          source $GITHUB_WORKSPACE/.venv/bin/activate
+          chmod +x ./CI/travis/${{ matrix.build-script }}
+          LIBIIO_PKG=$(ls build/libiio-*.${{ matrix.package-type }} 2>/dev/null | head -1)
+          if [ -z "$LIBIIO_PKG" ]; then
+            echo "Error: No libiio package found in build/"
+            ls -la build/
+            exit 1
+          fi
+          echo "Using libiio package: $LIBIIO_PKG"
+          ./CI/travis/${{ matrix.build-script }} "${{ matrix.os-type }}" "$LIBIIO_PKG"
+      - name: Upload build artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: |
+            build/*9361*.${{ matrix.package-type }}
+  linux-upstream:
+    name: upstream-ubuntu-amd64
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      APP_NAME: libad9361
+      ARTIFACT_NAME: libad9361-libiio-upstream
+    defaults:
+      run:
+        working-directory: ${{ env.APP_NAME }}
+    steps:
+      - name: Checkout code repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          path: ${{ env.APP_NAME }}
+
+      - name: Identify version
+        id: set_version
+        run: |
+          # Extract version from CMakeLists.txt project() line
+          cmake_version=$(grep -oP 'project\s*\([^)]*VERSION\s+\K[0-9]+\.[0-9]+(\.[0-9]+)?' CMakeLists.txt)
+          if [[ -z "$cmake_version" ]]; then
+            echo "Failed to extract version from CMakeLists.txt, using default"
+            cmake_version="0.0.1+${{ github.sha }}"
+          fi
+          echo "Version to use: $cmake_version"
+          echo "version=$cmake_version" >> "$GITHUB_OUTPUT"
+
+      - name: Create .deb package
+        run: |
+          .github/scripts/create_debian.sh ${{ steps.set_version.outputs.version }}
+
+      - name: Copy debian artifacts
+        run: |
+          mkdir -p artifacts
+          cp ../*.deb ../*.dsc ../*.debian.tar.xz ../*.orig.tar.gz artifacts/
+          ls -la artifacts/
+
+      - name: Upload debian artifacts to github
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ env.ARTIFACT_NAME }}-ubuntu
+          path: |
+            ${{ env.APP_NAME }}/artifacts/*.deb
+            ${{ env.APP_NAME }}/artifacts/*.dsc
+            ${{ env.APP_NAME }}/artifacts/*.debian.tar.xz
+            ${{ env.APP_NAME }}/artifacts/*.orig.tar.gz
+          if-no-files-found: error

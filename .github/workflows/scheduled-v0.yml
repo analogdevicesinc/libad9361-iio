@@ -1,0 +1,18 @@
+name: Scheduled v0 Build
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'   # Monthly, 1st at 00:00 UTC
+
+permissions:
+  actions: write
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Dispatch v0 build
+        run: gh workflow run build.yml --ref libad9361-iio-v0
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
