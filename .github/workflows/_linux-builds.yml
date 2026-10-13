@@ -125,18 +125,14 @@ jobs:
           uv pip install requests
 
       - name: Get libiio from Cloudsmith
-        env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-        run: |
-          set -e
-          wget https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/8d7a96779dd034005279ed1c7d052514df695d8c/utils/cloudsmith_utils/cloudsmith_helper.py \
-            -O /tmp/cloudsmith_helper.py
-          mkdir -p build && cd build
-          $PYTHON /tmp/cloudsmith_helper.py \
-            --method get_artifacts_from_location \
-            --repo external \
-            --package_version "${{ inputs.libiio-version }}" \
-            --package_name "${{ matrix.artifact-name }}.${{ matrix.package-type }}"
+        uses: ./.github/actions/get-libiio
+        with:
+          cloudsmith-api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
+          package-name: ${{ matrix.artifact-name }}.${{ matrix.package-type }}
+          package-version: ${{ inputs.libiio-version }}
+          # container job: use the env var (resolves to the in-container
+          # /__w path), not ${{ github.workspace }} which is the host path
+          python: $GITHUB_WORKSPACE/.venv/bin/python3
 
       - name: Build
         run: |
