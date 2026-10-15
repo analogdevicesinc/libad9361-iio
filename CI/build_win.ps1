@@ -19,6 +19,7 @@ cd build
 cmake -G "$COMPILER" -A "$ARCH" `
         -DLIBIIO_LIBRARIES:FILEPATH=$pwd\libiio.lib `
         -DLIBIIO_INCLUDEDIR:PATH=$pwd `
+        -DCMAKE_C_FLAGS="/I$pwd" `
 	..
 
 cmake --build . --config $BUILD_TYPE
