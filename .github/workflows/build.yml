@@ -125,22 +125,24 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
-      - name: Get libiio from Cloudsmith
-        env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+      - name: Install helper requirements
         run: |
           set -e
           python3 -m pip install --break-system-packages requests
-          wget https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/8d7a96779dd034005279ed1c7d052514df695d8c/utils/cloudsmith_utils/cloudsmith_helper.py \
-            -O /tmp/cloudsmith_helper.py
-          UBUNTU_VER=$(lsb_release -rs)
-          mkdir -p /tmp/libiio && cd /tmp/libiio
-          python3 /tmp/cloudsmith_helper.py \
-            --method get_artifacts_from_location \
-            --repo external \
-            --package_version "${{ needs.setup.outputs.libiio-version }}" \
-            --package_name "Linux-Ubuntu-${UBUNTU_VER}.deb"
-          sudo dpkg -i libiio-*.deb || sudo apt-get install -f -y
+          echo "UBUNTU_VER=$(lsb_release -rs)" >> "$GITHUB_ENV"
+
+      - name: Get libiio from Cloudsmith
+        uses: ./.github/actions/get-libiio
+        with:
+          cloudsmith-api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
+          package-name: Linux-Ubuntu-${{ env.UBUNTU_VER }}.deb
+          package-version: ${{ needs.setup.outputs.libiio-version }}
+          output-dir: /tmp/libiio
+
+      - name: Install libiio
+        run: |
+          set -e
+          sudo dpkg -i /tmp/libiio/libiio-*.deb || sudo apt-get install -f -y
           sudo ldconfig
 
       - uses: analogdevicesinc/shared-actions/pypi-build@7c51759246c2bd85f7310dc8843e2799fe0b30a6 # main
