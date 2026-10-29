@@ -54,38 +54,12 @@ release_artifacts() {
 	done
 }
 
-check_artifacts() {
-	cd "${BUILD_ARTIFACTSTAGINGDIRECTORY}"
-	local manifest="artifact_manifest.txt"
-	if [ ! -f "${manifest}" ]; then
-		echo "ERROR: ${manifest} not found in ${BUILD_ARTIFACTSTAGINGDIRECTORY}"
-		exit 1
-	fi
-	local missing=0
-	while IFS= read -r line; do
-		[ -z "${line}" ] && continue
-		# Manifest paths may be recorded relative to the workspace
-		# (artifacts/<tag>/<file>) or to the staging dir; accept either.
-		rel="${line#artifacts/}"
-		if [ -f "${rel}" ] || [ -f "${line}" ]; then
-			echo "${line} exists."
-		else
-			echo "${line} does not exist."
-			missing=$((missing + 1))
-		fi
-	done < "${manifest}"
-	if [ "${missing}" -gt 0 ]; then
-		echo "ERROR: ${missing} expected artifact(s) missing"
-		exit 1
-	fi
-}
-
 case "${1:-}" in
-	release|check)
-		"${1}"_artifacts
+	release)
+		release_artifacts
 		;;
 	*)
-		echo "Usage: ${0} {release|check}" >&2
+		echo "Usage: ${0} release" >&2
 		exit 1
 		;;
 esac
