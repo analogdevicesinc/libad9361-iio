@@ -1,0 +1,48 @@
+name: Get libiio from Cloudsmith
+description: >-
+  Download the pinned cloudsmith_helper.py and fetch a published libiio
+  package into the output directory. Centralises the helper revision and
+  fetch arguments so they live in one place.
+
+inputs:
+  cloudsmith-api-key:
+    description: Cloudsmith API key, exported to the helper as CLOUDSMITH_API_KEY.
+    required: true
+  package-name:
+    description: Package file name to fetch, e.g. "Linux-Ubuntu-24.04.deb".
+    required: true
+  package-version:
+    description: Cloudsmith package version, e.g. "libiio-v0~latest".
+    required: true
+  repo:
+    description: Cloudsmith repository to pull from.
+    required: false
+    default: external
+  python:
+    description: Python interpreter used to run the helper (must have the requests module).
+    required: false
+    default: python3
+  output-dir:
+    description: Directory the package is downloaded into.
+    required: false
+    default: build
+
+runs:
+  using: composite
+  steps:
+    - name: Fetch libiio package
+      shell: bash
+      env:
+        CLOUDSMITH_API_KEY: ${{ inputs.cloudsmith-api-key }}
+      run: |
+        set -e
+        # Pinned wiki-scripts revision - bump it here and every build follows.
+        wget -q https://raw.githubusercontent.com/analogdevicesinc/wiki-scripts/8d7a96779dd034005279ed1c7d052514df695d8c/utils/cloudsmith_utils/cloudsmith_helper.py \
+          -O /tmp/cloudsmith_helper.py
+        mkdir -p "${{ inputs.output-dir }}"
+        cd "${{ inputs.output-dir }}"
+        "${{ inputs.python }}" /tmp/cloudsmith_helper.py \
+          --method get_artifacts_from_location \
+          --repo "${{ inputs.repo }}" \
+          --package_version "${{ inputs.package-version }}" \
+          --package_name "${{ inputs.package-name }}"
