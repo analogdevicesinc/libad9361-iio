@@ -7,7 +7,6 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - next_stable
       - libad9361-iio-v0
       - 'staging/*'
       - '20*'
@@ -23,7 +22,6 @@ on:
       - 'CONTRIBUTING*'
   pull_request:
     branches:
-      - next_stable
       - libad9361-iio-v0
       - '20*'
     paths-ignore:
@@ -116,10 +114,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
       - name: Install helper requirements
         run: |
           set -e
-          python3 -m pip install --break-system-packages requests
+          uv python install 3.11
+          uv venv --python 3.11 /tmp/cloudsmith-venv --seed
+          uv pip install --python /tmp/cloudsmith-venv/bin/python3 requests
           echo "UBUNTU_VER=$(lsb_release -rs)" >> "$GITHUB_ENV"
 
       - name: Get libiio from Cloudsmith
@@ -128,6 +130,7 @@ jobs:
           cloudsmith-api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
           package-name: Linux-Ubuntu-${{ env.UBUNTU_VER }}.deb
           package-version: ${{ needs.setup.outputs.libiio-version }}
+          python: /tmp/cloudsmith-venv/bin/python3
           output-dir: /tmp/libiio
 
       - name: Install libiio
@@ -205,8 +208,15 @@ jobs:
         with:
           path: ${{ github.workspace }}/artifacts
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
       - name: Install Cloudsmith CLI
-        run: pip install cloudsmith-cli
+        run: |
+          set -e
+          uv python install 3.11
+          uv venv --python 3.11 /tmp/cloudsmith-venv --seed
+          uv pip install --python /tmp/cloudsmith-venv/bin/python3 cloudsmith-cli
+          echo "/tmp/cloudsmith-venv/bin" >> "$GITHUB_PATH"
 
       - name: Upload to Cloudsmith
         env:

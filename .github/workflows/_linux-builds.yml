@@ -73,7 +73,7 @@ jobs:
             package-type: rpm
     defaults:
       run:
-        shell: /bin/bash -e {0}
+        shell: bash
     container:
       image: ${{ matrix.image }}
       env:
@@ -139,7 +139,7 @@ jobs:
           set -e
           source $GITHUB_WORKSPACE/.venv/bin/activate
           chmod +x ./CI/travis/${{ matrix.build-script }}
-          LIBIIO_PKG=$(ls build/libiio-*.${{ matrix.package-type }} 2>/dev/null | head -1)
+          LIBIIO_PKG=$(ls build/libiio-*.${{ matrix.package-type }} 2>/dev/null | head -1) || true
           if [ -z "$LIBIIO_PKG" ]; then
             echo "Error: No libiio package found in build/"
             ls -la build/
