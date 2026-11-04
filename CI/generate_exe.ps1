@@ -7,6 +7,7 @@ dir $artifactsDir
 # The .iss resolves its [Files] sources from ARTIFACTS_DIR / VCREDIST_DIR; both the
 # libad9361/libiio DLLs and the VC runtime DLLs are staged into this one directory.
 iscc "/DARTIFACTS_DIR=$artifactsDir" "/DVCREDIST_DIR=$artifactsDir" "$artifactsDir\libad9361-iio.iss"
+if ($LASTEXITCODE -ne 0) { throw "iscc failed with exit code $LASTEXITCODE" }
 
 Get-ChildItem $env:BUILD_ARTIFACTSTAGINGDIRECTORY -Force -Recurse | Remove-Item -Force -Recurse
 cp C:\libad9361-setup.exe $env:BUILD_ARTIFACTSTAGINGDIRECTORY

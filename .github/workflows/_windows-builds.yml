@@ -112,6 +112,7 @@ jobs:
     needs: msvc
     if: github.event_name != 'pull_request'
     runs-on: windows-2022
+    timeout-minutes: 20
     env:
       BUILD_ARTIFACTSTAGINGDIRECTORY: ${{ github.workspace }}\staging
 

@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - libad9361-iio-v0
+      - main
       - 'staging/*'
       - '20*'
     tags:
@@ -22,7 +22,7 @@ on:
       - 'CONTRIBUTING*'
   pull_request:
     branches:
-      - libad9361-iio-v0
+      - main
       - '20*'
     paths-ignore:
       - '**/*.md'
@@ -43,14 +43,14 @@ jobs:
     outputs:
       build-type: ${{ steps.set.outputs.build-type }}
       libiio-version: ${{ steps.set.outputs.libiio-version }}
-      is-v0: ${{ steps.set.outputs.is-v0 }}
+      is-main: ${{ steps.set.outputs.is-main }}
       is-release: ${{ steps.set.outputs.is-release }}
       cloudsmith-version: ${{ steps.set.outputs.cloudsmith-version }}
     steps:
       - id: set
         shell: bash
         run: |
-          echo "libiio-version=libiio-v0~latest" >> "${GITHUB_OUTPUT}"
+          echo "libiio-version=libiio-main~latest" >> "${GITHUB_OUTPUT}"
           if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             echo "build-type=Release" >> "${GITHUB_OUTPUT}"
             echo "is-release=true" >> "${GITHUB_OUTPUT}"
@@ -59,11 +59,11 @@ jobs:
             echo "build-type=RelWithDebInfo" >> "${GITHUB_OUTPUT}"
             echo "is-release=false" >> "${GITHUB_OUTPUT}"
           fi
-          if [[ "${GITHUB_REF}" == "refs/heads/libad9361-iio-v0" ]]; then
-            echo "is-v0=true" >> "${GITHUB_OUTPUT}"
-            echo "cloudsmith-version=libad9361-iio-v0~latest" >> "${GITHUB_OUTPUT}"
+          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            echo "is-main=true" >> "${GITHUB_OUTPUT}"
+            echo "cloudsmith-version=libad9361-iio-main~latest" >> "${GITHUB_OUTPUT}"
           else
-            echo "is-v0=false" >> "${GITHUB_OUTPUT}"
+            echo "is-main=false" >> "${GITHUB_OUTPUT}"
           fi
 
   linux:
@@ -106,7 +106,7 @@ jobs:
   # Python sdist/wheel
   #############################################
   build-pypi:
-    if: needs.setup.outputs.is-v0 == 'true' || needs.setup.outputs.is-release == 'true'
+    if: needs.setup.outputs.is-main == 'true' || needs.setup.outputs.is-release == 'true'
     needs: [setup]
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -136,6 +136,7 @@ jobs:
       - name: Install libiio
         run: |
           set -e
+          sudo apt-get update
           sudo apt-get install -y /tmp/libiio/libiio-*.deb
           sudo ldconfig
 
@@ -143,8 +144,9 @@ jobs:
         with:
           cmake-options: '-DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON'
           apt-packages: 'cmake libxml2-dev libusb-1.0-0-dev'
-          run-tests: 'true'
-          pytest-args: '-vs --skip-scan'
+          # No test dir is staged next to the generated setup.py, so the action
+          # would skip pytest anyway. Re-enable once the bindings ship their tests.
+          run-tests: 'false'
           artifact-name: libad9361-dist
 
   #############################################
@@ -155,7 +157,7 @@ jobs:
       always() &&
       !cancelled() &&
       !contains(needs.*.result, 'failure') &&
-      (needs.setup.outputs.is-v0 == 'true' || needs.setup.outputs.is-release == 'true')
+      (needs.setup.outputs.is-main == 'true' || needs.setup.outputs.is-release == 'true')
     needs: [setup, linux, arm, macos, windows, build-pypi]
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -198,7 +200,7 @@ jobs:
   # Push to Cloudsmith
   #############################################
   push-cloudsmith:
-    if: needs.setup.outputs.is-v0 == 'true' || needs.setup.outputs.is-release == 'true'
+    if: needs.setup.outputs.is-main == 'true' || needs.setup.outputs.is-release == 'true'
     needs: [setup, check-artifacts]
     runs-on: ubuntu-latest
     timeout-minutes: 60

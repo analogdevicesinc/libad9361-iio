@@ -87,7 +87,11 @@ jobs:
               set -e
               export DEBIAN_FRONTEND=noninteractive
               apt-get update
-              apt-get install -y build-essential cmake git libxml2-dev python3-setuptools
+              apt-get install -y build-essential cmake git libxml2-dev python3-setuptools curl ca-certificates python3-lxml
+              curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
+              # lxml ships no wheel for s390x/ppc64le, so reuse the distro build rather than compiling it under QEMU.
+              uv venv --seed --system-site-packages /tmp/venv
+              . /tmp/venv/bin/activate
               cd /ci
               bash ./CI/travis/ci-ubuntu.sh
             "
@@ -229,7 +233,11 @@ jobs:
               set -e
               export DEBIAN_FRONTEND=noninteractive
               apt-get update
-              apt-get install -y build-essential cmake git libxml2-dev python3-setuptools
+              apt-get install -y build-essential cmake git libxml2-dev python3-setuptools curl ca-certificates python3-lxml
+              curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
+              # lxml ships no wheel for s390x/ppc64le, so reuse the distro build rather than compiling it under QEMU.
+              uv venv --seed --system-site-packages /tmp/venv
+              . /tmp/venv/bin/activate
               cd /ci
               bash ./CI/travis/ci-ubuntu.sh
             "
