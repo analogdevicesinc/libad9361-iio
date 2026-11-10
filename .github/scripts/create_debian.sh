@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 version=$1
 source_code=$(basename "$PWD")
 
@@ -28,4 +30,5 @@ tar czf ${source_code}_${version}.orig.tar.gz \
     $source_code
 popd
 
-debuild
+# Build unsigned packages; CI has no GPG key, so skip signing (-us -uc).
+debuild -us -uc

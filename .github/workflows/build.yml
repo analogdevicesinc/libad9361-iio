@@ -35,7 +35,8 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # only cancel superseded PR runs; never interrupt an in-flight publish on a branch/tag
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   setup:
@@ -141,7 +142,7 @@ jobs:
 
       - uses: analogdevicesinc/shared-actions/pypi-build@7c51759246c2bd85f7310dc8843e2799fe0b30a6 # main
         with:
-          cmake-options: '-DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON'
+          cmake-options: '-DPYTHON_BINDINGS=ON -DHAVE_DNS_SD=OFF -DWITH_AIO=OFF -DWITH_IIOD=OFF'
           apt-packages: 'cmake libxml2-dev libusb-1.0-0-dev'
           run-tests: 'true'
           pytest-args: '-vs --skip-scan'
