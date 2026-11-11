@@ -55,6 +55,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
+
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
 
@@ -78,7 +79,7 @@ jobs:
           set -e
           docker run \
             ${{ matrix.platform-flag }} \
-            --rm -t --privileged \
+            --rm -t \
             -e ARTIFACTNAME=${{ matrix.artifact-name }} \
             -e CMAKE_BUILD_TYPE=${{ inputs.build-type }} \
             -v "${{ github.workspace }}":"/ci" \
@@ -91,6 +92,7 @@ jobs:
               cd /ci
               bash ./CI/travis/ci-ubuntu.sh
             "
+
       - name: Upload artifacts
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -100,6 +102,7 @@ jobs:
             build/*9361*.deb
             build/*9361*.tar.gz
           if-no-files-found: error
+
   arm-native-upstream:
     name: upstream-${{ matrix.distro }}-${{ matrix.architecture }}
     runs-on: ubuntu-24.04-arm
@@ -181,6 +184,7 @@ jobs:
           - image: ubuntu:22.04
             arch: s390x
             artifact-name: Ubuntu-22.04-s390x
+
           - image: ubuntu:26.04
             arch: ppc64le
             artifact-name: Ubuntu-26.04-ppc64le
@@ -220,7 +224,7 @@ jobs:
           set -e
           sudo docker run \
             --platform "linux/${{ matrix.arch }}" \
-            --rm -t --privileged \
+            --rm -t \
             -e ARTIFACTNAME=${{ matrix.artifact-name }} \
             -e CMAKE_BUILD_TYPE=${{ inputs.build-type }} \
             -v "${{ github.workspace }}":"/ci" \

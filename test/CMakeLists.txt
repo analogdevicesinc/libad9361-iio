@@ -31,3 +31,10 @@ target_link_libraries(AutoRateTest LINK_PRIVATE ${LIBIIO_LIBRARIES} ad9361)
 add_test(NAME AutoRateTest
          COMMAND AutoRateTest
          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+# The tests include <iio.h> directly. The ad9361 lib keeps LIBIIO_INCLUDEDIR
+# PRIVATE, so give the test targets the path themselves (needed on Windows,
+# where libiio's headers sit in the build dir instead of a system path).
+foreach(test FilterDesignerTest GenerateRatesTest FilterDesignerHardwareTest FMComms5SyncTest AutoRateTest)
+    target_include_directories(${test} PRIVATE ${LIBIIO_INCLUDEDIR})
+endforeach()

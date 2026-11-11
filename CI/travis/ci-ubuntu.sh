@@ -17,7 +17,7 @@ pip_install() { python3 -m pip install --break-system-packages "$@" 2>/dev/null 
 pip_install setuptools wheel
 # build the libiio binding from source; DESTDIR=/usr/lib (scoped, not exported) points
 # pylibiio's hardcoded-x86_64 libiio check at the real multiarch dir so it finds libiio
-# on arm/ppc64le/s390x. Matches libad9166.
+# on arm/ppc64le/s390x.
 DESTDIR=/usr/lib pip_install pylibiio --no-binary :all:
 pip_install sphinx
 pip_install sphinx-rtd-theme furo
@@ -27,7 +27,7 @@ echo "$PWD"
 mkdir -p build
 cd build
 cmake -DPYTHON_BINDINGS=ON -DENABLE_PACKAGING=ON -DDEB_DETECT_DEPENDENCIES=ON -DWITH_DOC=OFF \
-	-DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" ..
+	-DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" -DCPACK_SYSTEM_NAME="${ARTIFACTNAME}" ..
 make && make package && make test
 make install
 ldconfig

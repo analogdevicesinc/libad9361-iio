@@ -31,7 +31,7 @@ python3 -m pip install pylibiio --no-binary :all:
 # Build project
 mkdir -p build
 cd build
-cmake -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" -DWITH_DOC=OFF $CMAKE_OPTIONS
+cmake -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE:-Release}" -DWITH_DOC=OFF -DCPACK_SYSTEM_NAME="${ARTIFACTNAME}" $CMAKE_OPTIONS
 sudo make && sudo make package && make test
 sudo make install
 ldconfig

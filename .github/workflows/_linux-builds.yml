@@ -19,6 +19,7 @@ jobs:
     env:
       PYTHON: ${{ github.workspace }}/.venv/bin/python3
       CMAKE_BUILD_TYPE: ${{ inputs.build-type }}
+      ARTIFACTNAME: ${{ matrix.artifact-name }}
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -39,6 +40,7 @@ jobs:
             build-script: ci-linux.sh
             os-type: default
             package-type: deb
+
           - image: debian:bookworm
             artifact-name: Linux-Debian-12
             build-script: ci-linux.sh
@@ -49,23 +51,23 @@ jobs:
             build-script: ci-linux.sh
             os-type: default
             package-type: deb
+
           - image: fedora:42
             artifact-name:  Linux-Fedora-42
             build-script: ci-linux.sh
             os-type: fedora
             package-type: rpm
-
           - image: fedora:44
             artifact-name:  Linux-Fedora-44
             build-script: ci-linux.sh
             os-type: fedora
             package-type: rpm
+
           - image: opensuse/leap:15.6
             artifact-name: Linux-openSUSE-15.6
             build-script: ci-linux.sh
             os-type: opensuse
             package-type: rpm
-
           - image: opensuse/leap:16.0
             artifact-name: Linux-openSUSE-16.0
             build-script: ci-linux.sh
@@ -110,12 +112,15 @@ jobs:
               python3 python3-pip python3-setuptools sudo wget curl tar
             pip3 install sphinx --break-system-packages 2>/dev/null || pip3 install sphinx
           fi
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
+
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+
       - name: Install py11, create venv and install dependencies
         run: |
           set -e
@@ -130,8 +135,6 @@ jobs:
           cloudsmith-api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
           package-name: ${{ matrix.artifact-name }}.${{ matrix.package-type }}
           package-version: ${{ inputs.libiio-version }}
-          # container job: use the env var (resolves to the in-container
-          # /__w path), not ${{ github.workspace }} which is the host path
           python: $GITHUB_WORKSPACE/.venv/bin/python3
 
       - name: Build
@@ -147,6 +150,7 @@ jobs:
           fi
           echo "Using libiio package: $LIBIIO_PKG"
           ./CI/travis/${{ matrix.build-script }} "${{ matrix.os-type }}" "$LIBIIO_PKG"
+
       - name: Upload build artifacts
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -155,6 +159,7 @@ jobs:
           path: |
             build/*9361*.${{ matrix.package-type }}
           if-no-files-found: error
+
   linux-upstream:
     name: upstream-ubuntu-amd64
     runs-on: ubuntu-latest
