@@ -104,6 +104,18 @@ jobs:
       CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
 
   #############################################
+  # Status build results 
+  #############################################
+  build-status:
+    name: Build Status
+    if: always()
+    needs: [linux, arm, macos, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - if: contains(needs.*.result, 'failure')
+        run: exit 1
+        
+  #############################################
   # Python sdist/wheel
   #############################################
   build-pypi:
