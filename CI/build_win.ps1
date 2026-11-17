@@ -1,3 +1,5 @@
+# Copyright (C) 2020-2026 Analog Devices, Inc.
+# SPDX-License-Identifier: LGPL-2.1-only
 
 $COMPILER=$Env:COMPILER
 $ARCH=$Env:ARCH

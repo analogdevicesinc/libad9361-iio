@@ -1,3 +1,5 @@
+# Copyright (C) 2023-2026 Analog Devices, Inc.
+# SPDX-License-Identifier: LGPL-2.1-only
 # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.2#erroractionpreference
 $ErrorActionPreference = "Stop"
 $ErrorView = "NormalView"

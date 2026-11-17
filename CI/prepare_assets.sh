@@ -1,4 +1,6 @@
 #!/bin/bash -e
+# Copyright (C) 2026 Analog Devices, Inc.
+# SPDX-License-Identifier: LGPL-2.1-only
 
 release_artifacts() {
 	cd "${BUILD_ARTIFACTSTAGINGDIRECTORY}"
