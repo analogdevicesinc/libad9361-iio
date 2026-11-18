@@ -2,4 +2,4 @@ libad9361 (@VERSION@) UNRELEASED; urgency=low
 
   * CI release.
 
- -- EngineerZone <https://ez.analog.com/sw-interface-tools/>  @DATE@
+ -- EngineerZone <linux@analog.com>  @DATE@
