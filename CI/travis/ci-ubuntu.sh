@@ -7,7 +7,9 @@ uname -a
 DEBIAN_FRONTEND=noninteractive apt install -y make graphviz libaio-dev \
 	libavahi-client-dev libavahi-common-dev libusb-1.0-0-dev \
 	rpm tar bzip2 gzip libserialport-dev
-dpkg -i /ci/build/*.deb
+# libiio-main~latest may ship several versions, so install just the newest
+libiio_pkg=$(ls /ci/build/libiio-*.deb | sort -V | tail -n1)
+dpkg -i "${libiio_pkg}"
 # refresh the loader cache so the just-installed libiio is discoverable
 # (its CPack .deb doesn't run ldconfig) before pylibiio's source build looks for it
 ldconfig

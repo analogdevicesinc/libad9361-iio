@@ -15,6 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Dispatch v0 build
-        run: gh workflow run build.yml --ref libad9361-v0 --repo ${{ github.repository }}
+        run: gh workflow run build.yml --ref libad9361-iio-v0 --repo ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

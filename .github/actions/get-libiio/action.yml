@@ -48,3 +48,6 @@ runs:
           --repo "${{ inputs.repo }}" \
           --package_version "${{ inputs.package-version }}" \
           --package_name "${{ inputs.package-name }}"
+        # libiio-main~latest can resolve to several versions; keep only the newest
+        # so a plain glob downstream installs exactly one package.
+        ls -1 *"${{ inputs.package-name }}" 2>/dev/null | sort -V | sed '$d' | xargs rm -f

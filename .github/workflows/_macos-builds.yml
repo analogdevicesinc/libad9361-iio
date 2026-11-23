@@ -61,7 +61,8 @@ jobs:
           if [ -n "$TAR" ]; then
             tar xf "$TAR" -C ${{ github.workspace }}/build
           fi
-          PKG=$(find ${{ github.workspace }}/build -name "*.pkg" | head -1)
+          # libiio-main~latest may ship several versions, so install just the newest
+          PKG=$(find ${{ github.workspace }}/build -name "*.pkg" | sort -V | tail -n1)
           if [ -z "$PKG" ]; then
             echo "Error: no libiio .pkg found in ${{ github.workspace }}/build"
             ls -la ${{ github.workspace }}/build
